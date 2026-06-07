@@ -16,7 +16,7 @@ const CATEGORIES = [
   { id: "sanitiser", name: "Sanitisers & Disinfectants", short: "Sanitisers", icon: "Shield", blurb: "High-purity protection that kills 99.9% of germs.", accent: "#159A4C" },
 ];
 
-const PRODUCTS = [
+const PRODUCTS_DEFAULT = [
   {
     id: "all-purpose-cleaner", name: "All Purpose Cleaner", cat: "household",
     sub: "Versatile Multi-Surface Cleaning Solution", price: 89.99, was: 109.99,
@@ -90,6 +90,18 @@ const PRODUCTS = [
     scent: "High Gloss",
   },
 ];
+
+// If the admin panel has published product changes, prefer those over the hardcoded list
+const PRODUCTS = (() => {
+  try {
+    const raw = localStorage.getItem("ab_products");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return PRODUCTS_DEFAULT;
+})();
 
 const money = (n) => "R" + n.toFixed(2);
 const catOf = (id) => CATEGORIES.find((c) => c.id === id);

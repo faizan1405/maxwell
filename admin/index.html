@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Amahle Blue</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <!-- Resolve asset paths relative to the project root so images work in both admin and storefront -->
+  <base href="../">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4/dist/index.global.min.js"></script>
+  <style type="text/tailwindcss"
+      --color-cobalt:  #1E50E0;
+      --color-cobalt-d:#1A40B5;>
+    @theme {
+      --color-ink:     #0B2545;
+      --color-grass:   #159A4C;
+      --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+    }
+  </style>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; font-family: "Plus Jakarta Sans", system-ui, sans-serif; background: #F1F5F9; color: #0F172A; -webkit-font-smoothing: antialiased; }
+    ::selection { background: #1E50E0; color: #fff; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+    .sidebar-nav::-webkit-scrollbar { width: 3px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
+    @keyframes fadein { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes slideup { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .animate-fadein { animation: fadein 0.25s ease both; }
+    .animate-slideup { animation: slideup 0.3s ease both; }
+    .animate-spin { animation: spin 0.7s linear infinite; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin></script>
+</head>
+<body>
+  <div id="admin-root"></div>
+
+  <script type="text/babel" src="admin/components/a-core.jsx"></script>
+  <script type="text/babel" src="admin/components/a-ui.jsx"></script>
+  <script type="text/babel" src="admin/components/a-auth.jsx"></script>
+  <script type="text/babel" src="admin/components/a-layout.jsx"></script>
+  <script type="text/babel" src="admin/components/a-dashboard.jsx"></script>
+  <script type="text/babel" src="admin/components/a-products.jsx"></script>
+  <script type="text/babel" src="admin/components/a-orders.jsx"></script>
+  <script type="text/babel" src="admin/components/a-customers.jsx"></script>
+  <script type="text/babel" src="admin/components/a-app.jsx"></script>
+</body>
+</html>
