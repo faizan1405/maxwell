@@ -1,9 +1,11 @@
 /* Admin Panel — Products Management */
 
 const CATEGORIES = [
-  { id:'household', label:'Household Cleaning' },
-  { id:'sanitiser', label:'Sanitisers & Disinfectants' },
-  { id:'car',       label:'Car Care' },
+  { id:'household',     label:'Household Cleaning' },
+  { id:'sanitiser',     label:'Sanitisers & Disinfectants' },
+  { id:'car',           label:'Car Care' },
+  { id:'car-exterior',  label:'Car Exterior' },
+  { id:'industrial',    label:'Industrial Products' },
 ];
 const BADGES  = [null,'Bestseller','New','High Purity','Sale'];
 const STATUSES= ['active','draft','archived'];
@@ -282,7 +284,7 @@ function ProductsPage() {
     else { addProduct(data); showToast('Product added successfully'); }
   }
 
-  const catLabel = { household:'Household', sanitiser:'Sanitiser', car:'Car Care' };
+  const catLabel = { household:'Household', sanitiser:'Sanitiser', car:'Car Care', 'car-exterior':'Car Exterior', industrial:'Industrial' };
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
