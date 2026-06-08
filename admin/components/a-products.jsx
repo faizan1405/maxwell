@@ -17,15 +17,15 @@ function blankProduct() {
 // ── Variant row ───────────────────────────────────────────────────────────────
 function VariantRow({ v, idx, onChange, onRemove }) {
   return (
-    <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
+    <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
       <input value={v.name} onChange={e=>onChange(idx,'name',e.target.value)} placeholder="Size (e.g. 1L)"
-        className="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-sm outline-none focus:border-cobalt"/>
+        className="min-w-0 px-2.5 py-1.5 rounded-lg border border-slate-200 text-sm outline-none focus:border-cobalt"/>
       <input value={v.price} onChange={e=>onChange(idx,'price',e.target.value)} placeholder="Price"
         type="number" min="0" step="0.01"
-        className="w-24 px-2.5 py-1.5 rounded-lg border border-slate-200 text-sm outline-none focus:border-cobalt"/>
+        className="w-20 px-2.5 py-1.5 rounded-lg border border-slate-200 text-sm outline-none focus:border-cobalt"/>
       <input value={v.stock} onChange={e=>onChange(idx,'stock',e.target.value)} placeholder="Stock"
         type="number" min="0"
-        className="w-20 px-2.5 py-1.5 rounded-lg border border-slate-200 text-sm outline-none focus:border-cobalt"/>
+        className="w-16 px-2.5 py-1.5 rounded-lg border border-slate-200 text-sm outline-none focus:border-cobalt"/>
       <button onClick={()=>onRemove(idx)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Icon.Trash/></button>
     </div>
   );
@@ -116,7 +116,7 @@ function ProductForm({ open, onClose, initial, onSave }) {
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-600 text-slate-700 mb-1">Product Image</label>
-            <label className={`relative flex flex-col items-center justify-center w-full h-36 rounded-xl border-2 border-dashed transition-colors overflow-hidden
+            <label className={`relative flex flex-col items-center justify-center w-full h-28 sm:h-36 rounded-xl border-2 border-dashed transition-colors overflow-hidden
               ${imgUploading ? 'border-cobalt/40 bg-cobalt/5 cursor-wait' : form.img ? 'border-cobalt/40 bg-cobalt/5 cursor-pointer' : 'border-slate-200 bg-slate-50 hover:border-cobalt/40 hover:bg-cobalt/5 cursor-pointer'}`}>
               {form.img && !imgUploading && (
                 <img src={form.img} alt="preview" className="absolute inset-0 w-full h-full object-cover rounded-xl"/>

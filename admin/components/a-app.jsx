@@ -25,30 +25,32 @@ function SettingsPage() {
     if (Object.keys(errs).length) return;
 
     setSaving(true);
-    // Verify current password
-    const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ab_salt_2024:' + pwForm.current));
-    const hash = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    const creds = JSON.parse(localStorage.getItem('ab_admin_creds_v2')||'[]');
-    const me    = creds.find(c => c.username === session.user.username);
-    if (!me || me.passwordHash !== hash) {
-      setPwErrors({ current:'Current password is incorrect.' });
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action:'changePassword', token:session.token, currentPassword:pwForm.current, newPassword:pwForm.next }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPwErrors({ current: data.error || 'Failed to update password.' });
+        setSaving(false);
+        return;
+      }
+    } catch {
+      setPwErrors({ current: 'Network error — please try again.' });
       setSaving(false);
       return;
     }
-
-    const newBuf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ab_salt_2024:' + pwForm.next));
-    const newHash = Array.from(new Uint8Array(newBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    const updated = creds.map(c => c.username===session.user.username ? {...c, passwordHash:newHash} : c);
-    localStorage.setItem('ab_admin_creds_v2', JSON.stringify(updated));
     setSaving(false);
     setPwForm({ current:'', next:'', confirm:'' });
     showToast('Password changed successfully');
   }
 
   function handleResetData() {
-    localStorage.removeItem('ab_admin_products_v2');
-    localStorage.removeItem('ab_admin_orders_v2');
-    showToast('Store data reset. Reload to see changes.', 'error');
+    // Clear local caches; the KV data will reseed on next load
+    localStorage.removeItem('ab_products');
+    showToast('Local cache cleared. Reload to resync from server.', 'error');
   }
 
   return (
@@ -152,13 +154,13 @@ function SettingsPage() {
 
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
             <h3 className="text-sm font-700 text-slate-700 mb-1">Data Management</h3>
-            <p className="text-xs text-slate-400 mb-4">Admin data is stored in your browser's localStorage. Use this to reset to demo data.</p>
-            <Btn variant="danger" size="sm" onClick={handleResetData}>Reset Store Data</Btn>
+            <p className="text-xs text-slate-400 mb-4">Products and orders are stored in Vercel KV. Clear the local browser cache if you need to force a resync.</p>
+            <Btn variant="danger" size="sm" onClick={handleResetData}>Clear Local Cache</Btn>
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-            <div className="flex gap-2 mb-2"><Icon.Warning/><span className="text-sm font-700 text-amber-800">Production Notice</span></div>
-            <p className="text-xs text-amber-700 leading-relaxed">This admin panel stores data in <strong>browser localStorage</strong>. For a production store, connect to a real backend (Node.js, Firebase, Supabase, etc.) with server-side authentication, a database, and proper API security. This demo is fully functional for development and testing.</p>
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-5">
+            <div className="flex gap-2 mb-2"><Icon.Check/><span className="text-sm font-700 text-green-800">Backend Connected</span></div>
+            <p className="text-xs text-green-700 leading-relaxed">Products, orders and credentials are stored in <strong>Vercel KV</strong> — persistent across devices and browser sessions. Images are hosted on <strong>Vercel Blob</strong>.</p>
           </div>
         </div>
       )}
@@ -180,6 +182,9 @@ function AdminApp() {
     orders:    <OrdersPage/>,
     customers: <CustomersPage/>,
     settings:  <SettingsPage/>,
+    coupons:   <CouponsPage/>,
+    reviews:   <ReviewsPage/>,
+    abandoned: <AbandonedPage/>,
   };
 
   return (

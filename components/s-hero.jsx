@@ -66,12 +66,12 @@ const Hero = ({ onShopCat }) => {
               </button>
             </div>
 
-            {/* floating chips */}
-            <div className="absolute -left-1 top-4 z-30 flex items-center gap-2 rounded-2xl bg-white px-3.5 py-2.5 shadow-xl ring-1 ring-black/5" style={{ animation: "abfloat 5s ease-in-out infinite" }}>
+            {/* floating chips — hidden on xs to prevent overflow */}
+            <div className="absolute -left-1 top-4 z-30 hidden sm:flex items-center gap-2 rounded-2xl bg-white px-3.5 py-2.5 shadow-xl ring-1 ring-black/5" style={{ animation: "abfloat 5s ease-in-out infinite" }}>
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-grass/12 text-grass"><Leaf size={18} /></span>
               <div className="leading-tight"><p className="text-[12px] font-extrabold text-ink">Eco-conscious</p><p className="text-[10.5px] text-slate-400">Responsibly made</p></div>
             </div>
-            <div className="absolute -right-1 bottom-2 z-30 flex items-center gap-2 rounded-2xl bg-white px-3.5 py-2.5 shadow-xl ring-1 ring-black/5" style={{ animation: "abfloat 5s ease-in-out infinite", animationDelay: "1.4s" }}>
+            <div className="absolute -right-1 bottom-2 z-30 hidden sm:flex items-center gap-2 rounded-2xl bg-white px-3.5 py-2.5 shadow-xl ring-1 ring-black/5" style={{ animation: "abfloat 5s ease-in-out infinite", animationDelay: "1.4s" }}>
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-cobalt/10 text-cobalt"><Truck size={18} /></span>
               <div className="leading-tight"><p className="text-[12px] font-extrabold text-ink">Fast delivery</p><p className="text-[10.5px] text-slate-400">Across South Africa</p></div>
             </div>

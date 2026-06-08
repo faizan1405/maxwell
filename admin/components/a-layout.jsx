@@ -7,8 +7,17 @@ const NAV = [
   { id:'customers',  label:'Customers',  icon:'Users',        badge:null },
 ];
 
+const NAV_ADMIN = [
+  { id:'coupons',   label:'Coupons',        icon:'Tag',     badge:null },
+  { id:'reviews',   label:'Reviews',        icon:'Star',    badge:'reviews' },
+  { id:'abandoned', label:'Abandoned Carts',icon:'Cart',    badge:null },
+  { id:'settings',  label:'Settings',       icon:'Settings',badge:null },
+];
+
 function Sidebar({ page, setPage, open, onClose, stats }) {
   const { session, logout, isAdmin } = useAuth();
+  const { reviews } = useAdmin();
+  const pendingReviews = React.useMemo(() => (reviews||[]).filter(r=>r.status==='pending').length, [reviews]);
 
   function navItem(item) {
     const active = page === item.id;
@@ -64,11 +73,22 @@ function Sidebar({ page, setPage, open, onClose, stats }) {
           {isAdmin && (
             <>
               <p className="px-3 text-white/30 text-xs font-600 uppercase tracking-widest mb-2 mt-5">Admin</p>
-              <button onClick={() => { setPage('settings'); onClose?.(); }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-500 transition-all text-left group ${page==='settings'?'bg-white/15 text-white font-600':'text-white/60 hover:bg-white/8 hover:text-white/90'}`}>
-                <span className={`transition-colors ${page==='settings'?'text-white':'text-white/50 group-hover:text-white/80'}`}><Icon.Settings/></span>
-                Settings
-              </button>
+              {NAV_ADMIN.map(item => {
+                const active = page === item.id;
+                const badgeCount = item.badge === 'reviews' ? pendingReviews : 0;
+                return (
+                  <button key={item.id} onClick={() => { setPage(item.id); onClose?.(); }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-500 transition-all text-left group ${active?'bg-white/15 text-white font-600':'text-white/60 hover:bg-white/8 hover:text-white/90'}`}>
+                    <span className={`transition-colors ${active?'text-white':'text-white/50 group-hover:text-white/80'}`}>
+                      {Icon[item.icon]?.()}
+                    </span>
+                    <span className="flex-1">{item.label}</span>
+                    {badgeCount > 0 && (
+                      <span className="min-w-[20px] h-5 px-1.5 bg-cobalt rounded-full text-xs font-700 text-white flex items-center justify-center">{badgeCount}</span>
+                    )}
+                  </button>
+                );
+              })}
             </>
           )}
         </nav>
@@ -101,7 +121,7 @@ function TopBar({ page, onMenuClick, stats, setPage }) {
   const [userOpen, setUserOpen] = React.useState(false);
   const alertCount = (stats?.byStatus?.pending||0) + (stats?.byStatus?.processing||0);
 
-  const labels = { dashboard:'Dashboard', products:'Products', orders:'Orders', customers:'Customers', settings:'Settings' };
+  const labels = { dashboard:'Dashboard', products:'Products', orders:'Orders', customers:'Customers', settings:'Settings', coupons:'Coupons', reviews:'Reviews', abandoned:'Abandoned Carts' };
   const label  = labels[page] || page;
 
   return (

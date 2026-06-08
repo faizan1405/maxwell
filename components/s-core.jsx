@@ -91,8 +91,8 @@ const PRODUCTS_DEFAULT = [
   },
 ];
 
-// If the admin panel has published product changes, prefer those over the hardcoded list
-const PRODUCTS = (() => {
+// Products seed — starts from localStorage cache, then live-patches from API
+let PRODUCTS = (() => {
   try {
     const raw = localStorage.getItem("ab_products");
     if (raw) {
@@ -103,23 +103,76 @@ const PRODUCTS = (() => {
   return PRODUCTS_DEFAULT;
 })();
 
-const money = (n) => "R" + n.toFixed(2);
+// Fetch from API and signal a re-render via custom event
+(async () => {
+  try {
+    const res = await fetch("/api/products");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (Array.isArray(data) && data.length) {
+      PRODUCTS = data;
+      try { localStorage.setItem("ab_products", JSON.stringify(data)); } catch {}
+      window.dispatchEvent(new Event("ab:products-loaded"));
+    }
+  } catch {}
+})();
+
+/* ── Money formatter — South African Rand: R 1,250.00 ─────────────────────────── */
+const money = (n) => {
+  const abs  = Math.abs(n || 0).toFixed(2);
+  const [int, dec] = abs.split('.');
+  return 'R ' + int.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + dec;
+};
+
 const catOf = (id) => CATEGORIES.find((c) => c.id === id);
 
-/* ---------------- Cart context ---------------- */
+/* ── Guest ID (persisted for abandoned cart tracking) ─────────────────────────── */
+function getGuestId() {
+  try {
+    let id = localStorage.getItem('ab_guest_id');
+    if (!id) { id = `guest_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`; localStorage.setItem('ab_guest_id', id); }
+    return id;
+  } catch { return null; }
+}
+
+const FREE_SHIP  = 750;
+const CUST_BASE  = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'https://maxwell-chi.vercel.app' : '';
+
+/* ── Cart context ─────────────────────────────────────────────────────────────── */
 const CartContext = React.createContext(null);
-const useCart = () => React.useContext(CartContext);
+const useCart    = () => React.useContext(CartContext);
 
 function CartProvider({ children }) {
-  const [items, setItems] = React.useState(() => {
+  const [items,   setItems]   = React.useState(() => {
     try { return JSON.parse(localStorage.getItem("ab_cart") || "[]"); } catch { return []; }
   });
-  const [open, setOpen] = React.useState(false);
-  const [toast, setToast] = React.useState(null);
+  const [open,    setOpen]    = React.useState(false);
+  const [toast,   setToast]   = React.useState(null);
+  const [coupon,  setCoupon]  = React.useState(null); // { code, discount, type, value }
   const toastTimer = React.useRef(null);
+  const syncTimer  = React.useRef(null);
 
+  /* Persist cart locally */
   React.useEffect(() => {
     try { localStorage.setItem("ab_cart", JSON.stringify(items)); } catch {}
+  }, [items]);
+
+  /* Debounced server sync for abandoned cart tracking */
+  React.useEffect(() => {
+    clearTimeout(syncTimer.current);
+    syncTimer.current = setTimeout(() => {
+      const guestId = getGuestId();
+      const session = (() => { try { const s = JSON.parse(localStorage.getItem('ab_customer_session_v2') || 'null'); return s?.expiresAt > Date.now() ? s : null; } catch { return null; } })();
+      if (!items.length && !session) return; // don't send empty guest carts
+      const headers = { 'Content-Type': 'application/json' };
+      if (session?.sessionToken) headers['Authorization'] = `Bearer ${session.sessionToken}`;
+      fetch(`${CUST_BASE}/api/carts`, {
+        method:  'POST',
+        headers,
+        body:    JSON.stringify({ guestId, items, email: session?.customer?.email || null }),
+      }).catch(() => {});
+    }, 3000);
+    return () => clearTimeout(syncTimer.current);
   }, [items]);
 
   const showToast = (msg) => {
@@ -129,28 +182,52 @@ function CartProvider({ children }) {
   };
 
   const add = (product, qty = 1) => {
+    const maxStock = typeof product.stock === 'number' ? product.stock : Infinity;
+    if (maxStock <= 0) { showToast(`${product.name} is out of stock`); return; }
     setItems((prev) => {
-      const found = prev.find((i) => i.id === product.id);
-      if (found) return prev.map((i) => i.id === product.id ? { ...i, qty: i.qty + qty } : i);
-      return [...prev, { id: product.id, qty }];
+      const found      = prev.find((i) => i.id === product.id);
+      const currentQty = found ? found.qty : 0;
+      const newQty     = Math.min(currentQty + qty, maxStock);
+      if (newQty <= currentQty) { showToast(`Only ${maxStock} unit${maxStock === 1 ? '' : 's'} available`); return prev; }
+      if (found) return prev.map((i) => i.id === product.id ? { ...i, qty: newQty } : i);
+      return [...prev, { id: product.id, qty: newQty }];
     });
     showToast(`${product.name} added to cart`);
   };
-  const setQty = (id, qty) => setItems((prev) => qty <= 0 ? prev.filter((i) => i.id !== id) : prev.map((i) => i.id === id ? { ...i, qty } : i));
-  const remove = (id) => setItems((prev) => prev.filter((i) => i.id !== id));
-  const clear = () => setItems([]);
+
+  const setQty = (id, qty) => setItems((prev) => {
+    const product  = PRODUCTS.find((p) => p.id === id);
+    const maxStock = typeof product?.stock === 'number' ? product.stock : Infinity;
+    const clamped  = Math.min(qty, maxStock);
+    return clamped <= 0 ? prev.filter((i) => i.id !== id) : prev.map((i) => i.id === id ? { ...i, qty: clamped } : i);
+  });
+
+  const remove = (id) => { setItems((prev) => prev.filter((i) => i.id !== id)); };
+
+  const clear = () => {
+    setItems([]);
+    setCoupon(null);
+    /* Mark cart converted */
+    const guestId = getGuestId();
+    const session = (() => { try { const s = JSON.parse(localStorage.getItem('ab_customer_session_v2') || 'null'); return s?.expiresAt > Date.now() ? s : null; } catch { return null; } })();
+    const headers = { 'Content-Type': 'application/json' };
+    if (session?.sessionToken) headers['Authorization'] = `Bearer ${session.sessionToken}`;
+    fetch(`${CUST_BASE}/api/carts`, {
+      method:  'POST',
+      headers,
+      body:    JSON.stringify({ guestId, action: 'convert' }),
+    }).catch(() => {});
+  };
 
   const detailed = items.map((i) => ({ ...i, product: PRODUCTS.find((p) => p.id === i.id) })).filter((i) => i.product);
-  const count = items.reduce((s, i) => s + i.qty, 0);
+  const count    = items.reduce((s, i) => s + i.qty, 0);
   const subtotal = detailed.reduce((s, i) => s + i.product.price * i.qty, 0);
 
-  const value = { items, detailed, count, subtotal, add, setQty, remove, clear, open, setOpen, toast };
+  const value = { items, detailed, count, subtotal, add, setQty, remove, clear, open, setOpen, toast, coupon, setCoupon };
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
-/* ---------------- Primitives ---------------- */
-
-/* Rise-in on view. Only translates (never fades opacity) so content is always visible. */
+/* ── Primitives ───────────────────────────────────────────────────────────────── */
 function useInView(threshold = 1.0, safety = 1400) {
   const ref = React.useRef(null);
   const [v, setV] = React.useState(false);
@@ -200,4 +277,4 @@ const CatIcon = ({ name, ...rest }) => {
   return <C {...rest} />;
 };
 
-Object.assign(window, { BRAND, CATEGORIES, PRODUCTS, money, catOf, CartContext, CartProvider, useCart, useInView, Reveal, Stars, CatIcon });
+Object.assign(window, { BRAND, CATEGORIES, PRODUCTS, money, catOf, FREE_SHIP, getGuestId, CartContext, CartProvider, useCart, useInView, Reveal, Stars, CatIcon });

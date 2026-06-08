@@ -51,7 +51,7 @@ const AnnouncementBar = () => {
           <span key={i} className="truncate" style={{ animation: "abfade .5s ease" }}>{A.text}</span>
         </div>
         <div className="hidden flex-1 items-center justify-end gap-3 text-slate-300 sm:flex">
-          <a href={BRAND.wa} target="_blank" rel="noopener noreferrer" className="text-[12px] hover:text-white">Track order</a>
+          <a href="#account" className="text-[12px] hover:text-white">My Orders</a>
           <span className="text-slate-600">|</span>
           <a href="#contact" className="text-[12px] hover:text-white">Help</a>
         </div>
@@ -69,43 +69,106 @@ const NAV = [
   { label: "Contact", href: "#contact" },
 ];
 
+/* ── Account menu (logged-in dropdown) ──────────────────────────────────────── */
+function AccountMenu({ customer, onAccount, onOrders, onLogout }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    function handler(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const displayName = customer?.name || customer?.email?.split('@')[0] || 'Account';
+
+  return (
+    <div className="relative" ref={ref}>
+      <button onClick={() => setOpen(v => !v)}
+        className="hidden sm:flex items-center gap-2 h-10 px-3 rounded-full border border-slate-200 hover:border-cobalt/40 hover:bg-cobalt/5 transition text-[13px] font-semibold text-ink">
+        <User size={16} className="text-cobalt" />
+        <span className="max-w-[100px] truncate">{displayName}</span>
+        <ChevronDown size={14} className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-[200px] bg-white rounded-2xl border border-slate-100 shadow-xl py-1.5 z-50" style={{ animation: 'abfade .15s ease' }}>
+          <div className="px-4 py-2.5 border-b border-slate-100">
+            <p className="text-[12px] font-700 text-slate-700 truncate">{customer?.email}</p>
+          </div>
+          <button onClick={() => { setOpen(false); onAccount(); }}
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-600 text-slate-700 hover:bg-slate-50 transition text-left">
+            <User size={15} className="text-slate-400" /> My Profile
+          </button>
+          <button onClick={() => { setOpen(false); onOrders(); }}
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-600 text-slate-700 hover:bg-slate-50 transition text-left">
+            <Package size={15} className="text-slate-400" /> My Orders
+          </button>
+          <div className="border-t border-slate-100 mt-1 pt-1">
+            <button onClick={() => { setOpen(false); onLogout(); }}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-600 text-red-500 hover:bg-red-50 transition text-left">
+              <LogOut size={15} /> Sign out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const Header = ({ onNavCat }) => {
   const { count, setOpen } = useCart();
+  const { customer, isLoggedIn, openAuth, logout, setPage } = useCustomer();
   const [scrolled, setScrolled] = React.useState(false);
-  const [menu, setMenu] = React.useState(false);
-  const [q, setQ] = React.useState("");
+  const [menu,     setMenu]     = React.useState(false);
+  const [q,        setQ]        = React.useState("");
+
   React.useEffect(() => {
     const f = () => setScrolled(window.scrollY > 8);
     f(); window.addEventListener("scroll", f, { passive: true });
     return () => window.removeEventListener("scroll", f);
   }, []);
-  React.useEffect(() => { document.body.style.overflow = menu ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [menu]);
+  React.useEffect(() => {
+    document.body.style.overflow = menu ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [menu]);
 
   const go = (item) => {
     setMenu(false);
     if (item.cat && onNavCat) onNavCat(item.cat);
   };
 
+  const goAccount = () => { setPage('account'); setMenu(false); window.scrollTo(0, 0); };
+  const goOrders  = () => { setPage('account'); setMenu(false); window.scrollTo(0, 0); };
+
   return (
     <div id="top" className="sticky top-0 z-40">
       <AnnouncementBar />
-      <header className="border-b border-slate-200/80 bg-white/95 backdrop-blur-md transition-shadow" style={{ boxShadow: scrolled ? "0 8px 30px -18px rgba(11,46,107,0.35)" : "none" }}>
+      <header className="border-b border-slate-200/80 bg-white/95 backdrop-blur-md transition-shadow"
+        style={{ boxShadow: scrolled ? "0 8px 30px -18px rgba(11,46,107,0.35)" : "none" }}>
         <div className="mx-auto flex max-w-[1280px] items-center gap-4 px-4 py-3.5 sm:px-6">
-          <button onClick={() => setMenu(true)} className="grid h-10 w-10 place-items-center rounded-xl text-ink hover:bg-slate-100 lg:hidden" aria-label="Open menu"><Menu size={22} /></button>
+          <button onClick={() => setMenu(true)} className="grid h-10 w-10 place-items-center rounded-xl text-ink hover:bg-slate-100 lg:hidden" aria-label="Open menu">
+            <Menu size={22} />
+          </button>
           <Wordmark className="shrink-0" />
 
           {/* search */}
-          <form onSubmit={(e) => { e.preventDefault(); if (onNavCat) onNavCat(null, q); }} className="relative ml-2 hidden flex-1 items-center md:flex">
+          <form onSubmit={(e) => { e.preventDefault(); if (onNavCat) onNavCat(null, q); }}
+            className="relative ml-2 hidden flex-1 items-center md:flex">
             <Search size={18} className="pointer-events-none absolute left-4 text-slate-400" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search cleaning products, car care, sanitisers…"
               className="h-11 w-full rounded-full border border-slate-200 bg-slate-50 pl-11 pr-4 text-[14px] text-ink outline-none transition focus:border-cobalt focus:bg-white focus:ring-4 focus:ring-cobalt/10" />
           </form>
 
-          <div className="ml-auto flex items-center gap-1.5">
-            <a href={BRAND.wa} target="_blank" rel="noopener noreferrer" className="hidden h-10 items-center gap-2 rounded-full px-3 text-[13px] font-semibold text-ink hover:bg-slate-100 sm:flex">
-              <Heart size={19} /> <span className="hidden xl:inline">Wishlist</span>
-            </a>
-            <button onClick={() => setOpen(true)} className="relative grid h-11 w-11 place-items-center rounded-full bg-cobalt text-white transition hover:bg-cobalt-700" aria-label="Open cart">
+          <div className="ml-auto flex items-center gap-2">
+            {isLoggedIn ? (
+              <AccountMenu customer={customer} onAccount={goAccount} onOrders={goOrders} onLogout={logout} />
+            ) : (
+              <button onClick={openAuth}
+                className="hidden sm:flex items-center gap-2 h-10 px-4 rounded-full border border-slate-200 text-[13px] font-semibold text-ink hover:border-cobalt/40 hover:bg-cobalt/5 transition">
+                <User size={16} className="text-cobalt" /> Sign in
+              </button>
+            )}
+            <button onClick={() => setOpen(true)}
+              className="relative grid h-11 w-11 place-items-center rounded-full bg-cobalt text-white transition hover:bg-cobalt-700" aria-label="Open cart">
               <Cart size={20} />
               {count > 0 && (
                 <span className="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-grass px-1 text-[11px] font-bold text-white ring-2 ring-white">{count}</span>
@@ -114,7 +177,7 @@ const Header = ({ onNavCat }) => {
           </div>
         </div>
 
-        {/* category nav row */}
+        {/* category nav */}
         <nav className="mx-auto hidden max-w-[1280px] items-center gap-7 px-6 pb-3 lg:flex">
           {NAV.map((n) => (
             <a key={n.label} href={n.href} onClick={() => go(n)} className="group relative text-[14px] font-semibold text-slate-600 transition-colors hover:text-cobalt">
@@ -128,27 +191,51 @@ const Header = ({ onNavCat }) => {
         </nav>
       </header>
 
-      {/* mobile menu */}
+      {/* Mobile menu */}
       <div className={`fixed inset-0 z-50 lg:hidden ${menu ? "" : "pointer-events-none"}`}>
         <div onClick={() => setMenu(false)} className="absolute inset-0 bg-ink/50 transition-opacity duration-300" style={{ opacity: menu ? 1 : 0 }} />
         <div className="absolute left-0 top-0 h-full w-[82%] max-w-[340px] bg-white shadow-2xl transition-transform duration-300" style={{ transform: menu ? "translateX(0)" : "translateX(-100%)" }}>
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
             <Wordmark />
-            <button onClick={() => setMenu(false)} className="grid h-10 w-10 place-items-center rounded-xl hover:bg-slate-100" aria-label="Close menu"><X size={22} /></button>
+            <button onClick={() => setMenu(false)} className="grid h-10 w-10 place-items-center rounded-xl hover:bg-slate-100"><X size={22} /></button>
           </div>
           <div className="px-5 py-3">
             <form onSubmit={(e) => { e.preventDefault(); setMenu(false); if (onNavCat) onNavCat(null, q); }} className="relative mb-3 flex items-center">
               <Search size={18} className="pointer-events-none absolute left-4 text-slate-400" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products…" className="h-11 w-full rounded-full border border-slate-200 bg-slate-50 pl-11 pr-4 text-[14px] outline-none focus:border-cobalt" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products…"
+                className="h-11 w-full rounded-full border border-slate-200 bg-slate-50 pl-11 pr-4 text-[14px] outline-none focus:border-cobalt" />
             </form>
             <nav className="flex flex-col">
               {NAV.map((n) => (
-                <a key={n.label} href={n.href} onClick={() => go(n)} className="flex items-center justify-between border-b border-slate-50 py-3.5 text-[15px] font-semibold text-ink">
+                <a key={n.label} href={n.href} onClick={() => go(n)}
+                  className="flex items-center justify-between border-b border-slate-50 py-3.5 text-[15px] font-semibold text-ink">
                   {n.label} <ChevronRight size={18} className="text-slate-300" />
                 </a>
               ))}
+              <div className="border-b border-slate-50 py-3.5">
+                {isLoggedIn ? (
+                  <div className="space-y-2">
+                    <button onClick={goAccount} className="flex w-full items-center gap-2 text-[14px] font-semibold text-cobalt">
+                      <User size={16} /> My Account
+                    </button>
+                    <button onClick={goOrders} className="flex w-full items-center gap-2 text-[14px] font-semibold text-cobalt">
+                      <Package size={16} /> My Orders
+                    </button>
+                    <button onClick={() => { logout(); setMenu(false); }} className="flex w-full items-center gap-2 text-[14px] font-semibold text-red-500">
+                      <LogOut size={16} /> Sign out
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => { setMenu(false); openAuth(); }}
+                    className="flex items-center gap-2 text-[14px] font-semibold text-cobalt">
+                    <User size={16} /> Sign in / Create account
+                  </button>
+                )}
+              </div>
             </nav>
-            <a href={`tel:${BRAND.phoneRaw}`} className="mt-5 flex items-center gap-2 text-[14px] font-semibold text-cobalt"><Phone size={16} /> {BRAND.phone}</a>
+            <a href={`tel:${BRAND.phoneRaw}`} className="mt-5 flex items-center gap-2 text-[14px] font-semibold text-cobalt">
+              <Phone size={16} /> {BRAND.phone}
+            </a>
           </div>
         </div>
       </div>
@@ -156,22 +243,27 @@ const Header = ({ onNavCat }) => {
   );
 };
 
-/* ---------------- Cart Drawer ---------------- */
+/* ── Cart Drawer ────────────────────────────────────────────────────────────── */
 const FREE_SHIP = 750;
 
 const CartDrawer = () => {
   const { open, setOpen, detailed, subtotal, setQty, remove, count, clear } = useCart();
-  const [placed, setPlaced] = React.useState(false);
+  const { setPage } = useCustomer();
+
   React.useEffect(() => { document.body.style.overflow = open ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [open]);
-  React.useEffect(() => { if (!open) setTimeout(() => setPlaced(false), 300); }, [open]);
 
   const remaining = Math.max(0, FREE_SHIP - subtotal);
-  const pct = Math.min(100, (subtotal / FREE_SHIP) * 100);
+  const pct       = Math.min(100, (subtotal / FREE_SHIP) * 100);
+
+  const goCart     = () => { setOpen(false); setPage('cart');     window.scrollTo(0, 0); };
+  const goCheckout = () => { setOpen(false); setPage('checkout'); window.scrollTo(0, 0); };
 
   return (
     <div className={`fixed inset-0 z-[60] ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
       <div onClick={() => setOpen(false)} className="absolute inset-0 bg-ink/55 backdrop-blur-[2px] transition-opacity duration-300" style={{ opacity: open ? 1 : 0 }} />
       <aside className="absolute right-0 top-0 flex h-full w-full max-w-[440px] flex-col bg-white shadow-2xl transition-transform duration-300" style={{ transform: open ? "translateX(0)" : "translateX(100%)" }}>
+
+        {/* Cart header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
           <div className="flex items-center gap-2">
             <Cart size={20} className="text-cobalt" />
@@ -181,22 +273,16 @@ const CartDrawer = () => {
           <button onClick={() => setOpen(false)} className="grid h-9 w-9 place-items-center rounded-lg hover:bg-slate-100" aria-label="Close cart"><X size={20} /></button>
         </div>
 
-        {placed ? (
-          <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
-            <span className="grid h-16 w-16 place-items-center rounded-full bg-grass/12 text-grass"><CheckCircle size={36} /></span>
-            <h3 className="mt-5 font-display text-xl font-extrabold text-ink">Order placed!</h3>
-            <p className="mt-2 text-[14px] text-slate-500">Thanks for shopping with Amahle Blue. This is a demo checkout — we'll confirm your order by email and arrange delivery.</p>
-            <button onClick={() => setOpen(false)} className="mt-6 rounded-full bg-cobalt px-6 py-3 text-[14px] font-bold text-white hover:bg-cobalt-700">Continue shopping</button>
-          </div>
-        ) : detailed.length === 0 ? (
+        {detailed.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
             <span className="grid h-16 w-16 place-items-center rounded-full bg-slate-100 text-slate-400"><Bag size={30} /></span>
             <h3 className="mt-5 font-display text-lg font-extrabold text-ink">Your cart is empty</h3>
-            <p className="mt-2 text-[14px] text-slate-500">Add some sparkle — browse our cleaning, car-care and sanitiser range.</p>
+            <p className="mt-2 text-[14px] text-slate-500">Browse our cleaning, car-care and sanitiser range.</p>
             <button onClick={() => setOpen(false)} className="mt-6 rounded-full bg-cobalt px-6 py-3 text-[14px] font-bold text-white hover:bg-cobalt-700">Start shopping</button>
           </div>
         ) : (
           <React.Fragment>
+            {/* Free shipping bar */}
             <div className="border-b border-slate-100 px-5 py-3">
               {remaining > 0 ? (
                 <p className="text-[12.5px] text-slate-500">Add <span className="font-bold text-cobalt">{money(remaining)}</span> more for <span className="font-semibold text-ink">free Gauteng delivery</span></p>
@@ -208,6 +294,7 @@ const CartDrawer = () => {
               </div>
             </div>
 
+            {/* Items */}
             <div className="flex-1 overflow-y-auto px-5 py-4">
               <ul className="flex flex-col gap-4">
                 {detailed.map(({ product, qty }) => (
@@ -221,13 +308,13 @@ const CartDrawer = () => {
                           <p className="text-[14px] font-bold leading-snug text-ink">{product.name}</p>
                           <p className="text-[12px] text-slate-400">{product.size} · {catOf(product.cat).short}</p>
                         </div>
-                        <button onClick={() => remove(product.id)} className="text-slate-300 hover:text-red-500" aria-label="Remove"><Trash size={16} /></button>
+                        <button onClick={() => remove(product.id)} className="text-slate-300 hover:text-red-500"><Trash size={16} /></button>
                       </div>
                       <div className="mt-auto flex items-center justify-between pt-2">
                         <div className="flex items-center rounded-full border border-slate-200">
-                          <button onClick={() => setQty(product.id, qty - 1)} className="grid h-8 w-8 place-items-center text-slate-500 hover:text-cobalt" aria-label="Decrease"><Minus size={14} /></button>
+                          <button onClick={() => setQty(product.id, qty - 1)} className="grid h-8 w-8 place-items-center text-slate-500 hover:text-cobalt"><Minus size={14} /></button>
                           <span className="w-7 text-center text-[14px] font-bold text-ink">{qty}</span>
-                          <button onClick={() => setQty(product.id, qty + 1)} className="grid h-8 w-8 place-items-center text-slate-500 hover:text-cobalt" aria-label="Increase"><Plus size={14} /></button>
+                          <button onClick={() => setQty(product.id, qty + 1)} className="grid h-8 w-8 place-items-center text-slate-500 hover:text-cobalt"><Plus size={14} /></button>
                         </div>
                         <span className="text-[15px] font-extrabold text-ink">{money(product.price * qty)}</span>
                       </div>
@@ -235,9 +322,13 @@ const CartDrawer = () => {
                   </li>
                 ))}
               </ul>
-              <button onClick={clear} className="mt-4 text-[12.5px] font-semibold text-slate-400 hover:text-red-500">Clear cart</button>
+              <div className="mt-4 flex items-center justify-between">
+                <button onClick={goCart} className="text-[12.5px] font-semibold text-cobalt hover:underline">View full cart</button>
+                <button onClick={clear} className="text-[12.5px] font-semibold text-slate-400 hover:text-red-500">Clear cart</button>
+              </div>
             </div>
 
+            {/* Footer */}
             <div className="border-t border-slate-100 px-5 py-4">
               <div className="flex items-center justify-between text-[14px]">
                 <span className="text-slate-500">Subtotal</span>
@@ -251,10 +342,11 @@ const CartDrawer = () => {
                 <span className="font-display text-[15px] font-extrabold text-ink">Total</span>
                 <span className="font-display text-[20px] font-extrabold text-ink">{money(subtotal)}</span>
               </div>
-              <button onClick={() => setPlaced(true)} className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-cobalt py-3.5 text-[15px] font-bold text-white transition hover:bg-cobalt-700">
-                <Lock size={16} /> Secure Checkout
+              <button onClick={goCheckout}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-cobalt py-3.5 text-[15px] font-bold text-white transition hover:bg-cobalt-700">
+                <Lock size={16} /> Proceed to Checkout
               </button>
-              <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[11.5px] text-slate-400"><Shield size={13} /> Demo store · no real payment is taken</p>
+              <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[11.5px] text-slate-400"><Shield size={13} /> Secure checkout · SSL encrypted</p>
             </div>
           </React.Fragment>
         )}
@@ -266,7 +358,8 @@ const CartDrawer = () => {
 const Toast = () => {
   const { toast } = useCart();
   return (
-    <div className="pointer-events-none fixed bottom-5 left-1/2 z-[70] -translate-x-1/2" style={{ transition: "all .3s cubic-bezier(.16,1,.3,1)", opacity: toast ? 1 : 0, transform: `translate(-50%, ${toast ? 0 : 16}px)` }}>
+    <div className="pointer-events-none fixed bottom-5 left-1/2 z-[70] -translate-x-1/2"
+      style={{ transition: "all .3s cubic-bezier(.16,1,.3,1)", opacity: toast ? 1 : 0, transform: `translate(-50%, ${toast ? 0 : 16}px)` }}>
       {toast && (
         <div className="pointer-events-auto flex items-center gap-2.5 rounded-full bg-ink px-5 py-3 text-[13.5px] font-semibold text-white shadow-2xl">
           <span className="grid h-6 w-6 place-items-center rounded-full bg-grass text-white"><Check size={15} /></span>

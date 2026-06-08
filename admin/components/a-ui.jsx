@@ -49,11 +49,11 @@ function Btn({ children, variant='primary', size='md', onClick, disabled, type='
   const base = 'inline-flex items-center gap-1.5 rounded-lg font-600 transition-all cursor-pointer border-0 outline-none';
   const sizes = { sm:'px-3 py-1.5 text-sm', md:'px-4 py-2 text-sm', lg:'px-5 py-2.5 text-base' };
   const variants = {
-    primary:  'bg-cobalt text-black hover:bg-cobalt-d active:scale-95 shadow-sm',
-    secondary:'bg-white text-black border border-slate-200 hover:bg-slate-50 active:scale-95 shadow-sm',
-    danger:   'bg-red-500 text-black hover:bg-red-600 active:scale-95 shadow-sm',
-    ghost:    'bg-transparent text-black hover:bg-slate-100 active:scale-95',
-    success:  'bg-green-500 text-black hover:bg-green-600 active:scale-95 shadow-sm',
+    primary:  'bg-cobalt text-white hover:bg-cobalt-d active:scale-95 shadow-sm',
+    secondary:'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 active:scale-95 shadow-sm',
+    danger:   'bg-red-500 text-white hover:bg-red-600 active:scale-95 shadow-sm',
+    ghost:    'bg-transparent text-slate-700 hover:bg-slate-100 active:scale-95',
+    success:  'bg-green-500 text-white hover:bg-green-600 active:scale-95 shadow-sm',
   };
   return (
     <button type={type} onClick={onClick} disabled={disabled} className={`${base} ${sizes[size]} ${variants[variant]} ${disabled?'opacity-50 pointer-events-none':''} ${className}`}>
@@ -122,26 +122,45 @@ function Modal({ open, onClose, title, children, size='md', footer }) {
   }, [open, onClose]);
 
   if (!open) return null;
-  const widths  = { sm:'max-w-md', md:'max-w-xl', lg:'max-w-2xl', xl:'max-w-4xl', full:'max-w-5xl' };
-  // lg/xl/full get an explicit height so the flex column has a defined space budget
-  // sm/md size to content (small confirmation dialogs don't need forced height)
-  const heights = { sm:'auto', md:'auto', lg:'85vh', xl:'90vh', full:'90vh' };
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={e => e.target===e.currentTarget && onClose()}>
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}/>
-      <div className={`relative bg-white rounded-2xl shadow-2xl w-full ${widths[size]} animate-slideup`}
-           style={{display:'flex', flexDirection:'column', height:heights[size], maxHeight:'90vh', marginBottom:'12rem'}}>
-        <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h2 className="text-base font-700 text-slate-800">{title}</h2>
+  const widths = { sm:'28rem', md:'36rem', lg:'42rem', xl:'56rem', full:'64rem' };
+  // Keep modal chrome outside the scrollable form body so actions always stay visible.
+  const large = size === 'lg' || size === 'xl' || size === 'full';
+  const modal = (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{position:'fixed', inset:0, zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', padding:16}}
+      onClick={e => e.target===e.currentTarget && onClose()}
+    >
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" style={{position:'absolute', inset:0}} onClick={onClose}/>
+      <div
+        className="relative bg-white rounded-2xl shadow-2xl w-full animate-slideup"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="admin-modal-title"
+        data-modal-size={size}
+        style={{
+          position:'relative',
+          display:'grid',
+          gridTemplateRows: footer ? 'auto minmax(0, 1fr) auto' : 'auto minmax(0, 1fr)',
+          width:'100%',
+          maxWidth: widths[size] || widths.md,
+          height: large ? 'min(90dvh, calc(100dvh - 32px))' : 'auto',
+          maxHeight:'calc(100dvh - 32px)',
+          overflow:'hidden',
+        }}
+      >
+        <div style={{flexShrink:0}} className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <h2 id="admin-modal-title" className="text-base font-700 text-slate-800">{title}</h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
         </div>
-        <div className="px-6 py-5" style={{overflowY:'auto', flex:'1 1 0', minHeight:0}}>{children}</div>
-        {footer && <div className="flex-shrink-0 px-6 py-4 border-t border-slate-100 flex justify-end gap-2">{footer}</div>}
+        <div style={{overflowY:'auto', minHeight:0, WebkitOverflowScrolling:'touch'}} className="px-6 py-5">{children}</div>
+        {footer && <div style={{flexShrink:0}} className="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">{footer}</div>}
       </div>
     </div>
   );
+  return ReactDOM.createPortal(modal, document.body);
 }
 
 // ── Confirm Dialog ────────────────────────────────────────────────────────────
@@ -276,6 +295,9 @@ const Icon = {
   Truck:     () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
   Search:    () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
   Filter:    () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>,
+  Tag:       () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
+  Star:      () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  Cart:      () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>,
 };
 
 window.Spinner=Spinner; window.Badge=Badge; window.Avatar=Avatar; window.Btn=Btn;

@@ -79,23 +79,81 @@ const WhatsappFab = () => (
 );
 
 /* ---------------- App ---------------- */
-function StoreApp() {
+function StoreRouter() {
+  const { page, setPage } = useCustomer();
   const [activeCat, setActiveCat] = React.useState("all");
   const [query, setQuery] = React.useState("");
+  const [confirmedOrder, setConfirmedOrder] = React.useState(null);
+  const [, forceUpdate] = React.useReducer(n => n + 1, 0);
+
+  React.useEffect(() => {
+    const h = () => forceUpdate();
+    window.addEventListener("ab:products-loaded", h);
+    return () => window.removeEventListener("ab:products-loaded", h);
+  }, []);
 
   const scrollToShop = () => {
     const el = document.getElementById("shop");
     if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 110, behavior: "smooth" });
   };
   const onNavCat = (cat, q) => {
+    setPage("home");
     if (cat) setActiveCat(cat);
     if (typeof q === "string") { setQuery(q); setActiveCat("all"); }
     setTimeout(scrollToShop, 60);
   };
   const onShopCat = (cat, q) => { onNavCat(cat || "all", q); };
 
+  const goHome   = () => { setPage("home");    window.scrollTo(0, 0); };
+  const goOrders = () => { setPage("account"); window.scrollTo(0, 0); };
+
+  const shell = (content) => (
+    <React.Fragment>
+      <Header onNavCat={onNavCat} />
+      {content}
+      <CartDrawer />
+      <AuthModal />
+      <Toast />
+      <WhatsappFab />
+    </React.Fragment>
+  );
+
+  if (page === "cart") {
+    return shell(
+      <CartPage
+        onGoHome={goHome}
+        onCheckout={() => { setPage("checkout"); window.scrollTo(0, 0); }}
+      />
+    );
+  }
+
+  if (page === "checkout") {
+    return shell(
+      <CheckoutPage
+        onBack={() => { setPage("cart"); window.scrollTo(0, 0); }}
+        onSuccess={(order) => { setConfirmedOrder(order); setPage("order-confirmed"); window.scrollTo(0, 0); }}
+      />
+    );
+  }
+
+  if (page === "order-confirmed") {
+    return shell(
+      <OrderConfirmedPage
+        order={confirmedOrder}
+        onGoHome={goHome}
+        onGoOrders={goOrders}
+      />
+    );
+  }
+
+  if (page === "account") {
+    return shell(
+      <AccountPage onGoHome={goHome} />
+    );
+  }
+
   return (
-    <CartProvider>
+    <React.Fragment>
       <Header onNavCat={onNavCat} />
       <main>
         <Hero onShopCat={onShopCat} />
@@ -110,10 +168,21 @@ function StoreApp() {
       </main>
       <Footer onShopCat={onShopCat} />
       <CartDrawer />
+      <AuthModal />
       <QuickView />
       <Toast />
       <WhatsappFab />
-    </CartProvider>
+    </React.Fragment>
+  );
+}
+
+function StoreApp() {
+  return (
+    <CustomerProvider>
+      <CartProvider>
+        <StoreRouter />
+      </CartProvider>
+    </CustomerProvider>
   );
 }
 

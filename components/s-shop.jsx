@@ -15,15 +15,22 @@ const BadgeChip = ({ badge }) => {
 const ProductCard = ({ p }) => {
   const { add } = useCart();
   const c = catOf(p.cat);
+  const outOfStock  = typeof p.stock === 'number' && p.stock === 0;
+  const lowStock    = typeof p.stock === 'number' && p.stock > 0 && p.stock <= (p.lowStockThreshold || 10);
   return (
     <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_2px_10px_rgba(11,46,107,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:border-slate-200 hover:shadow-[0_28px_55px_-28px_rgba(11,46,107,0.45)]">
       <div className="relative overflow-hidden bg-slate-50">
         <button onClick={() => openQuickView(p)} className="block w-full" aria-label={`Quick view ${p.name}`}>
-          <img src={p.img} alt={p.name} className="aspect-[3/4] w-full object-contain bg-white transition-transform duration-500 group-hover:scale-[1.03]" loading="lazy" />
+          <img src={p.img} alt={p.name} className={`aspect-[3/4] w-full object-contain bg-white transition-transform duration-500 group-hover:scale-[1.03] ${outOfStock ? 'opacity-50' : ''}`} loading="lazy" />
         </button>
+        {outOfStock && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
+            <span className="rounded-full bg-slate-800 px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-widest text-white shadow-lg">Out of Stock</span>
+          </div>
+        )}
         <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
-          <BadgeChip badge={p.badge} />
-          {p.was && <span className="rounded-full bg-red-500 px-2.5 py-1 text-[10.5px] font-extrabold uppercase tracking-wide text-white">Save {money(p.was - p.price)}</span>}
+          {!outOfStock && <BadgeChip badge={p.badge} />}
+          {p.was && !outOfStock && <span className="rounded-full bg-red-500 px-2.5 py-1 text-[10.5px] font-extrabold uppercase tracking-wide text-white">Save {money(p.was - p.price)}</span>}
         </div>
         <div className="absolute right-3 top-3 flex flex-col gap-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <button className="grid h-9 w-9 place-items-center rounded-full bg-white text-slate-500 shadow-md hover:text-red-500" aria-label="Add to wishlist"><Heart size={17} /></button>
@@ -48,9 +55,11 @@ const ProductCard = ({ p }) => {
             <span className="font-display text-[20px] font-extrabold text-ink">{money(p.price)}</span>
             {p.was && <span className="text-[13px] font-medium text-slate-300 line-through">{money(p.was)}</span>}
           </div>
+          {lowStock && <span className="text-[11px] font-bold text-amber-600">Only {p.stock} left</span>}
         </div>
-        <button onClick={() => add(p)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-ink py-2.5 text-[13.5px] font-bold text-white transition hover:bg-cobalt">
-          <Plus size={16} /> Add to Cart
+        <button onClick={() => add(p)} disabled={outOfStock}
+          className={`mt-3 flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-[13.5px] font-bold text-white transition ${outOfStock ? 'bg-slate-300 cursor-not-allowed' : 'bg-ink hover:bg-cobalt'}`}>
+          {outOfStock ? 'Out of Stock' : <><Plus size={16} /> Add to Cart</>}
         </button>
       </div>
     </div>
@@ -206,7 +215,7 @@ const QuickView = () => {
             </div>
             <div className="flex flex-col p-6 sm:p-7">
               <span className="text-[11.5px] font-bold uppercase tracking-wide" style={{ color: c.accent }}>{c.name}</span>
-              <h3 className="mt-1.5 font-display text-[24px] font-extrabold leading-tight text-ink">{product.name}</h3>
+              <h3 className="mt-1.5 font-display text-[20px] sm:text-[24px] font-extrabold leading-tight text-ink">{product.name}</h3>
               <div className="mt-2 flex items-center gap-2">
                 <Stars value={product.rating} size={15} />
                 <span className="text-[13px] font-semibold text-slate-500">{product.rating}</span>
@@ -219,20 +228,33 @@ const QuickView = () => {
                 ))}
               </ul>
               <div className="mt-5 flex items-baseline gap-2">
-                <span className="font-display text-[28px] font-extrabold text-ink">{money(product.price)}</span>
+                <span className="font-display text-[24px] sm:text-[28px] font-extrabold text-ink">{money(product.price)}</span>
                 {product.was && <span className="text-[15px] font-medium text-slate-300 line-through">{money(product.was)}</span>}
                 <span className="ml-auto rounded-full bg-slate-100 px-3 py-1 text-[12px] font-bold text-slate-500">{product.size}</span>
               </div>
-              <div className="mt-5 flex items-center gap-3">
-                <div className="flex items-center rounded-full border border-slate-200">
-                  <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="grid h-11 w-11 place-items-center text-slate-500 hover:text-cobalt" aria-label="Decrease"><Minus size={16} /></button>
-                  <span className="w-8 text-center font-display text-[16px] font-extrabold text-ink">{qty}</span>
-                  <button onClick={() => setQty((q) => q + 1)} className="grid h-11 w-11 place-items-center text-slate-500 hover:text-cobalt" aria-label="Increase"><Plus size={16} /></button>
-                </div>
-                <button onClick={() => { add(product, qty); setProduct(null); setTimeout(() => setOpen(true), 150); }} className="flex flex-1 items-center justify-center gap-2 rounded-full bg-cobalt py-3.5 text-[15px] font-bold text-white transition hover:bg-cobalt-700">
-                  <Cart size={18} /> Add to Cart
-                </button>
-              </div>
+              {(() => {
+                const outOfStock = typeof product.stock === 'number' && product.stock === 0;
+                const lowStock   = typeof product.stock === 'number' && product.stock > 0 && product.stock <= (product.lowStockThreshold || 10);
+                const maxQty     = typeof product.stock === 'number' ? product.stock : 99;
+                return (
+                  <React.Fragment>
+                    {lowStock && <p className="mt-3 text-[12.5px] font-bold text-amber-600">Only {product.stock} unit{product.stock === 1 ? '' : 's'} left — order soon!</p>}
+                    <div className="mt-5 flex items-center gap-3">
+                      {!outOfStock && (
+                        <div className="flex items-center rounded-full border border-slate-200">
+                          <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="grid h-11 w-11 place-items-center text-slate-500 hover:text-cobalt" aria-label="Decrease"><Minus size={16} /></button>
+                          <span className="w-8 text-center font-display text-[16px] font-extrabold text-ink">{qty}</span>
+                          <button onClick={() => setQty((q) => Math.min(maxQty, q + 1))} className="grid h-11 w-11 place-items-center text-slate-500 hover:text-cobalt" aria-label="Increase"><Plus size={16} /></button>
+                        </div>
+                      )}
+                      <button disabled={outOfStock} onClick={() => { if (!outOfStock) { add(product, qty); setProduct(null); setTimeout(() => setOpen(true), 150); } }}
+                        className={`flex flex-1 items-center justify-center gap-2 rounded-full py-3.5 text-[15px] font-bold text-white transition ${outOfStock ? 'bg-slate-300 cursor-not-allowed' : 'bg-cobalt hover:bg-cobalt-700'}`}>
+                        {outOfStock ? 'Out of Stock' : <><Cart size={18} /> Add to Cart</>}
+                      </button>
+                    </div>
+                  </React.Fragment>
+                );
+              })()}
             </div>
           </div>
         )}
