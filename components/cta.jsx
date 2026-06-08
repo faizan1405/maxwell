@@ -135,7 +135,7 @@ const Footer = () => (
             <li className="flex items-center gap-3"><IconPhone size={18} className="shrink-0 text-electric" /> <a href="tel:+27671014345" className="hover:text-white">067 101 4345</a></li>
             <li className="flex items-center gap-3"><IconMail size={18} className="shrink-0 text-electric" /> <a href="mailto:info@amahle-blue.co.za" className="hover:text-white">info@amahle-blue.co.za</a></li>
           </ul>
-          <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/12 bg-white/5 text-white transition-colors hover:border-electric hover:text-electric" aria-label="Facebook">
+          <a href="https://www.facebook.com/share/17sDJXMKSz/" target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/12 bg-white/5 text-white transition-colors hover:border-electric hover:text-electric" aria-label="Facebook">
             <IconFacebook size={20} />
           </a>
         </div>

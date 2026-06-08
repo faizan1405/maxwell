@@ -23,8 +23,8 @@ const Footer = ({ onShopCat }) => (
           <Wordmark light />
           <p className="mt-5 max-w-sm text-[14.5px] leading-relaxed text-slate-400">Premium, locally-manufactured cleaning, car-care and sanitising solutions. Powerful results with a fresh, clean finish — delivered across South Africa.</p>
           <div className="mt-5 flex gap-2.5">
-            <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" className="grid h-10 w-10 place-items-center rounded-xl bg-white/8 text-white transition hover:bg-cobalt" aria-label="Facebook"><Facebook size={18} /></a>
-            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="grid h-10 w-10 place-items-center rounded-xl bg-white/8 text-white transition hover:bg-cobalt" aria-label="Instagram"><Instagram size={18} /></a>
+            <a href={BRAND.facebook} target="_blank" rel="noopener noreferrer" className="grid h-10 w-10 place-items-center rounded-xl bg-white/8 text-white transition hover:bg-cobalt" aria-label="Facebook"><Facebook size={18} /></a>
+            <a href={BRAND.instagram} target="_blank" rel="noopener noreferrer" className="grid h-10 w-10 place-items-center rounded-xl bg-white/8 text-white transition hover:bg-cobalt" aria-label="Instagram"><Instagram size={18} /></a>
             <a href={BRAND.wa} target="_blank" rel="noopener noreferrer" className="grid h-10 w-10 place-items-center rounded-xl bg-white/8 text-white transition hover:bg-grass" aria-label="WhatsApp"><Whatsapp size={18} /></a>
           </div>
         </div>
@@ -92,6 +92,12 @@ function StoreRouter() {
     return () => window.removeEventListener("ab:products-loaded", h);
   }, []);
 
+  React.useEffect(() => {
+    const h = (e) => { setPage(e.detail); window.scrollTo(0, 0); };
+    window.addEventListener("ab:go-page", h);
+    return () => window.removeEventListener("ab:go-page", h);
+  }, []);
+
   const scrollToShop = () => {
     const el = document.getElementById("shop");
     if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 110, behavior: "smooth" });
@@ -105,7 +111,11 @@ function StoreRouter() {
   const onShopCat = (cat, q) => { onNavCat(cat || "all", q); };
 
   const goHome   = () => { setPage("home");    window.scrollTo(0, 0); };
-  const goOrders = () => { setPage("account"); window.scrollTo(0, 0); };
+  const goOrders = () => {
+    window.dispatchEvent(new CustomEvent("ab:account-tab", { detail: "orders" }));
+    setPage("account");
+    window.scrollTo(0, 0);
+  };
 
   const shell = (content) => (
     <React.Fragment>

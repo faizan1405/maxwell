@@ -1,6 +1,6 @@
 /* Auth API — POST /api/auth  (body: {action, username, password, token, ...}) */
-const crypto          = require('crypto');
-const { signJwt, cors } = require('./_auth');
+const crypto                       = require('crypto');
+const { signJwt, verifyJwt, cors } = require('./_auth');
 
 const SALT       = 'ab_salt_2024:';
 const SESSION_S  = 8 * 60 * 60; // 8 hours
@@ -9,30 +9,61 @@ function sha256hex(text) {
   return crypto.createHash('sha256').update(SALT + text).digest('hex');
 }
 
+/*
+ * Admin credentials live ONLY in env vars.
+ *   - ADMIN_CREDS  — JSON array [{username, passwordHash, role, name, email}, ...]
+ *     (passwordHash = sha256hex(SALT + plaintext); see scripts/hash-password.js)
+ *   - or individual ADMIN_PASSWORD_HASH / MANAGER_PASSWORD_HASH env vars.
+ *
+ * No plaintext default credentials are baked into code; an unconfigured deploy
+ * returns no users so login fails closed.
+ */
+const IS_PROD_AUTH = process.env.NODE_ENV === 'production' || (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== 'development');
+
 function getCredentials() {
-  // Credentials stored as env vars (set via Vercel dashboard or API)
-  // ADMIN_CREDS = JSON array: [{username, passwordHash, role, name, email}, ...]
   try {
     const raw = process.env.ADMIN_CREDS;
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  // Fallback to individual env vars
-  return [
-    {
-      username:     'admin',
-      passwordHash: process.env.ADMIN_PASSWORD_HASH || sha256hex('AmahleAdmin2024!'),
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {
+    console.error('[auth] ADMIN_CREDS parse error:', e.message);
+  }
+
+  const creds = [];
+  if (process.env.ADMIN_PASSWORD_HASH) {
+    creds.push({
+      username:     process.env.ADMIN_USERNAME || 'admin',
+      passwordHash: process.env.ADMIN_PASSWORD_HASH,
       role:         'admin',
-      name:         'Admin User',
-      email:        'admin@amahle-blue.co.za',
-    },
-    {
-      username:     'manager',
-      passwordHash: process.env.MANAGER_PASSWORD_HASH || sha256hex('AmahleManager2024!'),
+      name:         process.env.ADMIN_NAME  || 'Admin',
+      email:        process.env.ADMIN_EMAIL || 'admin@amahle-blue.co.za',
+    });
+  }
+  if (process.env.MANAGER_PASSWORD_HASH) {
+    creds.push({
+      username:     process.env.MANAGER_USERNAME || 'manager',
+      passwordHash: process.env.MANAGER_PASSWORD_HASH,
       role:         'manager',
-      name:         'Store Manager',
-      email:        'manager@amahle-blue.co.za',
-    },
-  ];
+      name:         process.env.MANAGER_NAME  || 'Manager',
+      email:        process.env.MANAGER_EMAIL || 'manager@amahle-blue.co.za',
+    });
+  }
+
+  /* Local dev convenience only — never used in prod */
+  if (!creds.length && !IS_PROD_AUTH) {
+    creds.push({
+      username:     'admin',
+      passwordHash: sha256hex('DevAdmin!2026'),
+      role:         'admin',
+      name:         'Dev Admin',
+      email:        'dev@amahle-blue.co.za',
+    });
+    console.warn('[auth] No admin credentials configured — using dev fallback (admin / DevAdmin!2026)');
+  }
+
+  return creds;
 }
 
 // Simple in-memory rate limiter (resets on cold start — sufficient for this use case)
@@ -70,7 +101,20 @@ module.exports = async function handler(req, res) {
 
     const inputHash = sha256hex(password);
     const creds     = getCredentials();
-    const user      = creds.find(c => c.username === key && c.passwordHash === inputHash);
+    if (!creds.length) {
+      console.error('[auth] No admin credentials configured — set ADMIN_CREDS or ADMIN_PASSWORD_HASH');
+      return res.status(503).json({ error: 'Login is not available. Contact support.' });
+    }
+    /* Constant-time compare to avoid timing oracle on usernames */
+    let user = null;
+    for (const c of creds) {
+      if (c.username !== key) continue;
+      try {
+        const a = Buffer.from(c.passwordHash, 'hex');
+        const b = Buffer.from(inputHash, 'hex');
+        if (a.length === b.length && crypto.timingSafeEqual(a, b)) user = c;
+      } catch {}
+    }
 
     if (!user) {
       const wasLocked = att.count >= MAX_ATTEMPTS && (now - att.lastAttempt) >= LOCKOUT_MS;
@@ -94,37 +138,52 @@ module.exports = async function handler(req, res) {
   if (action === 'changePassword') {
     const { token: reqToken, currentPassword, newPassword } = body;
     if (!reqToken) return res.status(401).json({ error: 'Not authenticated' });
+    if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Current and new passwords are required.' });
+    if (String(newPassword).length < 8)   return res.status(400).json({ error: 'New password must be at least 8 characters.' });
 
-    const { verifyJwt } = require('./_auth');
     const sess = verifyJwt(reqToken);
-    if (!sess) return res.status(401).json({ error: 'Session expired' });
+    if (!sess) return res.status(401).json({ error: 'Session expired. Sign in again.' });
 
     const creds   = getCredentials();
     const userIdx = creds.findIndex(c => c.username === sess.username);
     if (userIdx === -1) return res.status(404).json({ error: 'User not found' });
 
     const check = sha256hex(currentPassword);
-    if (check !== creds[userIdx].passwordHash) return res.status(401).json({ error: 'Current password incorrect' });
+    try {
+      const a = Buffer.from(check, 'hex');
+      const b = Buffer.from(creds[userIdx].passwordHash, 'hex');
+      if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+        return res.status(401).json({ error: 'Current password is incorrect.' });
+      }
+    } catch { return res.status(401).json({ error: 'Current password is incorrect.' }); }
 
     const newHash = sha256hex(newPassword);
     const updated = [...creds];
     updated[userIdx] = { ...updated[userIdx], passwordHash: newHash };
 
-    // Persist updated credentials to Vercel env var
+    // Persist updated credentials to Vercel env var (or surface failure to client)
     const teamId    = process.env.VERCEL_TEAM_ID;
     const projectId = process.env.VERCEL_PROJECT_ID;
     const apiToken  = process.env.VERCEL_API_TOKEN;
-
-    if (teamId && projectId && apiToken) {
-      try {
-        await fetch(`https://api.vercel.com/v9/projects/${projectId}/env?teamId=${teamId}`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${apiToken}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: 'ADMIN_CREDS', value: JSON.stringify(updated), type: 'encrypted', target: ['production', 'preview', 'development'] }),
-        });
-      } catch {}
+    if (!teamId || !projectId || !apiToken) {
+      return res.status(501).json({ error: 'Password rotation requires VERCEL_API_TOKEN / VERCEL_TEAM_ID / VERCEL_PROJECT_ID to be configured.' });
     }
-    return res.status(200).json({ ok: true });
+    try {
+      const r = await fetch(`https://api.vercel.com/v10/projects/${projectId}/env?teamId=${teamId}&upsert=true`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'ADMIN_CREDS', value: JSON.stringify(updated), type: 'encrypted', target: ['production', 'preview', 'development'] }),
+      });
+      if (!r.ok) {
+        const t = await r.text();
+        console.error('[auth] Vercel env update failed:', t);
+        return res.status(502).json({ error: 'Failed to persist new password. Contact support.' });
+      }
+    } catch (e) {
+      console.error('[auth] Vercel env update error:', e.message);
+      return res.status(502).json({ error: 'Failed to persist new password. Contact support.' });
+    }
+    return res.status(200).json({ ok: true, note: 'Password updated. New Vercel deployment will pick up the change shortly.' });
   }
 
   return res.status(400).json({ error: 'Unknown action' });

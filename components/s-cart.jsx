@@ -27,6 +27,15 @@ function printInvoice(order) {
     return 'R ' + int.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + dec;
   };
 
+  /* South African VAT is 15% and our displayed prices are VAT-inclusive,
+     so we show the embedded VAT amount on the invoice for the buyer's
+     SARS record-keeping. */
+  const VAT_RATE     = 0.15;
+  const taxableTotal = (order.total || 0); // VAT-inclusive
+  const vatExcl      = taxableTotal / (1 + VAT_RATE);
+  const vatAmount    = taxableTotal - vatExcl;
+  const vatNumber    = (window.__settings && window.__settings.business && window.__settings.business.vatNumber) || '';
+
   const rows = (order.items || []).map(i => `
     <tr>
       <td style="padding:10px 14px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">${i.name}</td>
@@ -95,6 +104,7 @@ function printInvoice(order) {
       <p style="font-weight:700;font-size:15px;color:#0B2545;margin-bottom:4px;">Amahle Blue</p>
       <p style="font-size:13px;color:#64748b;line-height:1.6;">Unit H, 13 Main Reef Road<br>Dunswart, Boksburg<br>Gauteng, South Africa</p>
       <p style="font-size:12px;color:#94a3b8;margin-top:6px;">info@amahle-blue.co.za</p>
+      ${vatNumber ? `<p style="font-size:12px;color:#94a3b8;margin-top:2px;">VAT No: ${vatNumber}</p>` : ''}
     </div>
     <div>
       <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Bill / Ship To</p>
@@ -146,8 +156,10 @@ function printInvoice(order) {
       ${couponRow}
       <tr><td colspan="3" style="padding:10px 14px;text-align:right;font-size:13px;color:#64748b;">Delivery</td>
           <td style="padding:10px 14px;text-align:right;font-size:13px;font-weight:600;color:${order.delivery===0?'#159A4C':'#0B2545'}">${order.delivery===0?'FREE':R(order.delivery)}</td></tr>
+      <tr><td colspan="3" style="padding:10px 14px;text-align:right;font-size:12px;color:#94a3b8;">VAT (15%, included in total)</td>
+          <td style="padding:10px 14px;text-align:right;font-size:12px;color:#94a3b8;">${R(vatAmount)}</td></tr>
       <tr style="border-top:2px solid #e2e8f0;">
-        <td colspan="3" style="padding:14px 14px;text-align:right;font-size:16px;font-weight:800;color:#0B2545;">Total</td>
+        <td colspan="3" style="padding:14px 14px;text-align:right;font-size:16px;font-weight:800;color:#0B2545;">Total (incl. VAT)</td>
         <td style="padding:14px 14px;text-align:right;font-size:18px;font-weight:800;color:#1E50E0;">${R(order.total)}</td>
       </tr>
     </tbody>
@@ -402,12 +414,23 @@ function CheckoutPage({ onBack, onSuccess }) {
 
   function removeCoupon() { setCoupon(null); setCouponInput(''); setCouponError(''); }
 
+  /* Validate SA phone numbers: accepts 067 101 4345 / 0671014345 / +27 67 101 4345. */
+  function isValidSaPhone(raw) {
+    if (!raw) return true; // optional field
+    const digits = String(raw).replace(/[^\d+]/g, '');
+    return /^(\+?27|0)[6-8]\d{8}$/.test(digits);
+  }
+
   async function placeOrder(e) {
     e.preventDefault();
     if (!form.name.trim())     { setError('Please enter your full name.'); return; }
-    if (!form.email.trim())    { setError('Please enter your email address.'); return; }
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
+                               { setError('Please enter a valid email address.'); return; }
+    if (form.phone.trim() && !isValidSaPhone(form.phone))
+                               { setError('Please enter a valid South African phone number (e.g. 067 101 4345).'); return; }
     if (!form.addrLine.trim()) { setError('Please enter your street address.'); return; }
     if (!form.addrCity.trim()) { setError('Please enter your city or town.'); return; }
+    if (!form.addrProvince)    { setError('Please select a province so we can calculate delivery.'); return; }
 
     setPlacing(true); setError('');
 
@@ -595,15 +618,16 @@ function CheckoutPage({ onBack, onSuccess }) {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={applyCoupon} className="flex gap-2">
+                <div className="flex gap-2">
                   <input value={couponInput} onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError(''); }}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(e); } }}
                     placeholder="Enter coupon code"
                     className={`flex-1 h-10 rounded-xl border px-3.5 text-[13px] font-mono outline-none transition focus:border-cobalt focus:ring-2 focus:ring-cobalt/10 ${couponError ? 'border-red-300' : 'border-slate-200'}`} />
-                  <button type="submit" disabled={couponLoading || !couponInput.trim()}
+                  <button type="button" onClick={applyCoupon} disabled={couponLoading || !couponInput.trim()}
                     className="h-10 px-4 rounded-xl bg-cobalt text-white text-[13px] font-700 hover:bg-cobalt-700 disabled:opacity-50 transition whitespace-nowrap">
                     {couponLoading ? 'Checking…' : 'Apply'}
                   </button>
-                </form>
+                </div>
               )}
               {couponError && <p className="text-[12px] text-red-500">{couponError}</p>}
             </div>
@@ -663,6 +687,7 @@ function CheckoutPage({ onBack, onSuccess }) {
               <span className="font-display text-[15px] font-extrabold text-ink">Total</span>
               <span className="font-display text-[20px] font-extrabold text-ink">{money(total)}</span>
             </div>
+            <p className="text-[11px] text-slate-400">Prices include 15% VAT.</p>
             <button form="ck-form" type="submit" disabled={placing}
               className="w-full flex items-center justify-center gap-2 rounded-full bg-cobalt py-3.5 text-[15px] font-bold text-white hover:bg-cobalt-700 transition disabled:opacity-60">
               {placing ? <><CkSpinner /> Placing order…</> : <><Lock size={16} /> Place Order · {money(total)}</>}

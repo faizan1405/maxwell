@@ -65,11 +65,17 @@ module.exports = async function handler(req, res) {
 
       const existing = await findByEmail(email);
       const otp      = generateOtp();
-      const otpToken = createOtpToken(email, otp);
-      const sent     = await sendOtpEmail(email, otp, existing?.name || '');
+      let otpToken;
+      try {
+        otpToken = createOtpToken(email, otp);
+      } catch (e) {
+        console.error('[customer-auth] secret missing:', e.message);
+        return res.status(500).json({ error: 'Auth service is misconfigured. Please contact support.' });
+      }
+      const sent = await sendOtpEmail(email, otp, existing?.name || '');
 
       if (!sent.ok && !sent.dev) {
-        return res.status(500).json({ error: 'Failed to send sign-in code. Please try again.' });
+        return res.status(500).json({ error: 'Failed to send sign-in code. Please try again in a moment.' });
       }
 
       return res.status(200).json({
@@ -86,6 +92,9 @@ module.exports = async function handler(req, res) {
       if (!otpToken || !otp) {
         return res.status(400).json({ error: 'OTP token and code are required.' });
       }
+      if (!/^\d{6}$/.test(String(otp).trim())) {
+        return res.status(400).json({ error: 'Invalid code. Please enter the 6-digit code from your email.' });
+      }
 
       const payload = verifyOtpToken(otpToken, String(otp).trim());
       if (!payload) {
@@ -96,8 +105,13 @@ module.exports = async function handler(req, res) {
       const isNew  = !customer;
       if (!customer) customer = await createCustomer(payload.email);
 
-      const sessionToken = createSessionToken(customer);
-      const expiresAt    = Date.now() + 30 * 24 * 60 * 60 * 1000;
+      let sessionToken;
+      try { sessionToken = createSessionToken(customer); }
+      catch (e) {
+        console.error('[customer-auth] session sign failed:', e.message);
+        return res.status(500).json({ error: 'Auth service is misconfigured. Please contact support.' });
+      }
+      const expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000;
 
       return res.status(200).json({ ok: true, customer, sessionToken, expiresAt, isNew });
     }

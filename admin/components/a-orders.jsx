@@ -13,6 +13,10 @@ function printInvoice(order) {
   const couponRow = order.couponDiscount > 0 ? `
     <tr><td colspan="3" style="padding:8px 12px;text-align:right;color:#159A4C">Coupon (${order.couponCode||''})</td>
     <td style="padding:8px 12px;text-align:right;color:#159A4C;font-weight:600">−R ${(order.couponDiscount||0).toFixed(2)}</td></tr>` : '';
+  /* SA VAT — embedded in the VAT-inclusive total (R is gross). */
+  const vatRate     = 0.15;
+  const vatAmount   = (order.total||0) - (order.total||0) / (1 + vatRate);
+  const vatNumber   = (window.__settings && window.__settings.business && window.__settings.business.vatNumber) || '';
   const date = order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-ZA',{day:'numeric',month:'long',year:'numeric'}) : '';
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice ${order.invoiceNumber||order.orderNumber}</title>
 <style>body{font-family:Arial,sans-serif;color:#0B2545;margin:0;padding:24px;font-size:13px}h1{margin:0;font-size:22px;color:#1E50E0}
@@ -21,7 +25,7 @@ table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#f8fafc;
 @media print{button{display:none}}</style></head><body>
 <div class="hdr"><div><h1>Amahle Blue</h1>
 <p style="margin:4px 0;color:#64748b;font-size:12px">Unit H, 13 Main Reef Road, Dunswart, Boksburg, Gauteng, South Africa</p>
-<p style="margin:2px 0;color:#64748b;font-size:12px">067 101 4345 · info@amahle-blue.co.za</p></div>
+<p style="margin:2px 0;color:#64748b;font-size:12px">067 101 4345 · info@amahle-blue.co.za</p>${vatNumber?`<p style="margin:2px 0;color:#64748b;font-size:11px">VAT No: ${vatNumber}</p>`:''}</div>
 <div style="text-align:right"><p style="font-size:18px;font-weight:700;margin:0">${order.invoiceNumber||order.orderNumber}</p>
 <p style="color:#64748b;margin:4px 0;font-size:12px">Date: ${date}</p>
 <p style="color:#64748b;margin:2px 0;font-size:12px">Order: ${order.orderNumber}</p></div></div>
@@ -34,8 +38,9 @@ table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#f8fafc;
 <tr><td colspan="3" style="padding:8px 12px;text-align:right;color:#64748b">Subtotal</td><td style="padding:8px 12px;text-align:right">R ${(order.subtotal||0).toFixed(2)}</td></tr>
 <tr><td colspan="3" style="padding:8px 12px;text-align:right;color:#64748b">Delivery</td><td style="padding:8px 12px;text-align:right">${order.delivery===0?'Free':'R '+((order.delivery||0).toFixed(2))}</td></tr>
 ${couponRow}
+<tr><td colspan="3" style="padding:8px 12px;text-align:right;color:#94a3b8;font-size:11px">VAT (15%, included in total)</td><td style="padding:8px 12px;text-align:right;color:#94a3b8;font-size:11px">R ${vatAmount.toFixed(2)}</td></tr>
 <tr style="font-weight:700;font-size:15px;color:#1E50E0;border-top:2px solid #e2e8f0">
-<td colspan="3" style="padding:10px 12px;text-align:right">Total</td><td style="padding:10px 12px;text-align:right">R ${(order.total||0).toFixed(2)}</td></tr>
+<td colspan="3" style="padding:10px 12px;text-align:right">Total (incl. VAT)</td><td style="padding:10px 12px;text-align:right">R ${(order.total||0).toFixed(2)}</td></tr>
 </tbody></table>
 <p style="margin-top:32px;font-size:11px;color:#94a3b8;text-align:center">Thank you for your purchase · Amahle Blue · info@amahle-blue.co.za</p>
 <script>window.onload=function(){window.print();}<\/script></body></html>`;

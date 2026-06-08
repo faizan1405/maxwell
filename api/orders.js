@@ -26,9 +26,15 @@ const SEED_ORDERS = [
   { id:'ORD-005', orderNumber:'#10005', invoiceNumber:'INV-2024-0005', customer:{id:'C005',name:'Fatima Cassim',email:'fatima.c@gmail.com',phone:'076 543 2109'}, items:[{productId:'all-purpose-cleaner',name:'All Purpose Cleaner (500ml)',qty:1,price:89.99},{productId:'linen-spray',name:'Linen Spray (500ml)',qty:2,price:99.99}], subtotal:289.97, delivery:85, couponDiscount:0, couponCode:null, total:374.97, status:'pending', payment:{method:'COD',status:'pending'}, address:'67 Main Road, Cape Town, Western Cape, 8001', notes:'', createdAt:new Date('2024-11-28').getTime(), updatedAt:new Date('2024-11-28').getTime() },
 ];
 
+/*
+ * getOrders returns the live order list.
+ * SEED_ORDERS is only used on the very first read (no blob exists at all) so the
+ * admin dashboard has something to look at; once persisted, we never reseed.
+ * Returning [] when admin has intentionally cleared everything is correct.
+ */
 async function getOrders() {
   const stored = await readBlob(ORDERS_PATH);
-  if (Array.isArray(stored) && stored.length) return stored;
+  if (Array.isArray(stored)) return stored;
   await writeBlob(ORDERS_PATH, SEED_ORDERS);
   return SEED_ORDERS;
 }
@@ -37,13 +43,17 @@ async function getProducts() {
   return (await readBlob(PRODUCTS_PATH)) || [];
 }
 
-/* ── Next invoice number ─────────────────────────────────────────────────────── */
-async function nextInvoiceNumber() {
-  const s = await readBlob(SETTINGS_PATH) || { invoiceCounter: 1000 };
-  const counter = (s.invoiceCounter || 1000) + 1;
+/* ── Next invoice + order number (single counter, collision-safe) ────────────── */
+async function nextInvoiceAndOrderNumber() {
+  const s = (await readBlob(SETTINGS_PATH)) || {};
+  const invoiceCounter = (s.invoiceCounter || 1000) + 1;
+  const orderCounter   = (s.orderCounter   || 10000) + 1;
   const year = new Date().getFullYear();
-  await writeBlob(SETTINGS_PATH, { ...s, invoiceCounter: counter });
-  return `INV-${year}-${String(counter).padStart(4, '0')}`;
+  await writeBlob(SETTINGS_PATH, { ...s, invoiceCounter, orderCounter });
+  return {
+    invoiceNumber: `INV-${year}-${String(invoiceCounter).padStart(4, '0')}`,
+    orderNumber:   `#${orderCounter}`,
+  };
 }
 
 /* ── Compute shipping fee ────────────────────────────────────────────────────── */
@@ -228,12 +238,12 @@ module.exports = async function handler(req, res) {
       payMethod = 'EFT';
     }
 
-    /* Invoice number */
-    const invoiceNumber = await nextInvoiceNumber();
+    /* Order + invoice numbers from persistent counter */
+    const { invoiceNumber, orderNumber } = await nextInvoiceAndOrderNumber();
 
     const newOrder = {
       id:             `ORD-${Date.now()}`,
-      orderNumber:    `#${10000 + orders.length + 1}`,
+      orderNumber,
       invoiceNumber,
       customer: {
         name:  customer.name.trim(),
@@ -298,10 +308,13 @@ module.exports = async function handler(req, res) {
     const orders = await getOrders();
     if (adminSession) return res.status(200).json(orders);
     const { customerId, email } = customerSession;
-    const mine = orders.filter(o =>
-      o.customerId === customerId ||
-      (o.customer?.email && o.customer.email.toLowerCase() === email.toLowerCase())
-    );
+    const mine = orders
+      .filter(o =>
+        o.customerId === customerId ||
+        (o.customer?.email && o.customer.email.toLowerCase() === email.toLowerCase())
+      )
+      /* Strip admin-only fields before sending to the customer */
+      .map(({ internalNotes, idempotencyKey, ...safe }) => safe);
     return res.status(200).json(mine);
   }
 
@@ -319,8 +332,10 @@ module.exports = async function handler(req, res) {
 
     const prev = orders[idx];
 
+    const isCustomerOnly = customerSession && !adminSession;
+
     /* Customer: can only cancel their own pending/confirmed/processing orders */
-    if (customerSession && !adminSession) {
+    if (isCustomerOnly) {
       const isOwner = prev.customerId === customerSession.customerId ||
         prev.customer?.email?.toLowerCase() === customerSession.email.toLowerCase();
       if (!isOwner) return res.status(403).json({ error: 'Forbidden' });
@@ -333,13 +348,28 @@ module.exports = async function handler(req, res) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
+    /* Admin can touch any field; customers may only set status. This guards
+       against a customer slipping `paymentStatus: 'paid'` or `internalNotes`
+       into the cancel request body. */
     const patch = { updatedAt: Date.now() };
-    if (status         !== undefined) patch.status         = status;
-    if (notes          !== undefined) patch.notes          = notes;
-    if (internalNotes  !== undefined) patch.internalNotes  = internalNotes;
-    if (trackingNumber !== undefined) patch.trackingNumber = trackingNumber;
-    if (carrier        !== undefined) patch.carrier        = carrier;
-    if (paymentStatus  !== undefined) patch.payment = { ...(prev.payment || {}), status: paymentStatus };
+    if (status !== undefined) patch.status = status;
+    if (!isCustomerOnly) {
+      const VALID_STATUS = ['pending','confirmed','processing','packed','shipped','delivered','cancelled'];
+      if (status !== undefined && !VALID_STATUS.includes(status)) {
+        return res.status(400).json({ error: 'Invalid order status.' });
+      }
+      if (notes          !== undefined) patch.notes          = String(notes).slice(0, 2000);
+      if (internalNotes  !== undefined) patch.internalNotes  = String(internalNotes).slice(0, 4000);
+      if (trackingNumber !== undefined) patch.trackingNumber = String(trackingNumber).slice(0, 80);
+      if (carrier        !== undefined) patch.carrier        = String(carrier).slice(0, 80);
+      if (paymentStatus  !== undefined) {
+        const VALID_PAY_STATUS = ['pending','paid','failed','refunded'];
+        if (!VALID_PAY_STATUS.includes(paymentStatus)) {
+          return res.status(400).json({ error: 'Invalid payment status.' });
+        }
+        patch.payment = { ...(prev.payment || {}), status: paymentStatus };
+      }
+    }
 
     /* Restore stock on cancellation */
     if (status === 'cancelled' && prev.status !== 'cancelled') {

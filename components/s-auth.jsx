@@ -35,6 +35,21 @@ function CustomerProvider({ children }) {
     setSessionToken(token);
     localStorage.setItem(CUST_SESSION_KEY, JSON.stringify({ customer: cust, sessionToken: token, expiresAt }));
     setAuthOpen(false);
+
+    /* Merge any guest cart items into the customer's server-side cart */
+    const guestId = window.getGuestId?.();
+    if (guestId) {
+      fetch(`${CUST_API_BASE}/api/carts`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body:    JSON.stringify({ action: 'merge', guestId }),
+      }).then(r => r.ok ? r.json() : null).then(data => {
+        if (data?.items?.length) {
+          try { localStorage.setItem('ab_cart', JSON.stringify(data.items)); } catch {}
+          window.dispatchEvent(new Event('ab:cart-merged'));
+        }
+      }).catch(() => {});
+    }
   }, []);
 
   const logout = React.useCallback(async () => {
@@ -96,6 +111,7 @@ function AuthModal() {
   const [error,       setError]       = React.useState('');
   const [resendSecs,  setResendSecs]  = React.useState(0);
   const [isNew,       setIsNew]       = React.useState(false);
+  const [devOtp,      setDevOtp]      = React.useState('');
   const otpFormRef = React.useRef(null);
 
   /* Reset on close */
@@ -103,7 +119,7 @@ function AuthModal() {
     if (!authOpen) {
       const t = setTimeout(() => {
         setStep('email'); setEmail(''); setOtp('');
-        setOtpToken(''); setError(''); setResendSecs(0);
+        setOtpToken(''); setError(''); setResendSecs(0); setDevOtp('');
       }, 300);
       return () => clearTimeout(t);
     }
@@ -136,6 +152,7 @@ function AuthModal() {
       setIsNew(!!data.isNew);
       setStep('otp');
       setResendSecs(60);
+      if (data.devOtp) { setOtp(data.devOtp); setDevOtp(data.devOtp); }
     } catch { setError('Network error. Please try again.'); }
     setLoading(false);
   }
@@ -216,6 +233,11 @@ function AuthModal() {
             </form>
           ) : (
             <form ref={otpFormRef} onSubmit={doVerifyOtp} className="space-y-4">
+              {devOtp && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
+                  Email delivery paused — domain not yet verified. Code pre-filled for testing.
+                </div>
+              )}
               <div>
                 <label className="block text-[13px] font-700 text-slate-700 mb-1.5">6-digit code</label>
                 <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={6}

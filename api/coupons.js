@@ -95,15 +95,26 @@ module.exports = async function handler(req, res) {
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
 
-  /* ── PATCH — update ─────────────────────────────────────────────────────────── */
+  /* ── PATCH — update (allowlisted fields, normalises types) ─────────────────── */
   if (req.method === 'PATCH') {
-    const { id, ...patch } = body;
+    const { id } = body;
     if (!id) return res.status(400).json({ error: 'Missing id' });
     const coupons = await getCoupons();
     const idx     = coupons.findIndex(c => c.id === id);
     if (idx === -1) return res.status(404).json({ error: 'Coupon not found' });
-    if (patch.code) patch.code = patch.code.toUpperCase().trim();
-    const updated  = { ...coupons[idx], ...patch, id, updatedAt: Date.now() };
+
+    const patch = { updatedAt: Date.now() };
+    if (body.code          !== undefined) patch.code          = String(body.code).toUpperCase().trim();
+    if (body.type          !== undefined) patch.type          = body.type === 'fixed' ? 'fixed' : 'percentage';
+    if (body.value         !== undefined) patch.value         = Math.max(0, Number(body.value) || 0);
+    if (body.minOrderValue !== undefined) patch.minOrderValue = Math.max(0, Number(body.minOrderValue) || 0);
+    if (body.maxUses       !== undefined) patch.maxUses       = body.maxUses == null ? 0 : Math.max(0, Number(body.maxUses) || 0);
+    if (body.expiresAt     !== undefined) patch.expiresAt     = body.expiresAt ? Number(body.expiresAt) : null;
+    if (body.active        !== undefined) patch.active        = !!body.active;
+    if (Array.isArray(body.restrictToProducts))   patch.restrictToProducts   = body.restrictToProducts;
+    if (Array.isArray(body.restrictToCategories)) patch.restrictToCategories = body.restrictToCategories;
+
+    const updated  = { ...coupons[idx], ...patch, id };
     const newList  = [...coupons]; newList[idx] = updated;
     await writeBlob(COUPONS_PATH, newList);
     return res.status(200).json(updated);

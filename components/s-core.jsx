@@ -8,10 +8,13 @@ const BRAND = {
   email: "info@amahle-blue.co.za",
   address: "Unit H, 13 Main Reef Road, Dunswart, Boksburg, Gauteng, South Africa",
   wa: "https://wa.me/27671014345",
+  facebook: "https://www.facebook.com/share/17sDJXMKSz/",
+  instagram: "https://www.instagram.com/amahle_blue/",
 };
 
 const CATEGORIES = [
   { id: "household", name: "Household Cleaning", short: "Household", icon: "Home", blurb: "Everyday surfaces, floors, fabrics & fresh-smelling rooms.", accent: "#1D4ED8" },
+  { id: "industrial", name: "Industrial Products", short: "Industrial", icon: "Spray", blurb: "Heavy-duty degreasers, cleaners and specialty solutions for industrial use.", accent: "#B45309" },
   { id: "car", name: "Car Care", short: "Car Care", icon: "Car", blurb: "Showroom shine for tyres, dashboards & trim.", accent: "#0B2E6B" },
   { id: "sanitiser", name: "Sanitisers & Disinfectants", short: "Sanitisers", icon: "Shield", blurb: "High-purity protection that kills 99.9% of germs.", accent: "#159A4C" },
 ];
@@ -89,6 +92,366 @@ const PRODUCTS_DEFAULT = [
     desc: "A quality car-care formula designed to clean, shine and refresh tyres, dashboards and vinyl or plastic surfaces — restoring a neat, glossy appearance that looks well maintained.",
     scent: "High Gloss",
   },
+  {
+    id: "wash-up-liquid-green", name: "Wash-Up Liquid (Green)", cat: "household",
+    sub: "Heavy-Duty Dishwashing & Degreasing Liquid", price: 0,
+    size: "5L", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/wash-up-liquid-green.jpg",
+    benefits: ["Cuts through grease fast", "Rich lather formula", "Gentle on hands", "For dishes, pots & surfaces"],
+    desc: "A powerful green dishwashing liquid formulated to cut through grease and food residue — leaving dishes, pots and kitchen surfaces clean and fresh with minimal effort.",
+    scent: "Fresh Green",
+  },
+  {
+    id: "sanitizers", name: "Sanitizers", cat: "household",
+    sub: "Multi-Surface Sanitizing Solution", price: 0,
+    size: "5L", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/sanitizers.jpg",
+    benefits: ["Kills germs & bacteria", "Safe on hard surfaces", "Quick-drying formula", "No harsh residue"],
+    desc: "A reliable sanitizing solution for everyday use on hard surfaces — effectively eliminating germs, bacteria and common pathogens to keep your home clean and safe.",
+    scent: "Clean Fresh",
+  },
+  {
+    id: "sani-pine", name: "Sani-Pine", cat: "household",
+    sub: "Pine-Scented Disinfectant Cleaner", price: 0,
+    size: "5L", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/sani-pine.jpg",
+    benefits: ["Disinfects & deodorises", "Classic pine fragrance", "Kills household germs", "For floors, toilets & hard surfaces"],
+    desc: "A pine-scented disinfectant cleaner that sanitises and deodorises floors, toilets and hard surfaces — leaving behind a fresh, clean pine fragrance.",
+    scent: "Pine Fresh",
+  },
+  {
+    id: "floor-shine-high-traffic", name: "Floor Shine High Traffic", cat: "household",
+    sub: "High-Gloss Floor Polish for Heavy-Use Areas", price: 0,
+    size: "5L", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/floor-shine-high-traffic.jpg",
+    benefits: ["High-gloss mirror finish", "Durable in heavy traffic areas", "Protects & seals floor surfaces", "Suitable for vinyl, tiles & linoleum"],
+    desc: "A premium floor polish specially formulated for high-traffic areas — delivering a brilliant, long-lasting gloss finish while protecting floor surfaces from daily wear and scuffing.",
+    scent: null,
+  },
+  {
+    id: "shower-gel", name: "Shower Gel", cat: "household",
+    sub: "Gentle Moisturising Body Wash", price: 0,
+    size: "500ml", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/shower-gel.jpg",
+    benefits: ["Rich lather & smooth rinse", "Moisturises skin", "Pleasant fragrance", "Gentle on all skin types"],
+    desc: "A gentle, moisturising shower gel formulated with a rich lather that cleanses the skin effectively while leaving it feeling soft, smooth and refreshed.",
+    scent: "Fresh Breeze",
+  },
+  {
+    id: "sulphuric-acid", name: "Sulphuric Acid", cat: "household",
+    sub: "Drain & Blockage Clearing Solution", price: 0,
+    size: "5L", rating: 4.6, reviews: 0, badge: null,
+    img: "assets/products/sulphuric-acid.jpg",
+    benefits: ["Clears blocked drains fast", "Breaks down organic blockages", "Industrial strength formula", "For drains, sewers & pipes"],
+    desc: "A high-strength sulphuric acid solution for clearing blocked drains and removing organic build-up in pipes and sewers. Use with caution — follow safety instructions carefully.",
+    scent: null,
+  },
+  {
+    id: "toilet-bowl-cleaner", name: "Toilet Bowl Cleaner", cat: "household",
+    sub: "Powerful Toilet Disinfectant & Descaler", price: 0,
+    size: "5L", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/toilet-bowl-cleaner.jpg",
+    benefits: ["Removes limescale & stains", "Disinfects & deodorises", "Clings to bowl surface", "Fresh clean scent"],
+    desc: "A powerful toilet bowl cleaner that removes limescale, stains and bacteria — disinfecting and deodorising the bowl while leaving a fresh, clean scent.",
+    scent: "Clean Citrus",
+  },
+  {
+    id: "thick-bleach", name: "Thick Bleach (Domestos Type)", cat: "household",
+    sub: "Heavy-Duty Thick Bleach Disinfectant", price: 0,
+    size: "5L", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/thick-bleach.jpg",
+    benefits: ["Kills 99.9% of germs", "Thick formula clings to surfaces", "Whitens & disinfects", "For toilets, drains & hard surfaces"],
+    desc: "A thick, heavy-duty bleach disinfectant that clings to surfaces for extended contact time — killing 99.9% of germs, whitening surfaces and eliminating tough stains and odours.",
+    scent: "Clean Bleach",
+  },
+  {
+    id: "oxy-o2", name: "Oxy O2 (Vanish Type)", cat: "household",
+    sub: "Oxygen-Powered Stain Remover & Fabric Brightener", price: 0,
+    size: "5L", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/oxy-o2.jpg",
+    benefits: ["Removes tough stains on contact", "Brightens & whitens fabrics", "Oxygen-activated formula", "Safe on colours & whites"],
+    desc: "An oxygen-powered stain remover formulated to lift tough stains from fabrics, carpets and surfaces — brightening and refreshing without the harsh effects of chlorine bleach.",
+    scent: null,
+  },
+  {
+    id: "industrial-washing-powder", name: "Industrial Washing Powder", cat: "household",
+    sub: "Heavy-Duty Laundry Powder for Commercial Use", price: 0,
+    size: "25kg", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/industrial-washing-powder.jpg",
+    benefits: ["Heavy-duty cleaning power", "For commercial laundry use", "Removes tough stains & grime", "High-foaming formula"],
+    desc: "A heavy-duty industrial washing powder designed for commercial and high-volume laundry use — delivering powerful cleaning performance to remove tough stains, grease and grime.",
+    scent: "Clean Fresh",
+  },
+  {
+    id: "high-foaming-hand-washing-powder", name: "High Foaming Hand Washing Powder", cat: "household",
+    sub: "Premium Hand-Wash Laundry Powder", price: 0,
+    size: "5kg", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/high-foaming-hand-washing-powder.jpg",
+    benefits: ["High foam for hand washing", "Removes stains effectively", "Gentle on fabrics", "Pleasant fresh scent"],
+    desc: "A high-foaming hand washing powder specially formulated for hand laundry — producing a rich lather to lift dirt and stains while remaining gentle on fabrics and skin.",
+    scent: "Spring Fresh",
+  },
+  {
+    id: "bio-ultra", name: "Bio Ultra (Bio Classic Type)", cat: "household",
+    sub: "Biological Enzyme Laundry Liquid", price: 0,
+    size: "5L", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/bio-ultra.jpg",
+    benefits: ["Enzyme-powered stain removal", "Works in cool wash temperatures", "Breaks down proteins & oils", "Suitable for all fabrics"],
+    desc: "A biological enzyme laundry liquid that uses natural enzymes to break down protein-based stains, grease and oils — working effectively even at low wash temperatures.",
+    scent: "Fresh Clean",
+  },
+  {
+    id: "metal-polish", name: "Metal Polish", cat: "household",
+    sub: "Multi-Metal Shine & Protection Polish", price: 0,
+    size: "1L", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/metal-polish.jpg",
+    benefits: ["Restores shine to all metals", "Removes tarnish & oxidation", "Leaves a protective coating", "For stainless steel, chrome & brass"],
+    desc: "A premium metal polish formulated to restore shine and remove tarnish, rust and oxidation from stainless steel, chrome, brass and other metal surfaces — leaving a brilliant finish with protective coating.",
+    scent: null,
+  },
+  {
+    id: "mop-and-shine", name: "Mop & Shine", cat: "household",
+    sub: "Floor Cleaner & Shine in One", price: 0,
+    size: "5L", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/mop-and-shine.jpg",
+    benefits: ["Cleans & shines in one step", "Long-lasting floor protection", "Pleasant fragrance", "For tiles, vinyl & sealed floors"],
+    desc: "A dual-action floor cleaner and shine product that cleans and polishes in a single application — leaving floors sparkling, protected and smelling fresh.",
+    scent: "Fresh Citrus",
+  },
+  {
+    id: "pine-gel", name: "Pine Gel", cat: "household",
+    sub: "Pine-Scented Heavy-Duty Cleaning Gel", price: 0,
+    size: "5L", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/pine-gel.jpg",
+    benefits: ["Powerful cleaning & disinfection", "Classic pine fragrance", "Gel formula clings to surfaces", "For floors, tiles & bathrooms"],
+    desc: "A thick pine-scented cleaning gel that clings to surfaces for deep cleaning and disinfection — leaving a powerful clean and a long-lasting fresh pine fragrance throughout the home.",
+    scent: "Pine",
+  },
+  {
+    id: "drain-cleaner", name: "Drain Cleaner", cat: "household",
+    sub: "Fast-Acting Drain Unblocking Solution", price: 0,
+    size: "5L", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/drain-cleaner.jpg",
+    benefits: ["Clears blocked drains fast", "Dissolves hair, grease & organic matter", "Works in sinks, showers & baths", "Prevents future blockages"],
+    desc: "A fast-acting drain cleaning solution formulated to dissolve hair, grease and organic blockages in sinks, showers and pipes — restoring full drainage quickly and effectively.",
+    scent: null,
+  },
+  {
+    id: "fabric-softener", name: "Fabric Softener (Comfort Type)", cat: "household",
+    sub: "Long-Lasting Fabric Conditioner & Softener", price: 0,
+    size: "5L", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/fabric-softener.jpg",
+    benefits: ["Softens & conditions fabrics", "Reduces static & wrinkles", "Long-lasting fresh scent", "Suitable for all fabric types"],
+    desc: "A premium fabric softener and conditioner that leaves laundry feeling soft, fresh and static-free — delivering long-lasting fragrance and gentle care for all fabric types.",
+    scent: "Spring Blossom",
+  },
+  {
+    id: "floor-stripper", name: "Floor Stripper", cat: "household",
+    sub: "Heavy-Duty Floor Polish & Wax Remover", price: 0,
+    size: "5L", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/floor-stripper.jpg",
+    benefits: ["Strips old wax & floor polish", "Prepares surfaces for re-polishing", "Fast-acting formula", "Suitable for vinyl, tiles & linoleum"],
+    desc: "A powerful floor stripping solution that removes old wax, polish and build-up from hard floor surfaces — preparing them for a fresh application of floor polish or sealer.",
+    scent: null,
+  },
+  {
+    id: "furniture-polish", name: "Furniture Polish", cat: "household",
+    sub: "Shine & Protect Wood & Furniture Polish", price: 0,
+    size: "500ml", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/furniture-polish.jpg",
+    benefits: ["Restores shine to wood furniture", "Protects against dust & scratches", "Pleasant fresh wood scent", "For tables, cabinets & shelves"],
+    desc: "A quality furniture polish that cleans, shines and protects wood and laminate furniture — restoring a natural lustre while leaving a pleasant fresh scent and a protective barrier.",
+    scent: "Fresh Wood",
+  },
+  {
+    id: "hard-surface-cleaner", name: "Hard Surface Cleaner (Handy Andy Type)", cat: "household",
+    sub: "All-Purpose Cream Cleaner for Tough Surfaces", price: 0,
+    size: "5L", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/hard-surface-cleaner.jpg",
+    benefits: ["Removes stubborn marks & stains", "Gentle abrasive cream formula", "Safe on most hard surfaces", "For kitchens, bathrooms & appliances"],
+    desc: "An all-purpose cream cleaner formulated to remove tough marks, stains and grease from hard surfaces — using a gentle abrasive formula that cleans without scratching kitchens, bathrooms and appliances.",
+    scent: "Clean Fresh",
+  },
+  {
+    id: "laundry-liquid", name: "Laundry Liquid (OMO Auto Type)", cat: "household",
+    sub: "Automatic Machine Washing Liquid", price: 0,
+    size: "5L", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/laundry-liquid.jpg",
+    benefits: ["For front & top loader machines", "Powerful stain removal", "Fresh clean scent", "Low-foam auto formula"],
+    desc: "A concentrated automatic laundry liquid formulated for front and top loader washing machines — delivering powerful stain removal and a long-lasting fresh scent with every wash.",
+    scent: "Spring Fresh",
+  },
+  {
+    id: "overall-washing-powder", name: "Overall Washing Powder", cat: "household",
+    sub: "Industrial-Strength Laundry Washing Powder", price: 0,
+    size: "10kg", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/overall-washing-powder.jpg",
+    benefits: ["Industrial cleaning power", "Removes heavy soiling & grease", "High-foaming formula", "For overalls, workwear & heavy fabrics"],
+    desc: "A heavy-duty washing powder designed for cleaning overalls, workwear and heavily soiled fabrics — cutting through grease, dirt and industrial grime to deliver a thorough clean.",
+    scent: "Clean Fresh",
+  },
+  {
+    id: "bleach-jik-type", name: "Bleach (Jik Type)", cat: "household",
+    sub: "Multi-Purpose Household Bleach", price: 0,
+    size: "5L", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/bleach-jik-type.jpg",
+    benefits: ["Whitens & disinfects", "Kills germs & bacteria", "Removes tough stains", "For laundry, toilets & surfaces"],
+    desc: "A powerful household bleach that whitens, disinfects and removes tough stains from laundry, toilets and hard surfaces — killing germs and bacteria for a hygienic clean.",
+    scent: "Clean Bleach",
+  },
+  {
+    id: "deo-blocks", name: "Deo Blocks", cat: "household",
+    sub: "Long-Lasting Toilet & Urinal Deodoriser Blocks", price: 0,
+    size: "1kg", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/deo-blocks.jpg",
+    benefits: ["Long-lasting fragrance", "Neutralises unpleasant odours", "For toilets & urinals", "Slow-release formula"],
+    desc: "Slow-release deodoriser blocks formulated for toilets and urinals — neutralising unpleasant odours and delivering a long-lasting fresh fragrance in bathroom and restroom environments.",
+    scent: "Fresh Mint",
+  },
+  {
+    id: "bubble-bath", name: "Bubble Bath", cat: "household",
+    sub: "Luxurious Foaming Bubble Bath Formula", price: 0,
+    size: "5L", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/bubble-bath.jpg",
+    benefits: ["Rich, long-lasting bubbles", "Gentle on skin", "Pleasant fragrance", "For adults & children"],
+    desc: "A luxurious foaming bubble bath formulated to create a rich, long-lasting lather — gentle on skin with a pleasant fragrance that makes bath time a relaxing and enjoyable experience.",
+    scent: "Ocean Fresh",
+  },
+  {
+    id: "dispenser-hand-soap-pink", name: "Dispenser Hand Soap Pink", cat: "household",
+    sub: "Gentle Pink Hand Soap for Dispensers", price: 0,
+    size: "5L", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/dispenser-hand-soap-pink.jpg",
+    benefits: ["Gentle & moisturising formula", "For all dispenser types", "Pleasant light fragrance", "Leaves hands soft & clean"],
+    desc: "A gentle pink hand soap formulated for soap dispensers in kitchens, bathrooms and commercial settings — effectively cleansing hands while leaving skin feeling soft and fresh.",
+    scent: "Light Floral",
+  },
+  {
+    id: "dribrite-floor-shine", name: "Dribrite Floor Shine", cat: "household",
+    sub: "High-Gloss Floor Polish & Protector", price: 0,
+    size: "5L", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/dribrite-floor-shine.jpg",
+    benefits: ["High-gloss mirror finish", "Durable floor protection", "Quick-drying formula", "For vinyl, tiles & sealed wood"],
+    desc: "A premium floor polish delivering a brilliant high-gloss finish with long-lasting protection — quick-drying and suitable for vinyl, tiles and sealed floor surfaces in homes and commercial spaces.",
+    scent: null,
+  },
+  {
+    id: "industrial-overall-washing-powders", name: "Overall Washing Powders", cat: "industrial",
+    sub: "Bulk Industrial Laundry Washing Powder", price: 0,
+    size: "25kg", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/industrial-overall-washing-powders.jpg",
+    benefits: ["Bulk commercial supply", "Removes heavy soiling & grease", "High-foaming formula", "For overalls, workwear & industrial fabrics"],
+    desc: "A bulk industrial laundry washing powder available in large quantities — designed for commercial laundromats, factories and industrial facilities requiring high-volume washing power.",
+    scent: "Clean Fresh",
+  },
+  {
+    id: "heavy-duty-degreaser", name: "Heavy Duty Degreaser", cat: "industrial",
+    sub: "Industrial-Strength Degreasing Solution", price: 0,
+    size: "25L", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/heavy-duty-degreaser.jpg",
+    benefits: ["Removes heavy grease & oils", "Fast-acting penetrating formula", "For machinery, engines & floors", "Dilutable for varied applications"],
+    desc: "A powerful industrial-strength degreaser formulated to cut through heavy grease, oil, fuel residue and industrial grime — ideal for use on machinery, engines, workshop floors and industrial equipment.",
+    scent: null,
+  },
+  {
+    id: "hd-degreaser", name: "HD Degreaser", cat: "industrial",
+    sub: "High-Performance Industrial Degreaser", price: 0,
+    size: "5L", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/hd-degreaser.jpg",
+    benefits: ["High-performance degreasing", "Penetrates tough grease build-up", "Safe on most metals & surfaces", "Suitable for workshops & factories"],
+    desc: "An industrial-grade HD degreaser formulated for high-performance grease and oil removal in workshop, factory and manufacturing environments — effective on metals, concrete and most hard surfaces.",
+    scent: null,
+  },
+  {
+    id: "nr-solvent-degreaser", name: "NR Solvent Degreaser", cat: "industrial",
+    sub: "Non-Residue Solvent-Based Degreaser", price: 0,
+    size: "5L", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/nr-solvent-degreaser.jpg",
+    benefits: ["Leaves no residue after drying", "Fast-evaporating solvent formula", "For precision equipment & electronics", "Removes oils, flux & contaminants"],
+    desc: "A non-residue solvent-based degreaser that evaporates cleanly without leaving residue — ideal for degreasing precision equipment, electronics, electrical components and sensitive machinery.",
+    scent: null,
+  },
+  {
+    id: "truck-shampoo", name: "Truck Shampoo", cat: "industrial",
+    sub: "Heavy-Duty Vehicle & Truck Wash Shampoo", price: 0,
+    size: "25L", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/truck-shampoo.jpg",
+    benefits: ["Removes road grime & diesel soot", "High-foaming concentrate", "Safe on painted surfaces & chrome", "For trucks, buses & heavy vehicles"],
+    desc: "A heavy-duty truck and vehicle wash shampoo specially formulated to remove road grime, diesel soot, mud and heavy soiling from trucks, buses and large commercial vehicles.",
+    scent: "Clean Fresh",
+  },
+  {
+    id: "window-dae-scaler", name: "Window Dae-Scaler", cat: "industrial",
+    sub: "Industrial Window & Glass Scale Remover", price: 0,
+    size: "5L", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/window-dae-scaler.jpg",
+    benefits: ["Removes mineral scale & hard water marks", "Leaves glass streak-free", "For windows, glass facades & panels", "Industrial concentration"],
+    desc: "An industrial-strength window and glass descaler formulated to remove stubborn mineral scale, hard water deposits and calcium build-up from glass surfaces — leaving a clear, streak-free finish.",
+    scent: null,
+  },
+  {
+    id: "alkaline-washing-powders", name: "Alkaline Washing Powders", cat: "industrial",
+    sub: "High-Alkaline Industrial Cleaning Powder", price: 0,
+    size: "25kg", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/alkaline-washing-powders.jpg",
+    benefits: ["High-alkaline formula cuts grease", "For industrial laundry & surface cleaning", "Removes oils, proteins & heavy soiling", "Suitable for commercial washing machines"],
+    desc: "A high-alkaline washing powder designed for industrial laundry and surface cleaning applications — effectively cutting through grease, oils and protein-based soiling in commercial and industrial settings.",
+    scent: "Clean Fresh",
+  },
+  {
+    id: "alubrite", name: "Alubrite", cat: "industrial",
+    sub: "Aluminium Brightener & Cleaner", price: 0,
+    size: "5L", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/alubrite.jpg",
+    benefits: ["Brightens & cleans aluminium", "Removes oxidation & staining", "For wheels, tanks & aluminium surfaces", "Restores original shine"],
+    desc: "A specialist aluminium brightener and cleaner formulated to remove oxidation, staining and dulling from aluminium surfaces — restoring a bright, clean finish on wheels, tanks and aluminium panels.",
+    scent: null,
+  },
+  {
+    id: "hf-alubrite", name: "HF Alubrite", cat: "industrial",
+    sub: "High-Foam Aluminium Brightener", price: 0,
+    size: "5L", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/hf-alubrite.jpg",
+    benefits: ["High-foam formula for better coverage", "Brightens aluminium fast", "For truck tanks & trailers", "Removes heavy oxidation"],
+    desc: "A high-foam aluminium brightener delivering improved surface coverage and faster brightening — specially formulated for truck tanks, trailers and large aluminium surfaces requiring a deep clean and restoration.",
+    scent: null,
+  },
+  {
+    id: "anti-freeze-concentrate", name: "Anti-Freeze Concentrate 96%", cat: "industrial",
+    sub: "High-Concentration Coolant Anti-Freeze", price: 0,
+    size: "25L", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/anti-freeze-concentrate.jpg",
+    benefits: ["96% concentrate formula", "Protects against freezing & overheating", "Compatible with most cooling systems", "Extends coolant system life"],
+    desc: "A high-concentration 96% anti-freeze coolant formulated to protect vehicle and industrial cooling systems against freezing, overheating and corrosion — compatible with most radiator and cooling systems.",
+    scent: null,
+  },
+  {
+    id: "hand-cleaner-paste-grit", name: "Hand Cleaner Paste - Grit", cat: "industrial",
+    sub: "Heavy-Duty Grit Hand Cleaner for Workshop Use", price: 0,
+    size: "5kg", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/hand-cleaner-paste-grit.jpg",
+    benefits: ["Removes grease, oil & industrial grime", "Grit particles for deep scrubbing", "Moisturises while it cleans", "For mechanics, engineers & factory workers"],
+    desc: "A heavy-duty grit hand cleaner paste formulated for mechanics, engineers and industrial workers — using fine grit particles to deep-clean grease, oil and stubborn industrial grime from hands.",
+    scent: "Clean Fresh",
+  },
+  {
+    id: "bio-degreaser-specialised", name: "Bio Degreaser Specialised", cat: "industrial",
+    sub: "Biological Enzyme Industrial Degreaser", price: 0,
+    size: "5L", rating: 4.8, reviews: 0, badge: null,
+    img: "assets/products/bio-degreaser-specialised.jpg",
+    benefits: ["Enzyme-powered biological degreasing", "Eco-friendly & biodegradable", "Breaks down oils & hydrocarbons", "Safe for drains & waterways"],
+    desc: "A specialised biological enzyme degreaser that uses natural bacteria and enzymes to break down oils, fats and hydrocarbons — an eco-friendly, biodegradable alternative for industrial degreasing applications.",
+    scent: null,
+  },
+  {
+    id: "eco-degreaser-hd-red", name: "Eco Degreaser HD Red", cat: "industrial",
+    sub: "Eco-Friendly Heavy-Duty Red Degreaser", price: 0,
+    size: "5L", rating: 4.7, reviews: 0, badge: null,
+    img: "assets/products/eco-degreaser-hd-red.jpg",
+    benefits: ["Heavy-duty eco-friendly formula", "Biodegradable & low-toxicity", "Removes grease & oils effectively", "For industrial & commercial use"],
+    desc: "An eco-friendly heavy-duty red degreaser formulated to deliver powerful grease and oil removal while maintaining a low-toxicity, biodegradable profile — suitable for industrial and commercial cleaning applications.",
+    scent: null,
+  },
 ];
 
 // Products seed — starts from localStorage cache, then live-patches from API
@@ -111,9 +474,21 @@ let PRODUCTS = (() => {
     const data = await res.json();
     if (Array.isArray(data) && data.length) {
       PRODUCTS = data;
+      window.PRODUCTS = data;
       try { localStorage.setItem("ab_products", JSON.stringify(data)); } catch {}
       window.dispatchEvent(new Event("ab:products-loaded"));
     }
+  } catch {}
+})();
+
+/* Settings (business info + VAT number) — used by invoice + footer */
+(async () => {
+  try {
+    const res = await fetch("/api/settings");
+    if (!res.ok) return;
+    const s = await res.json();
+    window.__settings = s;
+    window.dispatchEvent(new Event("ab:settings-loaded"));
   } catch {}
 })();
 
@@ -148,7 +523,9 @@ function CartProvider({ children }) {
   });
   const [open,    setOpen]    = React.useState(false);
   const [toast,   setToast]   = React.useState(null);
-  const [coupon,  setCoupon]  = React.useState(null); // { code, discount, type, value }
+  const [coupon,  setCoupon]  = React.useState(() => {
+    try { const s = localStorage.getItem("ab_coupon"); return s ? JSON.parse(s) : null; } catch { return null; }
+  });
   const toastTimer = React.useRef(null);
   const syncTimer  = React.useRef(null);
 
@@ -156,6 +533,26 @@ function CartProvider({ children }) {
   React.useEffect(() => {
     try { localStorage.setItem("ab_cart", JSON.stringify(items)); } catch {}
   }, [items]);
+
+  /* Persist coupon locally */
+  React.useEffect(() => {
+    try {
+      if (coupon) localStorage.setItem("ab_coupon", JSON.stringify(coupon));
+      else localStorage.removeItem("ab_coupon");
+    } catch {}
+  }, [coupon]);
+
+  /* Reload cart after guest→customer merge */
+  React.useEffect(() => {
+    const h = () => {
+      try {
+        const raw = localStorage.getItem("ab_cart");
+        if (raw) setItems(JSON.parse(raw));
+      } catch {}
+    };
+    window.addEventListener("ab:cart-merged", h);
+    return () => window.removeEventListener("ab:cart-merged", h);
+  }, []);
 
   /* Debounced server sync for abandoned cart tracking */
   React.useEffect(() => {

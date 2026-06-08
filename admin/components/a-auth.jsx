@@ -84,14 +84,9 @@ function LoginPage() {
             </button>
           </form>
 
-          {/* Default credentials hint */}
-          <div className="mt-6 p-3.5 bg-slate-50 rounded-xl border border-slate-100">
-            <p className="text-xs font-600 text-slate-500 mb-1.5">Default credentials</p>
-            <div className="space-y-0.5">
-              <p className="text-xs text-slate-500"><span className="font-600 text-slate-700">Admin:</span> admin / AmahleAdmin2024!</p>
-              <p className="text-xs text-slate-500"><span className="font-600 text-slate-700">Manager:</span> manager / AmahleManager2024!</p>
-            </div>
-          </div>
+          <p className="mt-5 text-center text-xs text-slate-400">
+            Contact the store owner if you need credentials.
+          </p>
         </div>
 
         <p className="text-center text-xs text-white/40 mt-6">

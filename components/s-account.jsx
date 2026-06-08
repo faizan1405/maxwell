@@ -599,6 +599,12 @@ function AccountPage({ onGoHome }) {
   const { add, setOpen: openCart } = useCart();
   const [tab, setTab] = React.useState('profile');
 
+  React.useEffect(() => {
+    const h = (e) => setTab(e.detail || 'profile');
+    window.addEventListener('ab:account-tab', h);
+    return () => window.removeEventListener('ab:account-tab', h);
+  }, []);
+
   if (!customer) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 text-center">

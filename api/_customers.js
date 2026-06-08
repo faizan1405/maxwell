@@ -1,10 +1,27 @@
-/* Customer auth helpers — OTP JWT, session JWT, Blob CRUD, Resend email */
-const crypto = require('crypto');
+/* Customer auth helpers — OTP JWT, session JWT, Blob CRUD, Resend/Gmail email */
+const crypto     = require('crypto');
+const nodemailer = require('nodemailer');
 const { readBlob, writeBlob } = require('./_blob');
 
-const CUSTOMER_SECRET = process.env.CUSTOMER_JWT_SECRET || 'customer-jwt-secret-change-in-prod';
-const OTP_SECRET      = CUSTOMER_SECRET + '_otp_v1';
-const CUSTOMERS_PATH  = 'data/maxwell-customers.json';
+/*
+ * CUSTOMER_JWT_SECRET — required in production.
+ * In dev (NODE_ENV !== 'production') a stable per-process fallback is used so the
+ * dev server keeps working without setup, but production deploys MUST set this
+ * env var or the API will reject all auth.
+ */
+const IS_PROD          = process.env.NODE_ENV === 'production' || !!process.env.VERCEL_ENV && process.env.VERCEL_ENV !== 'development';
+const CUSTOMER_SECRET  = process.env.CUSTOMER_JWT_SECRET
+  || (IS_PROD ? null : 'dev-customer-secret-' + (process.env.VERCEL_URL || 'local'));
+const OTP_SECRET       = CUSTOMER_SECRET ? CUSTOMER_SECRET + '_otp_v1' : null;
+const CUSTOMERS_PATH   = 'data/maxwell-customers.json';
+
+function assertSecret() {
+  if (!CUSTOMER_SECRET) {
+    const err = new Error('CUSTOMER_JWT_SECRET is not configured');
+    err.code = 'MISSING_SECRET';
+    throw err;
+  }
+}
 
 // ── JWT helpers ───────────────────────────────────────────────────────────────
 function b64url(buf) { return Buffer.from(buf).toString('base64url'); }
@@ -29,6 +46,7 @@ function verify(token, secret) {
 
 // ── OTP token (stateless — 10 min) ───────────────────────────────────────────
 function createOtpToken(email, otp) {
+  assertSecret();
   return sign({
     email: email.toLowerCase(),
     otpHash: crypto.createHash('sha256').update(otp).digest('hex'),
@@ -39,15 +57,22 @@ function createOtpToken(email, otp) {
 }
 
 function verifyOtpToken(token, otp) {
+  if (!OTP_SECRET) return null;
   const p = verify(token, OTP_SECRET);
   if (!p || p.type !== 'otp_verify') return null;
-  const hash = crypto.createHash('sha256').update(String(otp).trim()).digest('hex');
-  if (p.otpHash !== hash) return null;
+  const expected = crypto.createHash('sha256').update(String(otp).trim()).digest('hex');
+  // Constant-time compare to avoid timing leaks
+  try {
+    const a = Buffer.from(p.otpHash, 'hex');
+    const b = Buffer.from(expected, 'hex');
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  } catch { return null; }
   return p;
 }
 
 // ── Session token (30 days) ───────────────────────────────────────────────────
 function createSessionToken(customer) {
+  assertSecret();
   return sign({
     customerId: customer.id,
     email: customer.email,
@@ -58,6 +83,7 @@ function createSessionToken(customer) {
 }
 
 function verifySessionToken(token) {
+  if (!CUSTOMER_SECRET) return null;
   const p = verify(token, CUSTOMER_SECRET);
   if (!p || p.type !== 'customer_session') return null;
   return p;
@@ -126,19 +152,10 @@ async function updateCustomer(id, patch) {
   return updated;
 }
 
-// ── Resend email ──────────────────────────────────────────────────────────────
-async function sendOtpEmail(email, otp, name) {
-  const KEY  = process.env.RESEND_API_KEY;
-  const FROM = process.env.FROM_EMAIL || 'Amahle Blue <noreply@amahle-blue.co.za>';
-
-  if (!KEY) {
-    console.log(`[DEV] OTP for ${email}: ${otp}`);
-    return { ok: true, dev: true, devOtp: otp };
-  }
-
+// ── Email helpers ─────────────────────────────────────────────────────────────
+function buildOtpHtml(otp, name) {
   const hi = name ? `Hi ${name.split(' ')[0]},` : 'Hi there,';
-
-  const html = `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width"/></head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Helvetica,Arial,sans-serif;">
@@ -162,19 +179,76 @@ async function sendOtpEmail(email, otp, name) {
 </div>
 </body>
 </html>`;
+}
 
-  try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: FROM, to: [email], subject: `${otp} — Your Amahle Blue sign-in code`, html }),
-    });
-    if (!res.ok) { const e = await res.text(); console.error('Resend:', e); return { ok: false, error: 'Email delivery failed' }; }
-    return { ok: true };
-  } catch (e) {
-    console.error('Resend fetch error:', e);
-    return { ok: false, error: 'Email delivery failed' };
+async function sendOtpEmail(email, otp, name) {
+  const RESEND_KEY  = process.env.RESEND_API_KEY;
+  const GMAIL_USER  = process.env.GMAIL_USER;
+  const GMAIL_PASS  = process.env.GMAIL_APP_PASSWORD;
+  const subject     = `${otp} — Your Amahle Blue sign-in code`;
+  const html        = buildOtpHtml(otp, name);
+
+  /*
+   * OTP leak policy
+   * ───────────────
+   * The `devOtp` field is ONLY ever returned to the client when:
+   *   - We are running locally (no Vercel env), AND
+   *   - No email provider is configured.
+   * Production deploys (VERCEL_ENV=production|preview) NEVER receive devOtp,
+   * even if email delivery fails — that would let an attacker who exhausts the
+   * Resend quota mint sign-in codes for any email.
+   */
+  const isLocal = !process.env.VERCEL_ENV && process.env.NODE_ENV !== 'production';
+
+  /* No credentials at all */
+  if (!RESEND_KEY && !GMAIL_USER) {
+    if (isLocal) {
+      console.log(`[DEV] OTP for ${email}: ${otp}`);
+      return { ok: true, dev: true, devOtp: otp };
+    }
+    console.error('[OTP] No email provider configured in production');
+    return { ok: false };
   }
+
+  /* 1. Try Resend */
+  if (RESEND_KEY) {
+    try {
+      const FROM = process.env.FROM_EMAIL || 'Amahle Blue <noreply@amahle-blue.co.za>';
+      const res  = await fetch('https://api.resend.com/emails', {
+        method:  'POST',
+        headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ from: FROM, to: [email], subject, html }),
+      });
+      if (res.ok) return { ok: true };
+      const errText = await res.text();
+      console.warn('Resend failed:', errText);
+    } catch (e) {
+      console.warn('Resend fetch error:', e.message);
+    }
+  }
+
+  /* 2. Try Gmail SMTP */
+  if (GMAIL_USER && GMAIL_PASS) {
+    try {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user: GMAIL_USER, pass: GMAIL_PASS },
+      });
+      await transporter.sendMail({
+        from:    `Amahle Blue <${GMAIL_USER}>`,
+        to:      email,
+        subject,
+        html,
+      });
+      return { ok: true };
+    } catch (e) {
+      console.error('Gmail SMTP error:', e.message);
+    }
+  }
+
+  /* 3. All providers failed — log only, never return OTP to client in prod */
+  console.error(`[OTP-FAILED] All email providers failed for ${email}`);
+  return { ok: false };
 }
 
 module.exports = {

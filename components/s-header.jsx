@@ -51,7 +51,7 @@ const AnnouncementBar = () => {
           <span key={i} className="truncate" style={{ animation: "abfade .5s ease" }}>{A.text}</span>
         </div>
         <div className="hidden flex-1 items-center justify-end gap-3 text-slate-300 sm:flex">
-          <a href="#account" className="text-[12px] hover:text-white">My Orders</a>
+          <button onClick={() => { window.dispatchEvent(new CustomEvent('ab:account-tab', { detail: 'orders' })); window.dispatchEvent(new CustomEvent('ab:go-page', { detail: 'account' })); }} className="text-[12px] hover:text-white">My Orders</button>
           <span className="text-slate-600">|</span>
           <a href="#contact" className="text-[12px] hover:text-white">Help</a>
         </div>
@@ -137,7 +137,12 @@ const Header = ({ onNavCat }) => {
   };
 
   const goAccount = () => { setPage('account'); setMenu(false); window.scrollTo(0, 0); };
-  const goOrders  = () => { setPage('account'); setMenu(false); window.scrollTo(0, 0); };
+  const goOrders  = () => {
+    window.dispatchEvent(new CustomEvent('ab:account-tab', { detail: 'orders' }));
+    setPage('account');
+    setMenu(false);
+    window.scrollTo(0, 0);
+  };
 
   return (
     <div id="top" className="sticky top-0 z-40">
@@ -314,7 +319,7 @@ const CartDrawer = () => {
                         <div className="flex items-center rounded-full border border-slate-200">
                           <button onClick={() => setQty(product.id, qty - 1)} className="grid h-8 w-8 place-items-center text-slate-500 hover:text-cobalt"><Minus size={14} /></button>
                           <span className="w-7 text-center text-[14px] font-bold text-ink">{qty}</span>
-                          <button onClick={() => setQty(product.id, qty + 1)} className="grid h-8 w-8 place-items-center text-slate-500 hover:text-cobalt"><Plus size={14} /></button>
+                          <button onClick={() => setQty(product.id, qty + 1)} disabled={qty >= (typeof product.stock === 'number' ? product.stock : Infinity)} className="grid h-8 w-8 place-items-center text-slate-500 hover:text-cobalt disabled:opacity-40 disabled:cursor-not-allowed"><Plus size={14} /></button>
                         </div>
                         <span className="text-[15px] font-extrabold text-ink">{money(product.price * qty)}</span>
                       </div>
@@ -336,12 +341,17 @@ const CartDrawer = () => {
               </div>
               <div className="mt-1 flex items-center justify-between text-[14px]">
                 <span className="text-slate-500">Delivery</span>
-                <span className="font-bold text-grass">{remaining > 0 ? "Calculated at checkout" : "FREE"}</span>
+                <span className={`font-bold ${remaining > 0 ? "text-slate-400" : "text-grass"}`}>
+                  {remaining > 0 ? "Calculated at checkout" : "FREE"}
+                </span>
               </div>
               <div className="mt-3 flex items-center justify-between border-t border-dashed border-slate-200 pt-3">
-                <span className="font-display text-[15px] font-extrabold text-ink">Total</span>
+                <span className="font-display text-[15px] font-extrabold text-ink">
+                  {remaining > 0 ? "Subtotal" : "Total"}
+                </span>
                 <span className="font-display text-[20px] font-extrabold text-ink">{money(subtotal)}</span>
               </div>
+              <p className="mt-1 text-[10.5px] text-slate-400">Prices include 15% VAT.</p>
               <button onClick={goCheckout}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-cobalt py-3.5 text-[15px] font-bold text-white transition hover:bg-cobalt-700">
                 <Lock size={16} /> Proceed to Checkout

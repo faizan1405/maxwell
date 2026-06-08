@@ -25,7 +25,7 @@ const DEFAULT_SETTINGS = {
   business: {
     name:    'Amahle Blue',
     tagline: 'Cleaning Solutions',
-    vatNumber: '',
+    vatNumber: '4930324332',
     email:   'info@amahle-blue.co.za',
     phone:   '067 101 4345',
     address: 'Unit H, 13 Main Reef Road, Dunswart, Boksburg, Gauteng, South Africa',
@@ -74,10 +74,32 @@ module.exports = async function handler(req, res) {
   if (req.method === 'PATCH') {
     let body = req.body;
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
-    const current = await getSettings();
-    const updated  = deepMerge(current, body);
+    /* Admin can edit business/shipping/cod/eft only. Block invoiceCounter etc. */
+    const allowed = {};
+    if (body.business) allowed.business = body.business;
+    if (body.shipping) {
+      allowed.shipping = {};
+      if (body.shipping.freeThreshold !== undefined) allowed.shipping.freeThreshold = Math.max(0, Number(body.shipping.freeThreshold) || 0);
+      if (body.shipping.flatFee       !== undefined) allowed.shipping.flatFee       = Math.max(0, Number(body.shipping.flatFee) || 0);
+      if (body.shipping.provinceRates && typeof body.shipping.provinceRates === 'object') {
+        allowed.shipping.provinceRates = {};
+        for (const [k, v] of Object.entries(body.shipping.provinceRates)) {
+          allowed.shipping.provinceRates[String(k)] = Math.max(0, Number(v) || 0);
+        }
+      }
+    }
+    if (body.cod && typeof body.cod.enabled === 'boolean') allowed.cod = { enabled: body.cod.enabled };
+    if (body.eft && typeof body.eft.enabled === 'boolean') allowed.eft = { enabled: body.eft.enabled };
+
+    const current  = await getSettings();
+    const updated  = deepMerge(current, allowed);
     await writeBlob(SETTINGS_PATH, updated);
-    return res.status(200).json(updated);
+    return res.status(200).json({
+      cod:      updated.cod,
+      eft:      updated.eft,
+      shipping: updated.shipping,
+      business: updated.business,
+    });
   }
 
   return res.status(405).json({ error: 'Method not allowed' });

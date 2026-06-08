@@ -13,16 +13,31 @@ module.exports = async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
 
-  /* ── GET — public (approved) or admin (all) ─────────────────────────────────── */
+  /* ── GET — admin (all) | customer (own + approved) | public (approved only) ── */
   if (req.method === 'GET') {
     const reviews = await getReviews();
     const admin   = verifySession(req);
     if (admin) return res.status(200).json(reviews);
 
+    const stripPii = r => ({
+      id: r.id, productId: r.productId, customerName: r.customerName,
+      rating: r.rating, text: r.text, status: r.status,
+      createdAt: r.createdAt, updatedAt: r.updatedAt,
+    });
+
+    const cust = verifyCustomerSession(req);
     const productId = req.query.productId;
-    const approved  = reviews.filter(r => r.status === 'approved');
-    if (productId) return res.status(200).json(approved.filter(r => r.productId === productId));
-    return res.status(200).json(approved);
+    let visible = reviews.filter(r =>
+      r.status === 'approved' ||
+      (cust && (r.customerId === cust.customerId || (r.email && cust.email && r.email.toLowerCase() === cust.email.toLowerCase())))
+    );
+    if (productId) visible = visible.filter(r => r.productId === productId);
+    /* Strip PII from everyone else's reviews; let the customer keep their own. */
+    visible = visible.map(r => {
+      const isOwn = cust && (r.customerId === cust.customerId || (r.email && cust.email && r.email.toLowerCase() === cust.email.toLowerCase()));
+      return isOwn ? r : stripPii(r);
+    });
+    return res.status(200).json(visible);
   }
 
   /* ── POST — customer submit review ─────────────────────────────────────────── */
@@ -95,7 +110,7 @@ module.exports = async function handler(req, res) {
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
 
-  /* ── PATCH — moderate ───────────────────────────────────────────────────────── */
+  /* ── PATCH — moderate (admin only; allowlisted fields) ─────────────────────── */
   if (req.method === 'PATCH') {
     const { id, status } = body;
     if (!id) return res.status(400).json({ error: 'Missing id' });
@@ -106,8 +121,12 @@ module.exports = async function handler(req, res) {
     const idx     = reviews.findIndex(r => r.id === id);
     if (idx === -1) return res.status(404).json({ error: 'Review not found' });
 
-    const updated = { ...reviews[idx], ...body, id, updatedAt: Date.now() };
-    const newList  = [...reviews]; newList[idx] = updated;
+    /* Only allow status moderation here — never let body spread overwrite
+       createdAt, customerId, rating, etc. */
+    const patch = { updatedAt: Date.now() };
+    if (status !== undefined) patch.status = status;
+    const updated = { ...reviews[idx], ...patch };
+    const newList = [...reviews]; newList[idx] = updated;
     await writeBlob(REVIEWS_PATH, newList);
     return res.status(200).json(updated);
   }

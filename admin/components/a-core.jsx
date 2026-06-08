@@ -61,6 +61,7 @@ function AdminProvider({ children }) {
         await Promise.all([
           fetchProducts(sess.token), fetchOrders(sess.token), fetchRegisteredCustomers(sess.token),
           fetchCoupons(sess.token), fetchReviews(sess.token), fetchAbandonedCarts(sess.token),
+          fetchSettings(),
         ]);
       }
       setReady(true);
@@ -135,6 +136,15 @@ function AdminProvider({ children }) {
     } catch {}
   }
 
+  async function fetchSettings() {
+    try {
+      const res = await fetch(`${API_BASE}/api/settings`);
+      if (!res.ok) return;
+      const s = await res.json();
+      window.__settings = s; // consumed by invoice generator (VAT number etc.)
+    } catch {}
+  }
+
   // ── Auth ──────────────────────────────────────────────────────────────────
   const login = useCallback(async (username, password) => {
     try {
@@ -154,6 +164,7 @@ function AdminProvider({ children }) {
       await Promise.all([
         fetchProducts(token), fetchOrders(token), fetchRegisteredCustomers(token),
         fetchCoupons(token), fetchReviews(token), fetchAbandonedCarts(token),
+        fetchSettings(),
       ]);
       return { ok: true };
     } catch (err) {
