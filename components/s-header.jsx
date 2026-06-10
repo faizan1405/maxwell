@@ -1,7 +1,7 @@
 /* Amahle Blue Store — Wordmark, Announcement bar, Header, Cart drawer, Toast */
 
-const Wordmark = ({ className = "", light = false, compact = false }) => (
-  <a href="#top" className={`flex items-center ${className}`} aria-label="Amahle Blue home">
+const Wordmark = ({ className = "", light = false, compact = false, onClick }) => (
+  <a href="#home" onClick={onClick || ((e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('ab:go-page', { detail: 'home' })); })} className={`flex items-center ${className}`} aria-label="Amahle Blue home">
     <img
       src="assets/amahle-blue-logo.jpg"
       alt="Amahle Blue"
@@ -49,12 +49,13 @@ const AnnouncementBar = () => {
 };
 
 const NAV = [
-  { label: "Shop All", href: "#shop" },
-  { label: "Household", href: "#shop", cat: "household" },
-  { label: "Car Care", href: "#shop", cat: "car" },
-  { label: "Sanitisers", href: "#shop", cat: "sanitiser" },
-  { label: "About", href: "#about" },
-  { label: "Contact", href: "#contact" },
+  { label: "Home", href: "#home", page: "home" },
+  { label: "Shop", href: "#shop", page: "shop" },
+  { label: "Household", href: "#shop", cat: "household", page: "shop" },
+  { label: "Car Care", href: "#shop", cat: "car", page: "shop" },
+  { label: "Sanitisers", href: "#shop", cat: "sanitiser", page: "shop" },
+  { label: "About", href: "#about", page: "home" },
+  { label: "Contact", href: "#contact", page: "home" },
 ];
 
 /* ── Account menu (logged-in dropdown) ──────────────────────────────────────── */
@@ -119,9 +120,28 @@ const Header = ({ onNavCat }) => {
     return () => { document.body.style.overflow = ""; };
   }, [menu]);
 
-  const go = (item) => {
+  const go = (e, item) => {
+    e.preventDefault();
     setMenu(false);
-    if (item.cat && onNavCat) onNavCat(item.cat);
+    
+    if (item.page && item.page !== page) {
+      setPage(item.page);
+    }
+    
+    if (item.cat && onNavCat) {
+      onNavCat(item.cat);
+    } else if (item.href.startsWith("#") && item.href.length > 1) {
+      setTimeout(() => {
+        const el = document.getElementById(item.href.substring(1));
+        if (el) {
+          window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 110, behavior: "smooth" });
+        } else {
+          window.scrollTo(0, 0);
+        }
+      }, 50);
+    } else {
+      window.scrollTo(0, 0);
+    }
   };
 
   const goAccount = () => { setPage('account'); setMenu(false); window.scrollTo(0, 0); };
@@ -142,7 +162,7 @@ const Header = ({ onNavCat }) => {
           <button onClick={() => setMenu(true)} className="grid h-10 w-10 place-items-center rounded-xl text-ink hover:bg-slate-100 lg:hidden" aria-label="Open menu">
             <Menu size={22} />
           </button>
-          <Wordmark className="shrink-0" />
+          <Wordmark onClick={(e) => { e.preventDefault(); setPage('home'); window.scrollTo(0, 0); }} className="shrink-0" />
 
           {/* search */}
           <form onSubmit={(e) => { e.preventDefault(); if (onNavCat) onNavCat(null, q); }}
@@ -176,12 +196,15 @@ const Header = ({ onNavCat }) => {
 
         {/* category nav */}
         <nav className="mx-auto hidden max-w-[1280px] items-center gap-7 px-6 pb-3 lg:flex">
-          {NAV.map((n) => (
-            <a key={n.label} href={n.href} onClick={() => go(n)} className="group relative text-[14px] font-semibold text-slate-600 transition-colors hover:text-cobalt">
-              {n.label}
-              <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-cobalt transition-all duration-300 group-hover:w-full" />
-            </a>
-          ))}
+          {NAV.map((n) => {
+            const isActive = n.page === page && (n.page === 'shop' ? (!n.cat || n.cat === window.location.hash.split('=')[1]) : true);
+            return (
+              <a key={n.label} href={n.href} onClick={(e) => go(e, n)} className={`group relative text-[14px] font-semibold transition-colors hover:text-cobalt ${n.page === page && !n.cat ? 'text-cobalt' : 'text-slate-600'}`}>
+                {n.label}
+                <span className={`absolute -bottom-1 left-0 h-0.5 bg-cobalt transition-all duration-300 ${n.page === page && !n.cat ? 'w-full' : 'w-0 group-hover:w-full'}`} />
+              </a>
+            );
+          })}
           <span className="ml-auto inline-flex items-center gap-1.5 text-[13px] font-semibold text-grass">
             <Truck size={16} /> Fast nationwide delivery
           </span>
@@ -193,7 +216,7 @@ const Header = ({ onNavCat }) => {
         <div onClick={() => setMenu(false)} className="absolute inset-0 bg-ink/50 transition-opacity duration-300" style={{ opacity: menu ? 1 : 0 }} />
         <div className="absolute left-0 top-0 h-full w-[82%] max-w-[340px] bg-white shadow-2xl transition-transform duration-350 ease-[cubic-bezier(.16,1,.3,1)]" style={{ transform: menu ? "translateX(0)" : "translateX(-100%)" }}>
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-            <Wordmark />
+            <Wordmark onClick={(e) => { e.preventDefault(); setPage('home'); window.scrollTo(0, 0); }} />
             <button onClick={() => setMenu(false)} className="grid h-10 w-10 place-items-center rounded-xl hover:bg-slate-100"><X size={22} /></button>
           </div>
           <div className="px-5 py-3 overflow-y-auto h-[calc(100%-73px)]">
@@ -204,8 +227,8 @@ const Header = ({ onNavCat }) => {
             </form>
             <nav className="flex flex-col">
               {NAV.map((n) => (
-                <a key={n.label} href={n.href} onClick={() => go(n)}
-                  className="flex items-center justify-between border-b border-slate-50 py-3.5 text-[15px] font-semibold text-ink">
+                <a key={n.label} href={n.href} onClick={(e) => go(e, n)}
+                  className={`flex items-center justify-between border-b border-slate-50 py-3.5 text-[15px] font-semibold ${n.page === page && !n.cat ? 'text-cobalt' : 'text-ink'}`}>
                   {n.label} <ChevronRight size={18} className="text-slate-300" />
                 </a>
               ))}

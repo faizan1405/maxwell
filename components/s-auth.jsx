@@ -13,7 +13,31 @@ function CustomerProvider({ children }) {
   const [customer,     setCustomer]     = React.useState(null);
   const [sessionToken, setSessionToken] = React.useState(null);
   const [authOpen,     setAuthOpen]     = React.useState(false);
-  const [page,         setPage]         = React.useState('home'); // 'home' | 'account'
+  const [page,         setPageState]    = React.useState(() => {
+    return window.location.hash ? window.location.hash.substring(1).split('?')[0] : 'home';
+  });
+
+  const setPage = React.useCallback((p) => {
+    if (p && p !== 'home' && p !== 'shop' && p !== 'cart' && p !== 'checkout' && p !== 'account' && p !== 'order-confirmed' && p !== 'faq') {
+      p = 'home';
+    }
+    setPageState(old => {
+      if (old !== p) {
+        window.history.pushState({ page: p }, '', `#${p}`);
+      }
+      return p;
+    });
+  }, []);
+
+  React.useEffect(() => {
+    window.history.replaceState({ page }, '', `#${page}`);
+    const handlePopState = (e) => {
+      const p = e.state?.page || (window.location.hash ? window.location.hash.substring(1).split('?')[0] : 'home');
+      setPageState(p);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [page]);
 
   /* Restore session */
   React.useEffect(() => {
