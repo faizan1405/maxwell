@@ -132,23 +132,27 @@ const ProductCard = ({ p }) => {
 };
 
 const Featured = () => {
-  const bestIds = ["all-purpose-cleaner", "hand-surface-sanitiser", "carpet-upholstery-shampoo", "tyre-dash-shine", "linen-spray", "isopropyl-alcohol", "tyre-shine", "tile-cleaner"];
-  const best = PRODUCTS.filter((p) => bestIds.includes(p.id));
+  const bestIds = ["all-purpose-cleaner", "hand-surface-sanitiser", "carpet-upholstery-shampoo", "tyre-dash-shine"];
+  let best = PRODUCTS.filter((p) => p.badge === "Bestseller" || bestIds.includes(p.id));
+  if (best.length < 4) {
+    const remaining = PRODUCTS.filter((p) => !best.includes(p) && (typeof p.stock !== 'number' || p.stock > 0));
+    best = [...best, ...remaining];
+  }
+  best = best.slice(0, 4);
+
   const goShop = (e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('ab:go-page', { detail: 'shop' })); window.scrollTo(0, 0); };
+  
   return (
     <section className="bg-slate-50/70">
-      <div className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6 lg:py-20">
-        <div className="flex flex-col items-start sm:items-end justify-between gap-4 sm:flex-row">
-          <div>
-            <Reveal><span className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.2em] text-cobalt"><Sparkles size={14} className="text-amber-400" /> Customer favourites</span></Reveal>
-            <Reveal delay={60}><h2 className="mt-3 font-display text-[clamp(1.9rem,4vw,2.8rem)] font-extrabold tracking-tight text-ink">Bestsellers</h2></Reveal>
-          </div>
-          <Reveal delay={100}><button onClick={goShop} className="group inline-flex items-center gap-2 text-[14px] font-bold text-cobalt">View all products <ArrowRight size={17} className="transition-transform group-hover:translate-x-1" /></button></Reveal>
+      <div className="mx-auto max-w-[1280px] px-4 py-12 sm:px-6 lg:py-16">
+        <div className="flex flex-col items-center text-center">
+          <Reveal><span className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.2em] text-cobalt"><Sparkles size={14} className="text-amber-400" /> Customer favourites</span></Reveal>
+          <Reveal delay={60}><h2 className="mt-3 font-display text-[clamp(1.9rem,4vw,2.8rem)] font-extrabold tracking-tight text-ink">Bestsellers</h2></Reveal>
         </div>
-        <div className="mt-9 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
           {best.map((p, i) => <Reveal key={p.id} delay={(i % 4) * 70}><ProductCard p={p} /></Reveal>)}
         </div>
-        <div className="mt-12 flex justify-center">
+        <div className="mt-10 flex justify-center">
           <button onClick={goShop} className="rounded-full bg-ink px-8 py-3.5 text-[15px] font-bold text-white transition-all duration-200 hover:bg-cobalt hover:-translate-y-0.5 shadow-lg">View All Products</button>
         </div>
       </div>
