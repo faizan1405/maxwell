@@ -1,5 +1,5 @@
 /* Proof-of-Payment Upload API — POST (customer or admin auth) */
-const { put }                   = require('@vercel/blob');
+const { put, del }              = require('@vercel/blob');
 const { verifySession, cors }   = require('./_auth');
 const { verifyCustomerSession } = require('./_customers');
 const { readBlob, writeBlob }   = require('./_blob');
@@ -257,6 +257,16 @@ module.exports = async function handler(req, res) {
     const newList = [...orders];
     newList[idx]  = updatedOrder;
     await writeBlob(ORDERS_PATH, newList);
+
+    /* Delete old proof file to save space */
+    const oldStorageKey = order.proofOfPaymentStorageKey;
+    if (oldStorageKey) {
+      try {
+        await del(oldStorageKey, { token });
+      } catch (delErr) {
+        console.error('[proof] Failed to delete old proof:', oldStorageKey, delErr);
+      }
+    }
 
     /* Send emails (non-blocking) */
     sendProofAdminEmail(updatedOrder).catch(() => {});

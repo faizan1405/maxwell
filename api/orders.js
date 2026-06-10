@@ -791,9 +791,11 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    /* Stock restore on cancel */
+    /* Stock and Coupon adjustment on status change */
     const effectiveNewStatus = patch.status ?? prev.status;
-    if (effectiveNewStatus === 'cancelled' && prev.status !== 'cancelled') {
+    
+    if (prev.status !== 'cancelled' && effectiveNewStatus === 'cancelled') {
+      // Transition: Active -> Cancelled (Restore stock and coupon)
       const allProducts = await getProducts();
       const updatedProducts = allProducts.map(p => {
         const item = (prev.items || []).find(i => i.productId === p.id);
@@ -807,6 +809,37 @@ module.exports = async function handler(req, res) {
         const ci = allCoupons.findIndex(c => c.id === prev.couponId);
         if (ci !== -1 && allCoupons[ci].usedCount > 0) {
           allCoupons[ci] = { ...allCoupons[ci], usedCount: allCoupons[ci].usedCount - 1, updatedAt: Date.now() };
+          await writeBlob('data/maxwell-coupons.json', allCoupons);
+        }
+      }
+    } else if (prev.status === 'cancelled' && effectiveNewStatus !== 'cancelled') {
+      // Transition: Cancelled -> Active (Check & Deduct stock and coupon)
+      const allProducts = await getProducts();
+      
+      // 1. Verify stock availability before committing to anything
+      for (const item of (prev.items || [])) {
+        const product = allProducts.find(p => p.id === item.productId);
+        if (!product) continue;
+        const stockAvail = typeof product.stock === 'number' ? product.stock : 999;
+        if (stockAvail < item.qty) {
+          return res.status(400).json({ error: `Cannot reactivate order: Only ${stockAvail} unit(s) of "${product.name}" available, but ${item.qty} required.` });
+        }
+      }
+
+      // 2. Deduct stock safely
+      const updatedProducts = allProducts.map(p => {
+        const item = (prev.items || []).find(i => i.productId === p.id);
+        return item ? { ...p, stock: Math.max(0, (p.stock || 0) - item.qty), updatedAt: Date.now() } : p;
+      });
+      await writeBlob(PRODUCTS_PATH, updatedProducts);
+
+      // 3. Re-apply coupon usage
+      if (prev.couponId) {
+        const { getCoupons: gc } = require('./coupons');
+        const allCoupons = await gc();
+        const ci = allCoupons.findIndex(c => c.id === prev.couponId);
+        if (ci !== -1) {
+          allCoupons[ci] = { ...allCoupons[ci], usedCount: (allCoupons[ci].usedCount || 0) + 1, updatedAt: Date.now() };
           await writeBlob('data/maxwell-coupons.json', allCoupons);
         }
       }
