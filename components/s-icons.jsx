@@ -49,6 +49,7 @@ const AlertCircle = (p) => (<SIcon {...p}><circle cx="12" cy="12" r="10" /><line
 const CreditCard  = (p) => (<SIcon {...p}><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></SIcon>);
 const XCircle     = (p) => (<SIcon {...p}><circle cx="12" cy="12" r="10" /><path d="m15 9-6 6" /><path d="m9 9 6 6" /></SIcon>);
 const Banknote    = (p) => (<SIcon {...p}><rect width="20" height="12" x="2" y="6" rx="2" /><circle cx="12" cy="12" r="2" /><path d="M6 12h.01M18 12h.01" /></SIcon>);
+const FileText    = (p) => (<SIcon {...p}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M10 13H8" /><path d="M16 17H8" /><path d="M16 13h-2" /></SIcon>);
 
 const User       = (p) => (<SIcon {...p}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></SIcon>);
 const LogOut     = (p) => (<SIcon {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></SIcon>);
@@ -64,5 +65,5 @@ Object.assign(window, {
   Car, Spray, Phone, Mail, MapPin, Clock, Check, CheckCircle, Lock, Award, Facebook,
   Instagram, Whatsapp, Droplet, Eye,
   User, LogOut, Package, ArrowLeft, Pencil, RefreshCw, Settings,
-  AlertCircle, CreditCard, XCircle, Banknote,
+  AlertCircle, CreditCard, XCircle, Banknote, FileText,
 });
