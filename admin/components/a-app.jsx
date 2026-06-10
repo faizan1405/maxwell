@@ -387,6 +387,7 @@ function AdminApp() {
     orders:    <OrdersPage/>,
     customers: <CustomersPage/>,
     settings:  <SettingsPage/>,
+    categories:<CategoriesPage/>,
     coupons:   <CouponsPage/>,
     reviews:   <ReviewsPage/>,
     faqs:      <FaqsPage/>,

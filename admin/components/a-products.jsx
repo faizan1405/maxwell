@@ -1,12 +1,5 @@
 /* Admin Panel — Products Management */
 
-const CATEGORIES = [
-  { id:'household',     label:'Household Cleaning' },
-  { id:'sanitiser',     label:'Sanitisers & Disinfectants' },
-  { id:'car',           label:'Car Care' },
-  { id:'car-exterior',  label:'Car Exterior' },
-  { id:'industrial',    label:'Industrial Products' },
-];
 const BADGES  = [null,'Bestseller','New','High Purity','Sale'];
 const STATUSES= ['active','draft','archived'];
 const PAGE_SIZE = 8;
@@ -201,6 +194,7 @@ function MediaGallerySection({ items, onFilesSelected, onReorder, onSetPrimary, 
 // ── Product Form Modal ────────────────────────────────────────────────────────
 function ProductForm({ open, onClose, initial, onSave }) {
   const { session }                    = useAuth();
+  const { categories }                 = useAdmin();
   const [form,       setForm]          = React.useState(blankProduct);
   const [saving,     setSaving]        = React.useState(false);
   const [errors,     setErrors]        = React.useState({});
@@ -384,7 +378,7 @@ function ProductForm({ open, onClose, initial, onSave }) {
           <Input label="Product Name *" value={form.name} onChange={e=>set('name',e.target.value)} placeholder="e.g. All Purpose Cleaner" error={errors.name} className="sm:col-span-2"/>
           <Input label="Subtitle" value={form.sub} onChange={e=>set('sub',e.target.value)} placeholder="e.g. 5L Concentrated Formula"/>
           <Select label="Category" value={form.cat} onChange={e=>set('cat',e.target.value)}>
-            {CATEGORIES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
+            {categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
           </Select>
         </div>
 
@@ -460,7 +454,7 @@ function ProductForm({ open, onClose, initial, onSave }) {
 
 // ── Products Page ─────────────────────────────────────────────────────────────
 function ProductsPage() {
-  const { products, addProduct, updateProduct, deleteProduct, fmtMoney } = useAdmin();
+  const { products, addProduct, updateProduct, deleteProduct, fmtMoney, categories } = useAdmin();
   const { isAdmin } = useAuth();
 
   const [search,    setSearch]    = React.useState('');
@@ -531,7 +525,11 @@ function ProductsPage() {
     }
   }
 
-  const catLabel = { household:'Household', sanitiser:'Sanitiser', car:'Car Care', 'car-exterior':'Car Exterior', industrial:'Industrial' };
+  const catLabel = React.useMemo(() => {
+    const map = {};
+    categories.forEach(c => { map[c.id] = c.short || c.name; });
+    return map;
+  }, [categories]);
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
@@ -564,7 +562,7 @@ function ProductsPage() {
           <SearchInput value={search} onChange={setSearch} placeholder="Search products…"/>
           <select value={catFilter} onChange={e=>setCatFilter(e.target.value)} className="px-3 py-2 rounded-lg border border-slate-200 text-sm outline-none focus:border-cobalt bg-white">
             <option value="all">All Categories</option>
-            {CATEGORIES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
+            {categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <select value={statusFilter} onChange={e=>setStatus(e.target.value)} className="px-3 py-2 rounded-lg border border-slate-200 text-sm outline-none focus:border-cobalt bg-white">
             <option value="all">All Statuses</option>

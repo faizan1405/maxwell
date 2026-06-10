@@ -100,7 +100,11 @@ function StoreRouter() {
   React.useEffect(() => {
     const h = () => forceUpdate();
     window.addEventListener("ab:products-loaded", h);
-    return () => window.removeEventListener("ab:products-loaded", h);
+    window.addEventListener("ab:categories-loaded", h);
+    return () => {
+      window.removeEventListener("ab:products-loaded", h);
+      window.removeEventListener("ab:categories-loaded", h);
+    };
   }, []);
 
   React.useEffect(() => {

@@ -8,6 +8,7 @@ const NAV = [
 ];
 
 const NAV_ADMIN = [
+  { id:'categories',label:'Categories',     icon:'List',    badge:null },
   { id:'coupons',   label:'Coupons',        icon:'Tag',     badge:null },
   { id:'reviews',   label:'Reviews',        icon:'Star',    badge:'reviews' },
   { id:'faqs',      label:'FAQs',           icon:'Help',    badge:null },
@@ -116,7 +117,7 @@ function TopBar({ page, onMenuClick, stats, setPage }) {
   const [userOpen, setUserOpen] = React.useState(false);
   const alertCount = (stats?.byStatus?.pending||0) + (stats?.byStatus?.processing||0);
 
-  const labels = { dashboard:'Dashboard', products:'Products', orders:'Orders', customers:'Customers', settings:'Settings', coupons:'Coupons', reviews:'Reviews', faqs:'FAQs', abandoned:'Abandoned Carts' };
+  const labels = { dashboard:'Dashboard', products:'Products', orders:'Orders', customers:'Customers', settings:'Settings', categories: 'Categories', coupons:'Coupons', reviews:'Reviews', faqs:'FAQs', abandoned:'Abandoned Carts' };
   const label  = labels[page] || page;
 
   return (

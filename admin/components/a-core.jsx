@@ -48,6 +48,7 @@ function AdminProvider({ children }) {
   const [reviews,             setReviews]             = useState([]);
   const [abandonedCarts,      setAbandonedCarts]      = useState([]);
   const [faqs,                setFaqs]               = useState([]);
+  const [categories,          setCategories]         = useState([]);
 
   // Init — restore session from sessionStorage, then fetch data
   useEffect(() => {
@@ -62,7 +63,7 @@ function AdminProvider({ children }) {
         await Promise.all([
           fetchProducts(sess.token), fetchOrders(sess.token), fetchRegisteredCustomers(sess.token),
           fetchCoupons(sess.token), fetchReviews(sess.token), fetchAbandonedCarts(sess.token),
-          fetchFaqs(sess.token), fetchSettings(),
+          fetchFaqs(sess.token), fetchCategories(sess.token), fetchSettings(),
         ]);
       }
       setReady(true);
@@ -146,6 +147,15 @@ function AdminProvider({ children }) {
     } catch {}
   }
 
+  async function fetchCategories(token) {
+    try {
+      const res = await fetch(`${API_BASE}/api/categories?all=1`, { headers: apiHeaders(token) });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data)) setCategories(data);
+    } catch {}
+  }
+
   async function fetchSettings() {
     try {
       const res = await fetch(`${API_BASE}/api/settings`);
@@ -174,7 +184,7 @@ function AdminProvider({ children }) {
       await Promise.all([
         fetchProducts(token), fetchOrders(token), fetchRegisteredCustomers(token),
         fetchCoupons(token), fetchReviews(token), fetchAbandonedCarts(token),
-        fetchFaqs(token), fetchSettings(),
+        fetchFaqs(token), fetchCategories(token), fetchSettings(),
       ]);
       return { ok: true };
     } catch (err) {
@@ -196,6 +206,7 @@ function AdminProvider({ children }) {
     setReviews([]);
     setAbandonedCarts([]);
     setFaqs([]);
+    setCategories([]);
     sessionStorage.removeItem(SESSION_KEY);
   }, [session]);
 
@@ -365,6 +376,49 @@ function AdminProvider({ children }) {
     } catch { fetchFaqs(session?.token); }
   }, [session]);
 
+  // ── Categories CRUD ────────────────────────────────────────────────────────
+  const addCategory = useCallback(async (payload) => {
+    const res = await fetch(`${API_BASE}/api/categories`, {
+      method: 'POST', headers: apiHeaders(session?.token), body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Server error');
+    setCategories(prev => [...prev, data].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)));
+    return data;
+  }, [session]);
+
+  const updateCategory = useCallback(async (id, patch) => {
+    setCategories(prev => prev.map(c => c.id === id ? { ...c, ...patch, updatedAt: Date.now() } : c).sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)));
+    try {
+      const res = await fetch(`${API_BASE}/api/categories`, {
+        method: 'PATCH', headers: apiHeaders(session?.token), body: JSON.stringify({ id, patch }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || 'Server error');
+      }
+    } catch (e) {
+      fetchCategories(session?.token);
+      throw e;
+    }
+  }, [session]);
+
+  const deleteCategory = useCallback(async (id) => {
+    setCategories(prev => prev.filter(c => c.id !== id));
+    try {
+      const res = await fetch(`${API_BASE}/api/categories`, {
+        method: 'DELETE', headers: apiHeaders(session?.token), body: JSON.stringify({ id }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || 'Server error');
+      }
+    } catch (e) {
+      fetchCategories(session?.token);
+      throw e;
+    }
+  }, [session]);
+
   // ── Review moderation ─────────────────────────────────────────────────────
   const updateReview = useCallback(async (id, patch) => {
     setReviews(prev => prev.map(r => r.id===id ? {...r,...patch,updatedAt:Date.now()} : r));
@@ -442,6 +496,7 @@ function AdminProvider({ children }) {
     reviews, updateReview, deleteReview,
     abandonedCarts,
     faqs, addFaq, updateFaq, deleteFaq,
+    categories, addCategory, updateCategory, deleteCategory,
     fmtMoney, fmtDate, fmtDateTime, initials,
   };
 

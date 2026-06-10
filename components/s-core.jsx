@@ -12,7 +12,7 @@ const BRAND = {
   instagram: "https://www.instagram.com/amahle_blue/",
 };
 
-const CATEGORIES = [
+let CATEGORIES = [
   { id: "household", name: "Household Cleaning", short: "Household", icon: "Home", blurb: "Everyday surfaces, floors, fabrics & fresh-smelling rooms.", accent: "#1D4ED8" },
   { id: "industrial", name: "Industrial Products", short: "Industrial", icon: "Spray", blurb: "Heavy-duty degreasers, cleaners and specialty solutions for industrial use.", accent: "#B45309" },
   { id: "car", name: "Car Care", short: "Car Care", icon: "Car", blurb: "Showroom shine for tyres, dashboards & trim.", accent: "#0B2E6B" },
@@ -567,6 +567,20 @@ let PRODUCTS = (() => {
     const s = await res.json();
     window.__settings = s;
     window.dispatchEvent(new Event("ab:settings-loaded"));
+  } catch {}
+})();
+
+// Fetch categories from API and live-patch
+(async () => {
+  try {
+    const res = await fetch("/api/categories");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (Array.isArray(data) && data.length) {
+      CATEGORIES = data.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      window.CATEGORIES = CATEGORIES;
+      window.dispatchEvent(new Event("ab:categories-loaded"));
+    }
   } catch {}
 })();
 
