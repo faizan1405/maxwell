@@ -78,7 +78,7 @@ function LoginPage() {
             </div>
 
             <button type="submit" disabled={loading}
-              className="w-full py-2.5 rounded-xl bg-cobalt text-white font-700 text-sm hover:bg-cobalt-d active:scale-98 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2">
+              className="w-full py-2.5 rounded-xl bg-cobalt text-white font-700 text-sm hover:bg-cobalt-d active:scale-[0.98] transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2">
               {loading ? <><Spinner size={16}/> Signing in…</> : 'Sign In'}
             </button>
           </form>

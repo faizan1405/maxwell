@@ -68,8 +68,8 @@ function PaymentSettingsTab({ token }) {
           <label className="flex items-center gap-2 cursor-pointer">
             <span className="text-xs font-600 text-slate-600">Enabled</span>
             <div className={`relative w-10 h-5 rounded-full transition ${eft.enabled ? 'bg-cobalt' : 'bg-slate-200'}`}
-              onClick={() => set('eft','enabled',!eft.enabled)} role="switch" tabIndex={0}
-              onKeyDown={e=>e.key===' '&&set('eft','enabled',!eft.enabled)}>
+              onClick={() => set('eft','enabled',!eft.enabled)} role="switch" aria-checked={!!eft.enabled} tabIndex={0}
+              onKeyDown={e=>(e.key===' '||e.key==='Enter')&&set('eft','enabled',!eft.enabled)}>
               <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${eft.enabled ? 'left-5' : 'left-0.5'}`}/>
             </div>
           </label>
@@ -139,8 +139,8 @@ function PaymentSettingsTab({ token }) {
           <label className="flex items-center gap-2 cursor-pointer">
             <span className="text-xs font-600 text-slate-600">Enabled</span>
             <div className={`relative w-10 h-5 rounded-full transition ${cod.enabled ? 'bg-cobalt' : 'bg-slate-200'}`}
-              onClick={() => set('cod','enabled',!cod.enabled)} role="switch" tabIndex={0}
-              onKeyDown={e=>e.key===' '&&set('cod','enabled',!cod.enabled)}>
+              onClick={() => set('cod','enabled',!cod.enabled)} role="switch" aria-checked={!!cod.enabled} tabIndex={0}
+              onKeyDown={e=>(e.key===' '||e.key==='Enter')&&set('cod','enabled',!cod.enabled)}>
               <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${cod.enabled ? 'left-5' : 'left-0.5'}`}/>
             </div>
           </label>
@@ -251,7 +251,7 @@ function SettingsPage() {
   function handleResetData() {
     // Clear local caches; the KV data will reseed on next load
     localStorage.removeItem('ab_products');
-    showToast('Local cache cleared. Reload to resync from server.', 'error');
+    showToast('Local cache cleared. Reload to resync from server.');
   }
 
   return (

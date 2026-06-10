@@ -113,7 +113,7 @@ function Toggle({ checked, onChange, label }) {
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
 function Modal({ open, onClose, title, children, size='md', footer }) {
-  useEffect(() => {
+  React.useEffect(() => {
     if (!open) return;
     const esc = (e) => e.key === 'Escape' && onClose();
     document.addEventListener('keydown', esc);

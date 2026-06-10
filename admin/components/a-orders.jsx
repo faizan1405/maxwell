@@ -214,7 +214,7 @@ ${eftSection}${codSection}
 }
 
 /* ── Confirmation dialog ─────────────────────────────────────────────────────── */
-function ConfirmDialog({ open, title, message, note, noteLabel, noteRequired, confirmLabel, confirmVariant='danger', onConfirm, onCancel }) {
+function OrderConfirmDialog({ open, title, message, note, noteLabel, noteRequired, confirmLabel, confirmVariant='danger', onConfirm, onCancel }) {
   const [val, setVal] = React.useState('');
   React.useEffect(() => { if (open) setVal(''); }, [open]);
   if (!open) return null;
@@ -702,7 +702,7 @@ function OrderDetail({ order, onClose, onOrderStatusChange, onPayStatusChange, o
         )}
       </Modal>
 
-      <ConfirmDialog
+      <OrderConfirmDialog
         open={!!confirmDlg}
         title={confirmDlg?.title}
         message={confirmDlg?.message}

@@ -36,9 +36,10 @@ function CustomerDetail({ customer, onClose }) {
           </div>
           <div className="bg-slate-50 rounded-xl px-4 py-3 text-center">
             <div className="text-xl font-800 text-slate-700">
-              {customer.orderCount > 0 && customer.totalSpent > 0
-                ? fmtMoney(customer.totalSpent / customer.orders.filter(o=>o.payment?.status==='paid').length || 1)
-                : 'R0.00'}
+              {(() => {
+                const paidOrders = customer.orders.filter(o => o.payment?.status === 'paid');
+                return paidOrders.length > 0 ? fmtMoney(customer.totalSpent / paidOrders.length) : 'R0.00';
+              })()}
             </div>
             <div className="text-xs text-slate-500 mt-0.5">Avg. Order</div>
           </div>

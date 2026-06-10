@@ -45,8 +45,7 @@ function Sidebar({ page, setPage, open, onClose, stats }) {
       <aside className={`fixed top-0 left-0 h-full z-40 flex flex-col transition-transform
         w-64 bg-ink border-r border-white/8
         ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
-        style={{ transitionDuration: '300ms', transitionTimingFunction: 'cubic-bezier(.16,1,.3,1)' }}
-        style={{boxShadow:'4px 0 24px rgba(0,0,0,0.15)'}}>
+        style={{ transitionDuration: '300ms', transitionTimingFunction: 'cubic-bezier(.16,1,.3,1)', boxShadow:'4px 0 24px rgba(0,0,0,0.15)' }}>
 
         {/* Logo */}
         <div className="flex items-center justify-between px-5 py-5 border-b border-white/8">

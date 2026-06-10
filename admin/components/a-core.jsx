@@ -466,6 +466,7 @@ function AdminProvider({ children }) {
 window.useAuth     = useAuth;
 window.useAdmin    = useAdmin;
 window.AdminProvider = AdminProvider;
+window.API_BASE    = API_BASE;
 window.fmtMoney    = fmtMoney;
 window.fmtDate     = fmtDate;
 window.fmtDateTime = fmtDateTime;
