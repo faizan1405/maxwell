@@ -24,6 +24,12 @@
         { "key": "Referrer-Policy",          "value": "strict-origin-when-cross-origin" }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/categories",
+      "destination": "/api/settings?resource=categories"
+    }
   ]
 }
 

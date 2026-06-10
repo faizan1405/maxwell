@@ -76,6 +76,10 @@ module.exports = async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
 
+  if (req.query.resource === 'categories') {
+    return require('./_categories')(req, res);
+  }
+
   /* ── GET ─────────────────────────────────────────────────────────────────────── */
   if (req.method === 'GET') {
     const s            = await getSettings();
