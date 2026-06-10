@@ -105,7 +105,7 @@ function AccountMenu({ customer, onAccount, onOrders, onLogout }) {
 
 const Header = ({ onNavCat }) => {
   const { count, setOpen } = useCart();
-  const { customer, isLoggedIn, openAuth, logout, setPage } = useCustomer();
+  const { customer, isLoggedIn, openAuth, logout, page, setPage } = useCustomer();
   const [scrolled, setScrolled] = React.useState(false);
   const [menu,     setMenu]     = React.useState(false);
   const [q,        setQ]        = React.useState("");
