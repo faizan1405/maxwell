@@ -44,7 +44,7 @@ const Footer = ({ onShopCat }) => (
           <ul className="mt-4 space-y-2.5 text-[14px]">
             <li><a href="#about" className="text-slate-400 transition hover:text-white">About us</a></li>
             <li><a href="#contact" className="text-slate-400 transition hover:text-white">Contact</a></li>
-            <li><a href={BRAND.wa} target="_blank" rel="noopener noreferrer" className="text-slate-400 transition hover:text-white">Bulk &amp; trade</a></li>
+            <li><a href={`${BRAND.wa}?text=${encodeURIComponent("Hi Amahle Blue, I'd like to inquire about bulk and trade pricing.")}`} target="_blank" rel="noopener noreferrer" className="text-slate-400 transition hover:text-white">Bulk &amp; trade</a></li>
             <li><button onClick={() => window.dispatchEvent(new CustomEvent('ab:go-page', { detail: 'faq' }))} className="text-slate-400 transition hover:text-white">Delivery &amp; returns</button></li>
             <li>
               <button
@@ -80,7 +80,7 @@ const Footer = ({ onShopCat }) => (
 );
 
 const WhatsappFab = () => (
-  <a href={BRAND.wa} target="_blank" rel="noopener noreferrer"
+  <a href={`${BRAND.wa}?text=${encodeURIComponent("Hi Amahle Blue, I need some help.")}`} target="_blank" rel="noopener noreferrer"
     className="group fixed bottom-5 right-5 z-30 inline-flex items-center gap-0 overflow-hidden rounded-full bg-grass px-4 py-4 text-white shadow-[0_16px_40px_-10px_rgba(21,154,76,0.8)] transition-all duration-300 hover:px-5 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
     style={{ animation: 'abfloat 4s ease-in-out infinite' }}
     aria-label="Chat on WhatsApp">

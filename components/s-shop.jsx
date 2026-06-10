@@ -112,7 +112,7 @@ const ProductCard = ({ p }) => {
           {lowStock && <span className="text-[11px] font-bold text-amber-600">Only {p.stock} left</span>}
         </div>
         {contactForPrice ? (
-          <a href={BRAND.wa} target="_blank" rel="noopener noreferrer"
+          <a href={`${BRAND.wa}?text=${encodeURIComponent(`Hi Amahle Blue, I would like to get a quote for the ${p.name}.`)}`} target="_blank" rel="noopener noreferrer"
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-[13.5px] font-bold text-white bg-grass hover:bg-emerald-600 transition-all duration-200 active:scale-95">
             <Whatsapp size={16} /> Get a quote
           </a>
@@ -520,7 +520,7 @@ const QuickView = () => {
                 <span className="ml-auto rounded-full bg-slate-100 px-3 py-1 text-[12px] font-bold text-slate-500">{product.size}</span>
               </div>
               {(!product.price || product.price <= 0) ? (
-                <a href={BRAND.wa} target="_blank" rel="noopener noreferrer"
+                <a href={`${BRAND.wa}?text=${encodeURIComponent(`Hi Amahle Blue, I would like to get a quote for the ${product.name}.`)}`} target="_blank" rel="noopener noreferrer"
                   className="mt-5 flex items-center justify-center gap-2 rounded-full py-3.5 text-[15px] font-bold text-white bg-grass hover:bg-emerald-600 transition">
                   <Whatsapp size={18} /> Get a quote on WhatsApp
                 </a>
