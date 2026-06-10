@@ -132,19 +132,24 @@ const ProductCard = ({ p }) => {
 };
 
 const Featured = () => {
-  const best = PRODUCTS.filter((p) => ["all-purpose-cleaner", "hand-surface-sanitiser", "carpet-upholstery-shampoo", "tyre-dash-shine"].includes(p.id));
+  const bestIds = ["all-purpose-cleaner", "hand-surface-sanitiser", "carpet-upholstery-shampoo", "tyre-dash-shine", "linen-spray", "isopropyl-alcohol", "tyre-shine", "tile-cleaner"];
+  const best = PRODUCTS.filter((p) => bestIds.includes(p.id));
+  const goShop = (e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('ab:go-page', { detail: 'shop' })); window.scrollTo(0, 0); };
   return (
     <section className="bg-slate-50/70">
       <div className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6 lg:py-20">
-        <div className="flex flex-col items-end justify-between gap-4 sm:flex-row sm:items-end">
+        <div className="flex flex-col items-start sm:items-end justify-between gap-4 sm:flex-row">
           <div>
             <Reveal><span className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.2em] text-cobalt"><Sparkles size={14} className="text-amber-400" /> Customer favourites</span></Reveal>
             <Reveal delay={60}><h2 className="mt-3 font-display text-[clamp(1.9rem,4vw,2.8rem)] font-extrabold tracking-tight text-ink">Bestsellers</h2></Reveal>
           </div>
-          <Reveal delay={100}><a href="#shop" className="group inline-flex items-center gap-2 text-[14px] font-bold text-cobalt">View all products <ArrowRight size={17} className="transition-transform group-hover:translate-x-1" /></a></Reveal>
+          <Reveal delay={100}><button onClick={goShop} className="group inline-flex items-center gap-2 text-[14px] font-bold text-cobalt">View all products <ArrowRight size={17} className="transition-transform group-hover:translate-x-1" /></button></Reveal>
         </div>
-        <div className="mt-9 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
+        <div className="mt-9 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
           {best.map((p, i) => <Reveal key={p.id} delay={(i % 4) * 70}><ProductCard p={p} /></Reveal>)}
+        </div>
+        <div className="mt-12 flex justify-center">
+          <button onClick={goShop} className="rounded-full bg-ink px-8 py-3.5 text-[15px] font-bold text-white transition-all duration-200 hover:bg-cobalt hover:-translate-y-0.5 shadow-lg">View All Products</button>
         </div>
       </div>
     </section>
@@ -189,7 +194,12 @@ const SORTS = [
 
 const Shop = ({ activeCat, setActiveCat, query, setQuery }) => {
   const [sort, setSort] = React.useState("featured");
+  const [visibleCount, setVisibleCount] = React.useState(8);
   const tabs = [{ id: "all", short: "All Products" }, ...CATEGORIES];
+
+  React.useEffect(() => {
+    setVisibleCount(8);
+  }, [activeCat, query, sort]);
 
   let list = PRODUCTS.filter((p) => (activeCat === "all" || !activeCat ? true : p.cat === activeCat));
   if (query && query.trim()) {
@@ -241,8 +251,15 @@ const Shop = ({ activeCat, setActiveCat, query, setQuery }) => {
             <button onClick={() => { setActiveCat("all"); setQuery(""); }} className="mt-5 rounded-full bg-cobalt px-6 py-2.5 text-[14px] font-bold text-white">Reset filters</button>
           </div>
         ) : (
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
-            {list.map((p, i) => <Reveal key={p.id} delay={(i % 4) * 60}><ProductCard p={p} /></Reveal>)}
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
+            {list.slice(0, visibleCount).map((p, i) => <Reveal key={p.id} delay={(i % 4) * 60}><ProductCard p={p} /></Reveal>)}
+          </div>
+        )}
+        {list.length > visibleCount && (
+          <div className="mt-12 flex justify-center">
+            <button onClick={() => setVisibleCount(v => v + 8)} className="rounded-full border border-slate-200 bg-white px-8 py-3.5 text-[14px] font-bold text-ink hover:border-cobalt hover:text-cobalt transition-colors shadow-sm">
+              Load More
+            </button>
           </div>
         )}
       </div>
@@ -346,7 +363,7 @@ const QuickView = () => {
 
       {/* Modal */}
       <div
-        className="relative z-10 w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl transition-all duration-350"
+        className="relative z-10 w-full max-w-3xl max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl bg-white shadow-2xl transition-all duration-350 flex flex-col sm:block"
         style={{ opacity: product ? 1 : 0, transform: product ? "scale(1) translateY(0)" : "scale(.95) translateY(14px)" }}
       >
         {product && (

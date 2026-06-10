@@ -118,10 +118,10 @@ function StoreRouter() {
     if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 110, behavior: "smooth" });
   };
   const onNavCat = (cat, q) => {
-    setPage("home");
+    setPage("shop");
     if (cat) setActiveCat(cat);
     if (typeof q === "string") { setQuery(q); setActiveCat("all"); }
-    setTimeout(scrollToShop, 60);
+    window.scrollTo(0, 0);
   };
   const onShopCat = (cat, q) => { onNavCat(cat || "all", q); };
 
@@ -183,6 +183,23 @@ function StoreRouter() {
     );
   }
 
+  if (page === "shop") {
+    return (
+      <React.Fragment>
+        <Header onNavCat={onNavCat} />
+        <main className="ab-page-enter bg-white pb-20">
+          <Shop activeCat={activeCat} setActiveCat={setActiveCat} query={query} setQuery={setQuery} />
+        </main>
+        <Footer onShopCat={onShopCat} />
+        <CartDrawer />
+        <AuthModal />
+        <QuickView />
+        <Toast />
+        <WhatsappFab />
+      </React.Fragment>
+    );
+  }
+
   return (
     <React.Fragment>
       <Header onNavCat={onNavCat} />
@@ -192,7 +209,6 @@ function StoreRouter() {
         <CategoryShowcase onShopCat={onShopCat} />
         <Featured />
         <BulkPromo />
-        <Shop activeCat={activeCat} setActiveCat={setActiveCat} query={query} setQuery={setQuery} />
         <WhyUs />
         <Reviews />
         <Newsletter />

@@ -196,7 +196,7 @@ const Header = ({ onNavCat }) => {
             <Wordmark />
             <button onClick={() => setMenu(false)} className="grid h-10 w-10 place-items-center rounded-xl hover:bg-slate-100"><X size={22} /></button>
           </div>
-          <div className="px-5 py-3">
+          <div className="px-5 py-3 overflow-y-auto h-[calc(100%-73px)]">
             <form onSubmit={(e) => { e.preventDefault(); setMenu(false); if (onNavCat) onNavCat(null, q); }} className="relative mb-3 flex items-center">
               <Search size={18} className="pointer-events-none absolute left-4 text-slate-400" />
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products…"
