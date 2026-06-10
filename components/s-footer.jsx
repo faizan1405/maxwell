@@ -45,7 +45,7 @@ const Footer = ({ onShopCat }) => (
             <li><a href="#about" className="text-slate-400 transition hover:text-white">About us</a></li>
             <li><a href="#contact" className="text-slate-400 transition hover:text-white">Contact</a></li>
             <li><a href={BRAND.wa} target="_blank" rel="noopener noreferrer" className="text-slate-400 transition hover:text-white">Bulk &amp; trade</a></li>
-            <li><a href="#shop" className="text-slate-400 transition hover:text-white">Delivery &amp; returns</a></li>
+            <li><button onClick={() => window.dispatchEvent(new CustomEvent('ab:go-page', { detail: 'faq' }))} className="text-slate-400 transition hover:text-white">Delivery &amp; returns</button></li>
             <li>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('ab:go-page', { detail: 'faq' }))}

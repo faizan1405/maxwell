@@ -96,10 +96,10 @@ const Newsletter = () => {
             <div className="pointer-events-none absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.14) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
             <div className="relative mx-auto max-w-xl">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-wide text-white"><Mail size={14} /> Join the list</span>
-              <h2 className="mt-4 font-display text-[clamp(1.7rem,3.5vw,2.5rem)] font-extrabold leading-tight tracking-tight text-white">Get 10% off your first order</h2>
+              <h2 className="mt-4 font-display text-[clamp(1.7rem,3.5vw,2.5rem)] font-extrabold leading-tight tracking-tight text-white">Be the first to hear about deals</h2>
               <p className="mt-3 text-[15.5px] text-sky-100/90">Subscribe for cleaning tips, new product drops and subscriber-only deals.</p>
               {done ? (
-                <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-[15px] font-bold text-cobalt"><CheckCircle size={18} className="text-grass" /> You're in — check your inbox!</div>
+                <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-[15px] font-bold text-cobalt"><CheckCircle size={18} className="text-grass" /> Thanks for subscribing!</div>
               ) : (
                 <form onSubmit={(e) => { e.preventDefault(); setDone(true); }} className="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row">
                   <input type="email" required placeholder="you@email.co.za" className="h-[52px] flex-1 rounded-full border border-white/20 bg-white/10 px-5 text-[15px] text-white placeholder-white/55 outline-none focus:border-white focus:bg-white/15" />

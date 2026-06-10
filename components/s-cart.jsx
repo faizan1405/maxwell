@@ -29,7 +29,7 @@ function printInvoice(order) {
 
   const s        = window.__settings || {};
   const biz      = s.business || {};
-  const bank     = s.bankDetails || {};
+  const bank     = order.eftBankDetails || s.eft || {};
   const bizName  = biz.name    || 'Amahle Blue';
   const bizAddr  = biz.address || 'Unit H, 13 Main Reef Road, Dunswart, Boksburg, Gauteng, South Africa';
   const bizPhone = biz.phone   || '067 101 4345';
@@ -249,7 +249,7 @@ function CartPage({ onGoHome, onCheckout }) {
               {remaining > 0 ? (
                 <p className="text-[13px] text-slate-600">
                   Add <span className="font-700 text-cobalt">{money(remaining)}</span> more for{' '}
-                  <span className="font-600 text-ink">free Gauteng delivery</span>
+                  <span className="font-600 text-ink">free delivery</span>
                 </p>
               ) : (
                 <p className="flex items-center gap-2 text-[13px] font-600 text-grass">
@@ -268,7 +268,7 @@ function CartPage({ onGoHome, onCheckout }) {
                 return (
                   <div key={product.id} className="flex gap-4 p-5">
                     <div className="h-24 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
-                      <img src={product.img} alt={product.name} className="h-full w-full object-cover" onError={e=>{e.target.onerror=null;e.target.src='assets/products/placeholder.svg'}} />
+                      <img src={getPrimaryImg(product)} alt={product.name} className="h-full w-full object-cover" onError={e=>{e.target.onerror=null;e.target.src='assets/products/placeholder.svg'}} />
                     </div>
                     <div className="flex flex-1 flex-col gap-1.5 min-w-0">
                       <div className="flex items-start justify-between gap-3">
@@ -393,7 +393,8 @@ function CheckoutPage({ onBack, onSuccess }) {
   }, [form.addrProvince, subtotal, settings]);
 
   const couponDiscount = coupon?.discount || 0;
-  const total          = Math.max(0, subtotal + delivery - couponDiscount);
+  const codFee         = form.payment === 'COD' ? (settings?.cod?.codFee || 0) : 0;
+  const total          = Math.max(0, subtotal + delivery - couponDiscount + codFee);
 
   const idemKey = React.useRef(`idem_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
 
@@ -717,7 +718,7 @@ function CheckoutPage({ onBack, onSuccess }) {
               {detailed.map(({ product, qty }) => (
                 <div key={product.id} className="flex items-center gap-3">
                   <div className="h-12 w-10 shrink-0 overflow-hidden rounded-lg bg-slate-50 border border-slate-100">
-                    <img src={product.img} alt={product.name} className="h-full w-full object-cover" onError={e=>{e.target.onerror=null;e.target.src='assets/products/placeholder.svg'}} />
+                    <img src={getPrimaryImg(product)} alt={product.name} className="h-full w-full object-cover" onError={e=>{e.target.onerror=null;e.target.src='assets/products/placeholder.svg'}} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[12.5px] font-600 text-ink truncate">{product.name}</p>
@@ -744,6 +745,12 @@ function CheckoutPage({ onBack, onSuccess }) {
                   {delivery === 0 ? 'FREE' : money(delivery)}
                 </span>
               </div>
+              {codFee > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">COD Fee</span>
+                  <span className="font-600 text-ink">{money(codFee)}</span>
+                </div>
+              )}
             </div>
             <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
               <span className="font-display text-[15px] font-extrabold text-ink">Total</span>

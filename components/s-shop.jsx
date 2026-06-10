@@ -15,8 +15,9 @@ const BadgeChip = ({ badge }) => {
 const ProductCard = ({ p }) => {
   const { add } = useCart();
   const c = catOf(p.cat);
-  const outOfStock  = typeof p.stock === 'number' && p.stock === 0;
-  const lowStock    = typeof p.stock === 'number' && p.stock > 0 && p.stock <= (p.lowStockThreshold || 10);
+  const outOfStock      = typeof p.stock === 'number' && p.stock === 0;
+  const lowStock        = typeof p.stock === 'number' && p.stock > 0 && p.stock <= (p.lowStockThreshold || 10);
+  const contactForPrice = !p.price || p.price <= 0;
 
   const primaryImgUrl = getPrimaryImg(p);
   const secondImgUrl  = getSecondImg(p);
@@ -102,19 +103,29 @@ const ProductCard = ({ p }) => {
         </div>
         <div className="mt-3 flex items-end justify-between gap-2 pt-1">
           <div className="flex items-baseline gap-1.5">
-            <span className="font-display text-[20px] font-extrabold text-ink">{money(p.price)}</span>
-            {p.was && <span className="text-[13px] font-medium text-slate-300 line-through">{money(p.was)}</span>}
+            {contactForPrice
+              ? <span className="font-display text-[15px] font-extrabold text-slate-500">Contact for price</span>
+              : <><span className="font-display text-[20px] font-extrabold text-ink">{money(p.price)}</span>
+                  {p.was && <span className="text-[13px] font-medium text-slate-300 line-through">{money(p.was)}</span>}</>
+            }
           </div>
           {lowStock && <span className="text-[11px] font-bold text-amber-600">Only {p.stock} left</span>}
         </div>
-        <button onClick={handleAdd} disabled={outOfStock}
-          className={`mt-3 flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-[13.5px] font-bold text-white transition-all duration-200 active:scale-95 ${
-            outOfStock ? 'bg-slate-300 cursor-not-allowed' :
-            added      ? 'bg-grass scale-[0.98]' :
-                         'bg-ink hover:bg-cobalt'
-          }`}>
-          {outOfStock ? 'Out of Stock' : added ? <><Check size={16} /> Added!</> : <><Plus size={16} /> Add to Cart</>}
-        </button>
+        {contactForPrice ? (
+          <a href={BRAND.wa} target="_blank" rel="noopener noreferrer"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-[13.5px] font-bold text-white bg-grass hover:bg-emerald-600 transition-all duration-200 active:scale-95">
+            <Whatsapp size={16} /> Get a quote
+          </a>
+        ) : (
+          <button onClick={handleAdd} disabled={outOfStock}
+            className={`mt-3 flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-[13.5px] font-bold text-white transition-all duration-200 active:scale-95 ${
+              outOfStock ? 'bg-slate-300 cursor-not-allowed' :
+              added      ? 'bg-grass scale-[0.98]' :
+                           'bg-ink hover:bg-cobalt'
+            }`}>
+            {outOfStock ? 'Out of Stock' : added ? <><Check size={16} /> Added!</> : <><Plus size={16} /> Add to Cart</>}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -501,11 +512,19 @@ const QuickView = () => {
                 ))}
               </ul>
               <div className="mt-5 flex items-baseline gap-2">
-                <span className="font-display text-[24px] sm:text-[28px] font-extrabold text-ink">{money(product.price)}</span>
-                {product.was && <span className="text-[15px] font-medium text-slate-300 line-through">{money(product.was)}</span>}
+                {(!product.price || product.price <= 0)
+                  ? <span className="font-display text-[20px] font-extrabold text-slate-500">Contact for price</span>
+                  : <><span className="font-display text-[24px] sm:text-[28px] font-extrabold text-ink">{money(product.price)}</span>
+                      {product.was && <span className="text-[15px] font-medium text-slate-300 line-through">{money(product.was)}</span>}</>
+                }
                 <span className="ml-auto rounded-full bg-slate-100 px-3 py-1 text-[12px] font-bold text-slate-500">{product.size}</span>
               </div>
-              {(() => {
+              {(!product.price || product.price <= 0) ? (
+                <a href={BRAND.wa} target="_blank" rel="noopener noreferrer"
+                  className="mt-5 flex items-center justify-center gap-2 rounded-full py-3.5 text-[15px] font-bold text-white bg-grass hover:bg-emerald-600 transition">
+                  <Whatsapp size={18} /> Get a quote on WhatsApp
+                </a>
+              ) : (() => {
                 const outOfStock = typeof product.stock === 'number' && product.stock === 0;
                 const lowStock   = typeof product.stock === 'number' && product.stock > 0 && product.stock <= (product.lowStockThreshold || 10);
                 const maxQty     = typeof product.stock === 'number' ? product.stock : 99;

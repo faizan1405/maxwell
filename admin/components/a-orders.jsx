@@ -111,7 +111,7 @@ function printInvoice(order) {
   const vatRate     = 0.15;
   const vatAmount   = (order.total || 0) - (order.total || 0) / (1 + vatRate);
   const vatNumber   = (window.__settings && window.__settings.business && window.__settings.business.vatNumber) || '';
-  const bankDetails = (window.__settings && window.__settings.bankDetails) || {};
+  const bankDetails = (window.__settings && window.__settings.eft) || {};
   const date = order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-ZA', { day:'numeric', month:'long', year:'numeric' }) : '';
 
   const itemRows = (order.items || []).map(item => `
@@ -791,7 +791,7 @@ function OrdersPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        const updated = data.order || { orderStatus: newStatus, status: simpleStatus };
+        const updated = (data && data.id) ? data : { orderStatus: newStatus, status: simpleStatus };
         setViewing(v => v ? { ...v, ...updated } : null);
         updateOrderStatus(id, simpleStatus);
         showToast(`Order status → ${newStatus}`);
@@ -811,11 +811,11 @@ function OrdersPage() {
       const res = await fetch(`${API_BASE}/api/orders`, {
         method: 'PATCH',
         headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${session?.token}` },
-        body: JSON.stringify({ id, paymentStatus: newPayStatus, note }),
+        body: JSON.stringify({ id, paymentStatus: newPayStatus, statusNote: note }),
       });
       if (res.ok) {
         const data = await res.json();
-        const updated = data.order || { paymentStatus: newPayStatus };
+        const updated = (data && data.id) ? data : { paymentStatus: newPayStatus };
         setViewing(v => v ? { ...v, ...updated } : null);
         updatePaymentStatus(id, newPayStatus === 'Paid' ? 'paid' : 'pending');
         showToast(`Payment status → ${newPayStatus}`);
@@ -834,11 +834,11 @@ function OrdersPage() {
       const res = await fetch(`${API_BASE}/api/orders`, {
         method: 'PATCH',
         headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${session?.token}` },
-        body: JSON.stringify({ id, addInternalNote: note }),
+        body: JSON.stringify({ id, internalNotes: note }),
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.order) setViewing(v => v ? { ...v, ...data.order } : null);
+        if (data && data.id) setViewing(v => v ? { ...v, ...data } : null);
         showToast('Internal note saved');
       }
     } catch {

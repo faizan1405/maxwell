@@ -5,5 +5,10 @@
   "dependencies": {
     "@vercel/blob": "^0.27.0",
     "nodemailer": "^8.0.10"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.7",
+    "@babel/preset-react": "^7.29.7"
   }
 }

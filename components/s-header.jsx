@@ -297,7 +297,7 @@ const CartDrawer = () => {
                 {detailed.map(({ product, qty }) => (
                   <li key={product.id} className="flex gap-3">
                     <div className="h-[88px] w-[72px] shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
-                      <img src={product.img} alt={product.name} className="h-full w-full object-cover" onError={e=>{e.target.onerror=null;e.target.src='assets/products/placeholder.svg'}} />
+                      <img src={getPrimaryImg(product)} alt={product.name} className="h-full w-full object-cover" onError={e=>{e.target.onerror=null;e.target.src='assets/products/placeholder.svg'}} />
                     </div>
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-start justify-between gap-2">

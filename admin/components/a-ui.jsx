@@ -166,9 +166,21 @@ function Modal({ open, onClose, title, children, size='md', footer }) {
 // ── Confirm Dialog ────────────────────────────────────────────────────────────
 function ConfirmDialog({ open, onClose, onConfirm, title, message, confirmLabel='Delete', variant='danger' }) {
   const [busy, setBusy] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!open) setBusy(false);
+  }, [open]);
+
   async function handleConfirm() {
     setBusy(true);
-    try { await onConfirm(); } finally { setBusy(false); onClose(); }
+    try {
+      await onConfirm();
+    } catch {
+      // onConfirm handles its own errors
+    } finally {
+      setBusy(false);
+      onClose();
+    }
   }
   return (
     <Modal open={open} onClose={onClose} title={title} size="sm"

@@ -191,6 +191,11 @@ function AdminProvider({ children }) {
     setSession(null);
     setProducts([]);
     setOrders([]);
+    setRegisteredCustomers([]);
+    setCoupons([]);
+    setReviews([]);
+    setAbandonedCarts([]);
+    setFaqs([]);
     sessionStorage.removeItem(SESSION_KEY);
   }, [session]);
 

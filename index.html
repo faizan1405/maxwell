@@ -6,6 +6,27 @@
   <title>Amahle Blue — Premium Cleaning, Car-Care &amp; Sanitising Products</title>
   <meta name="description" content="Shop Amahle Blue: premium, locally-manufactured cleaning, car-care and sanitising solutions. Made in Gauteng, South Africa. Fast nationwide delivery." />
 
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpeg" href="assets/amahle-blue-logo.jpg" />
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://maxwell-chi.vercel.app/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://maxwell-chi.vercel.app/" />
+  <meta property="og:title"       content="Amahle Blue — Premium Cleaning, Car-Care &amp; Sanitising Products" />
+  <meta property="og:description" content="Premium, locally-manufactured cleaning, car-care and sanitising solutions. Made in Gauteng, South Africa. Fast nationwide delivery." />
+  <meta property="og:image"       content="https://maxwell-chi.vercel.app/assets/amahle-blue-logo.jpg" />
+  <meta property="og:locale"      content="en_ZA" />
+  <meta property="og:site_name"   content="Amahle Blue" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="Amahle Blue — Premium Cleaning, Car-Care &amp; Sanitising Products" />
+  <meta name="twitter:description" content="Premium, locally-manufactured cleaning, car-care and sanitising solutions. Made in Gauteng, South Africa." />
+  <meta name="twitter:image"       content="https://maxwell-chi.vercel.app/assets/amahle-blue-logo.jpg" />
+
   <!-- ext-resource-dependency: all product images referenced as strings in JSX -->
   <meta name="ext-resource-dependency" content="assets/products/all-purpose-cleaner.jpg" data-resource-id="allPurposeCleaner" />
   <meta name="ext-resource-dependency" content="assets/products/tile-cleaner.jpg" data-resource-id="tileCleaner" />
@@ -51,6 +72,7 @@
     @keyframes abshake  { 0%,100%{transform:translateX(0)} 18%,54%{transform:translateX(-5px)} 36%,72%{transform:translateX(5px)} }
     @keyframes absucc   { 0%{transform:scale(.4);opacity:0} 55%{transform:scale(1.15)} 80%{transform:scale(.95)} 100%{transform:scale(1);opacity:1} }
     @keyframes abpulse  { 0%,100%{box-shadow:0 0 0 0 rgba(30,80,224,0.4)} 50%{box-shadow:0 0 0 6px rgba(30,80,224,0)} }
+    @keyframes spin     { to { transform: rotate(360deg); } }
 
     /* ── Loading skeleton shimmer ───────────────────────────────────────────── */
     @keyframes abskel   { from{background-position:-400px 0} to{background-position:400px 0} }

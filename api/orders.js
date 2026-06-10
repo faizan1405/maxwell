@@ -720,8 +720,18 @@ module.exports = async function handler(req, res) {
     }
 
     if (!isCustomerOnly) {
-      if (notes         !== undefined) patch.notes         = String(notes).slice(0, 2000);
-      if (internalNotes !== undefined) patch.internalNotes = String(internalNotes).slice(0, 4000);
+      if (notes !== undefined) patch.notes = String(notes).slice(0, 2000);
+      if (internalNotes !== undefined) {
+        const noteText = String(internalNotes).slice(0, 4000).trim();
+        if (noteText) {
+          const existing = Array.isArray(prev.internalNotes) ? prev.internalNotes : [];
+          patch.internalNotes = [...existing, {
+            note:      noteText,
+            addedBy:   adminSession?.user?.username || adminSession?.username || 'admin',
+            createdAt: Date.now(),
+          }];
+        }
+      }
       if (trackingNumber !== undefined) patch.trackingNumber = String(trackingNumber).slice(0, 80);
       if (carrier        !== undefined) patch.carrier        = String(carrier).slice(0, 80);
 

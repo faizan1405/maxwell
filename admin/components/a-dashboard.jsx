@@ -12,13 +12,6 @@ function RevenueChart({ orders }) {
     if (found) found.revenue += o.total;
   });
 
-  // Fallback seed if all zeros (demo data is older)
-  const allZero = days.every(d => d.revenue===0);
-  if (allZero) {
-    const seeds = [420, 750, 310, 890, 640, 1200, 480];
-    days.forEach((d,i) => d.revenue = seeds[i]);
-  }
-
   const max = Math.max(...days.map(d=>d.revenue), 1);
   const H = 80;
   const pts = days.map((d,i) => [i*(100/6), H - (d.revenue/max)*H]);

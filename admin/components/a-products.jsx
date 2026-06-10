@@ -676,11 +676,14 @@ function ProductsPage() {
         title="Archive Product" confirmLabel="Archive" variant="secondary"
         message={`Archive "${archiving?.name}"? It will be hidden from the storefront but not deleted.`}
         onConfirm={async () => {
+          const id = archiving?.id;
           try {
-            await updateProduct(archiving.id, {status:'archived'});
+            await updateProduct(id, {status:'archived'});
             showToast('Product archived');
           } catch(err) {
             showToast(err.message || 'Failed to archive product', 'error');
+          } finally {
+            setArchiving(null);
           }
         }}
       />
@@ -690,11 +693,14 @@ function ProductsPage() {
         title="Delete Product" confirmLabel="Delete" variant="danger"
         message={`Permanently delete "${deleting?.name}"? This action cannot be undone.`}
         onConfirm={async () => {
+          const id = deleting?.id;
           try {
-            await deleteProduct(deleting.id);
+            await deleteProduct(id);
             showToast('Product deleted');
           } catch(err) {
             showToast(err.message || 'Failed to delete product', 'error');
+          } finally {
+            setDeleting(null);
           }
         }}
       />

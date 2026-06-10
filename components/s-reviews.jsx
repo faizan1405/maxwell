@@ -147,8 +147,9 @@ function ProductReviews({ productId }) {
         });
         if (!res.ok) { setPurchaseCheck(false); return; }
         const orders = await res.json();
+        const ELIGIBLE = ['processing','shipped','delivered','Processing','Dispatched','Delivered'];
         const bought = orders.some(o =>
-          ['processing', 'shipped', 'delivered'].includes(o.status) &&
+          ELIGIBLE.includes(o.status) &&
           o.items?.some(i => i.productId === productId)
         );
         setPurchaseCheck(bought);
