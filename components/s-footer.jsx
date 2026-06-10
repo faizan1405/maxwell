@@ -204,13 +204,31 @@ function StoreRouter() {
   );
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(e) { return { error: e }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 40, fontFamily: 'monospace', background: '#fff1f2', border: '2px solid #f87171', borderRadius: 12, margin: 24 }}>
+          <strong style={{ color: '#dc2626', fontSize: 18 }}>React render error (check console for full trace):</strong>
+          <pre style={{ marginTop: 12, whiteSpace: 'pre-wrap', color: '#7f1d1d', fontSize: 13 }}>{String(this.state.error)}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function StoreApp() {
   return (
-    <CustomerProvider>
-      <CartProvider>
-        <StoreRouter />
-      </CartProvider>
-    </CustomerProvider>
+    <ErrorBoundary>
+      <CustomerProvider>
+        <CartProvider>
+          <StoreRouter />
+        </CartProvider>
+      </CustomerProvider>
+    </ErrorBoundary>
   );
 }
 
