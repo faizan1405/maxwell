@@ -2,8 +2,8 @@
 
 const Hero = ({ onShopCat }) => {
   const { add, setOpen } = useCart();
-  const apc = PRODUCTS.find((p) => p.id === "all-purpose-cleaner");
-  const san = PRODUCTS.find((p) => p.id === "hand-surface-sanitiser");
+  const apc = PRODUCTS.find((p) => p.id === "all-purpose-cleaner") || PRODUCTS.find((p) => p.cat === "household") || PRODUCTS[0];
+  const san = PRODUCTS.find((p) => p.id === "hand-surface-sanitiser") || PRODUCTS.find((p) => p.cat === "sanitiser") || PRODUCTS[1] || PRODUCTS[0];
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-sky-50 via-white to-white">
       {/* decorative */}
@@ -57,10 +57,10 @@ const Hero = ({ onShopCat }) => {
             <div className="absolute left-1/2 top-1/2 h-[88%] w-[88%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/40" />
 
             <div className="relative z-10 mb-8 w-[44%] -rotate-6 overflow-hidden rounded-2xl bg-white shadow-[0_30px_60px_-20px_rgba(11,46,107,0.55)] ring-1 ring-black/5 transition-transform duration-500 hover:-translate-y-2 hover:rotate-0">
-              <img src={san.img} alt={san.name} className="h-full w-full object-cover" />
+              <img src={getPrimaryImg(san)} alt={san.name} className="h-full w-full object-cover" />
             </div>
             <div className="relative z-20 w-[50%] rotate-3 overflow-hidden rounded-2xl bg-white shadow-[0_36px_70px_-20px_rgba(11,46,107,0.6)] ring-1 ring-black/5 transition-transform duration-500 hover:-translate-y-2 hover:rotate-0">
-              <img src={apc.img} alt={apc.name} className="h-full w-full object-cover" />
+              <img src={getPrimaryImg(apc)} alt={apc.name} className="h-full w-full object-cover" />
               <button onClick={() => { add(apc); }} className="absolute bottom-3 left-1/2 z-30 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full bg-white/95 px-4 py-2 text-[12.5px] font-bold text-cobalt shadow-lg backdrop-blur transition hover:bg-cobalt hover:text-white">
                 <Plus size={14} /> Quick add
               </button>

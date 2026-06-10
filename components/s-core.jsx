@@ -533,7 +533,12 @@ let PRODUCTS = (() => {
     const raw = localStorage.getItem("ab_products");
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const ids = new Set(parsed.map(p => p.id));
+        const valid = ids.has('all-purpose-cleaner') && ids.has('hand-surface-sanitiser');
+        if (valid) return parsed;
+        localStorage.removeItem("ab_products"); // stale cache — clear it
+      }
     }
   } catch {}
   return PRODUCTS_DEFAULT;
