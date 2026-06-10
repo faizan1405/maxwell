@@ -49,6 +49,7 @@ function AdminProvider({ children }) {
   const [abandonedCarts,      setAbandonedCarts]      = useState([]);
   const [faqs,                setFaqs]               = useState([]);
   const [categories,          setCategories]         = useState([]);
+  const [shippingRates,       setShippingRates]      = useState([]);
 
   // Init — restore session from sessionStorage, then fetch data
   useEffect(() => {
@@ -63,7 +64,7 @@ function AdminProvider({ children }) {
         await Promise.all([
           fetchProducts(sess.token), fetchOrders(sess.token), fetchRegisteredCustomers(sess.token),
           fetchCoupons(sess.token), fetchReviews(sess.token), fetchAbandonedCarts(sess.token),
-          fetchFaqs(sess.token), fetchCategories(sess.token), fetchSettings(),
+          fetchFaqs(sess.token), fetchCategories(sess.token), fetchShippingRates(sess.token), fetchSettings(),
         ]);
       }
       setReady(true);
@@ -165,6 +166,18 @@ function AdminProvider({ children }) {
     } catch {}
   }
 
+  async function fetchShippingRates(token) {
+    try {
+      const res = await fetch(`${API_BASE}/api/shipping`, { headers: apiHeaders(token) });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setShippingRates(data);
+        window.SHIPPING_RATES = data;
+      }
+    } catch {}
+  }
+
   // ── Auth ──────────────────────────────────────────────────────────────────
   const login = useCallback(async (username, password) => {
     try {
@@ -184,7 +197,7 @@ function AdminProvider({ children }) {
       await Promise.all([
         fetchProducts(token), fetchOrders(token), fetchRegisteredCustomers(token),
         fetchCoupons(token), fetchReviews(token), fetchAbandonedCarts(token),
-        fetchFaqs(token), fetchCategories(token), fetchSettings(),
+        fetchFaqs(token), fetchCategories(token), fetchShippingRates(token), fetchSettings(),
       ]);
       return { ok: true };
     } catch (err) {
@@ -376,6 +389,33 @@ function AdminProvider({ children }) {
     } catch { fetchFaqs(session?.token); }
   }, [session]);
 
+  // ── Shipping Rates ──
+  async function addShippingRate(rate) {
+    try {
+      const res = await fetch(`${API_BASE}/api/shipping`, { method:'POST', headers:apiHeaders(session.token), body:JSON.stringify(rate) });
+      if(!res.ok) return false;
+      const data = await res.json();
+      setShippingRates([...shippingRates.filter(r => !data.isDefault || !r.isDefault), data]);
+      return true;
+    } catch { return false; }
+  }
+  async function updateShippingRate(rate) {
+    try {
+      const res = await fetch(`${API_BASE}/api/shipping`, { method:'PATCH', headers:apiHeaders(session.token), body:JSON.stringify(rate) });
+      if(!res.ok) return false;
+      const data = await res.json();
+      setShippingRates(shippingRates.map(r => r.id === data.id ? data : (data.isDefault ? {...r, isDefault:false} : r)));
+      return true;
+    } catch { return false; }
+  }
+  async function deleteShippingRate(id) {
+    try {
+      const res = await fetch(`${API_BASE}/api/shipping`, { method:'DELETE', headers:apiHeaders(session.token), body:JSON.stringify({id}) });
+      if(res.ok) setShippingRates(shippingRates.filter(r=>r.id!==id));
+      return res.ok;
+    } catch { return false; }
+  }
+
   // ── Categories CRUD ────────────────────────────────────────────────────────
   const addCategory = useCallback(async (payload) => {
     const res = await fetch(`${API_BASE}/api/categories`, {
@@ -489,14 +529,18 @@ function AdminProvider({ children }) {
 
   const authValue  = { session, login, logout, isAdmin: session?.role === 'admin' };
   const dataValue  = {
-    products, orders, customers, registeredCustomers, stats,
-    addProduct, updateProduct, deleteProduct,
+    products, setProducts, fetchProducts, addProduct, updateProduct, deleteProduct,
+    orders, setOrders, fetchOrders,
+    customers,
+    registeredCustomers, fetchRegisteredCustomers,
+    stats,
     updateOrderStatus, updateOrderNote, updatePaymentStatus, updateTracking,
-    coupons, addCoupon, updateCoupon, deleteCoupon,
-    reviews, updateReview, deleteReview,
-    abandonedCarts,
-    faqs, addFaq, updateFaq, deleteFaq,
-    categories, addCategory, updateCategory, deleteCategory,
+    coupons, setCoupons, fetchCoupons, addCoupon, updateCoupon, deleteCoupon,
+    reviews, setReviews, fetchReviews, updateReview, deleteReview,
+    abandonedCarts, setAbandonedCarts, fetchAbandonedCarts,
+    faqs, setFaqs, fetchFaqs, addFaq, updateFaq, deleteFaq,
+    categories, setCategories, fetchCategories, addCategory, updateCategory, deleteCategory,
+    shippingRates, setShippingRates, fetchShippingRates, addShippingRate, updateShippingRate, deleteShippingRate,
     fmtMoney, fmtDate, fmtDateTime, initials,
   };
 

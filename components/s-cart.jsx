@@ -204,10 +204,21 @@ function printInvoice(order) {
 function CartPage({ onGoHome, onCheckout }) {
   const { detailed, count, subtotal, setQty, remove, clear } = useCart();
 
-  const delivery  = count > 0 ? (subtotal >= FREE_SHIP ? 0 : 85) : 0;
+  const [shippingRates, setShippingRates] = React.useState([]);
+  React.useEffect(() => {
+    setShippingRates(window.SHIPPING_RATES || []);
+    const onShipping = () => setShippingRates(window.SHIPPING_RATES || []);
+    window.addEventListener('ab:shipping-loaded', onShipping);
+    return () => window.removeEventListener('ab:shipping-loaded', onShipping);
+  }, []);
+
+  const defaultRate = shippingRates.find(r => r.isDefault);
+  const FREE_SHIP_DYN = defaultRate?.freeThreshold > 0 ? defaultRate.freeThreshold : 750;
+
+  const delivery  = count > 0 ? (subtotal >= FREE_SHIP_DYN ? 0 : (defaultRate?.charge ?? 85)) : 0;
   const total     = subtotal + delivery;
-  const remaining = Math.max(0, FREE_SHIP - subtotal);
-  const pct       = Math.min(100, (subtotal / FREE_SHIP) * 100);
+  const remaining = Math.max(0, FREE_SHIP_DYN - subtotal);
+  const pct       = Math.min(100, (subtotal / FREE_SHIP_DYN) * 100);
 
   if (count === 0) {
     return (
@@ -371,9 +382,17 @@ function CheckoutPage({ onBack, onSuccess }) {
   const [couponLoading, setCouponLoading] = React.useState(false);
   const [couponError,   setCouponError]   = React.useState('');
 
-  /* Province-aware shipping */
-  const [delivery, setDelivery] = React.useState(subtotal >= FREE_SHIP ? 0 : 85);
+  /* Dynamic Shipping Rates */
+  const [delivery, setDelivery] = React.useState(0);
+  const [shippingRates, setShippingRates] = React.useState([]);
   const [settings, setSettings] = React.useState(null);
+
+  React.useEffect(() => {
+    setShippingRates(window.SHIPPING_RATES || []);
+    const onShipping = () => setShippingRates(window.SHIPPING_RATES || []);
+    window.addEventListener('ab:shipping-loaded', onShipping);
+    return () => window.removeEventListener('ab:shipping-loaded', onShipping);
+  }, []);
 
   React.useEffect(() => {
     (async () => {
@@ -385,12 +404,32 @@ function CheckoutPage({ onBack, onSuccess }) {
   }, []);
 
   React.useEffect(() => {
-    if (!settings) return;
-    const threshold = settings.shipping?.freeThreshold ?? FREE_SHIP;
-    if (subtotal >= threshold) { setDelivery(0); return; }
-    const rate = settings.shipping?.provinceRates?.[form.addrProvince] ?? (settings.shipping?.flatFee ?? 85);
+    let rate = 85; // absolute fallback
+    let matchingRate = null;
+    const rates = shippingRates.filter(r => r.status === 'active');
+
+    // Find specific match first
+    if (form.addrCountry && form.addrProvince) {
+      matchingRate = rates.find(r => r.country === form.addrCountry && r.region && form.addrProvince.includes(r.region));
+    }
+    if (!matchingRate && form.addrCountry) {
+      matchingRate = rates.find(r => r.country === form.addrCountry && !r.region && !r.isDefault);
+    }
+    if (!matchingRate) {
+      matchingRate = rates.find(r => r.isDefault);
+    }
+
+    if (matchingRate) {
+      if (matchingRate.freeThreshold > 0 && subtotal >= matchingRate.freeThreshold) {
+        rate = 0;
+      } else {
+        rate = matchingRate.charge;
+      }
+    } else {
+      if (subtotal >= 750) rate = 0; // fallback free shipping
+    }
     setDelivery(rate);
-  }, [form.addrProvince, subtotal, settings]);
+  }, [form.addrCountry, form.addrProvince, subtotal, shippingRates]);
 
   const couponDiscount = coupon?.discount || 0;
   const codFee         = form.payment === 'COD' ? (settings?.cod?.codFee || 0) : 0;

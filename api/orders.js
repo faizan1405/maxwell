@@ -51,12 +51,39 @@ async function nextInvoiceAndOrderNumber() {
 }
 
 /* ── Province-based shipping ─────────────────────────────────────────────────── */
-async function computeShipping(subtotal, province) {
+async function computeShipping(subtotal, province, country) {
+  let rates = [];
+  try {
+    const raw = await readBlob('data/maxwell-shipping.json');
+    if (raw) rates = raw.filter(r => r.status === 'active');
+  } catch {}
+
+  let rateObj = null;
+
+  // 1. Specific match
+  if (country && province) {
+    rateObj = rates.find(r => r.country === country && r.region && province.includes(r.region));
+  }
+  // 2. Country match
+  if (!rateObj && country) {
+    rateObj = rates.find(r => r.country === country && !r.region && !r.isDefault);
+  }
+  // 3. Fallback
+  if (!rateObj) {
+    rateObj = rates.find(r => r.isDefault);
+  }
+
+  if (rateObj) {
+    if (rateObj.freeThreshold > 0 && subtotal >= rateObj.freeThreshold) return { charge: 0, name: rateObj.name };
+    return { charge: rateObj.charge, name: rateObj.name };
+  }
+
+  // legacy fallback
   const settings  = await getSettings();
   const threshold = settings.shipping?.freeThreshold ?? 750;
-  if (subtotal >= threshold) return 0;
-  const rates = settings.shipping?.provinceRates || {};
-  return rates[province] ?? (settings.shipping?.flatFee ?? 85);
+  if (subtotal >= threshold) return { charge: 0, name: 'Standard Shipping' };
+  const legacyRate = settings.shipping?.provinceRates?.[province] ?? (settings.shipping?.flatFee ?? 85);
+  return { charge: legacyRate, name: 'Standard Shipping' };
 }
 
 /* ── Payment label ───────────────────────────────────────────────────────────── */
@@ -515,7 +542,8 @@ module.exports = async function handler(req, res) {
     const subtotal = Math.round(validatedItems.reduce((s, i) => s + i.price * i.qty, 0) * 100) / 100;
 
     const province = body.addressDetails?.province || '';
-    const delivery = await computeShipping(subtotal, province);
+    const country = body.addressDetails?.country || 'South Africa';
+    const { charge: delivery, name: shippingRateName } = await computeShipping(subtotal, province, country);
 
     /* Coupon */
     let couponDiscount = 0, couponCode = null, couponId = null;
@@ -565,6 +593,7 @@ module.exports = async function handler(req, res) {
       items:          validatedItems,
       subtotal,
       delivery,
+      shippingRateName,
       couponDiscount,
       couponCode,
       couponId,

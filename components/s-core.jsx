@@ -570,6 +570,19 @@ let PRODUCTS = (() => {
   } catch {}
 })();
 
+/* Shipping Rates */
+(async () => {
+  try {
+    const res = await fetch("/api/shipping");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      window.SHIPPING_RATES = data;
+      window.dispatchEvent(new Event("ab:shipping-loaded"));
+    }
+  } catch {}
+})();
+
 // Fetch categories from API and live-patch
 (async () => {
   try {

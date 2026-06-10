@@ -10,6 +10,7 @@ const NAV = [
 const NAV_ADMIN = [
   { id:'categories',label:'Categories',     icon:'List',    badge:null },
   { id:'coupons',   label:'Coupons',        icon:'Tag',     badge:null },
+  { id:'shipping',  label:'Shipping',       icon:'Truck',   badge:null },
   { id:'reviews',   label:'Reviews',        icon:'Star',    badge:'reviews' },
   { id:'faqs',      label:'FAQs',           icon:'Help',    badge:null },
   { id:'abandoned', label:'Abandoned Carts',icon:'Cart',    badge:null },

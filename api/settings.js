@@ -79,6 +79,9 @@ module.exports = async function handler(req, res) {
   if (req.query.resource === 'categories') {
     return require('./_categories')(req, res);
   }
+  if (req.query.resource === 'shipping') {
+    return require('./_shipping')(req, res);
+  }
 
   /* ── GET ─────────────────────────────────────────────────────────────────────── */
   if (req.method === 'GET') {

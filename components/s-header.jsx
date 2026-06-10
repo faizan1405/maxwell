@@ -247,10 +247,21 @@ const CartDrawer = () => {
   const { open, setOpen, detailed, subtotal, setQty, remove, count, clear } = useCart();
   const { setPage } = useCustomer();
 
+  const [shippingRates, setShippingRates] = React.useState([]);
+  React.useEffect(() => {
+    setShippingRates(window.SHIPPING_RATES || []);
+    const onShipping = () => setShippingRates(window.SHIPPING_RATES || []);
+    window.addEventListener('ab:shipping-loaded', onShipping);
+    return () => window.removeEventListener('ab:shipping-loaded', onShipping);
+  }, []);
+
   React.useEffect(() => { document.body.style.overflow = open ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [open]);
 
-  const remaining = Math.max(0, FREE_SHIP - subtotal);
-  const pct       = Math.min(100, (subtotal / FREE_SHIP) * 100);
+  const defaultRate = shippingRates.find(r => r.isDefault);
+  const FREE_SHIP_DYN = defaultRate?.freeThreshold > 0 ? defaultRate.freeThreshold : FREE_SHIP;
+
+  const remaining = Math.max(0, FREE_SHIP_DYN - subtotal);
+  const pct       = Math.min(100, (subtotal / FREE_SHIP_DYN) * 100);
 
   const goCart     = () => { setOpen(false); setPage('cart');     window.scrollTo(0, 0); };
   const goCheckout = () => { setOpen(false); setPage('checkout'); window.scrollTo(0, 0); };

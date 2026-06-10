@@ -29,6 +29,10 @@
     {
       "source": "/api/categories",
       "destination": "/api/settings?resource=categories"
+    },
+    {
+      "source": "/api/shipping",
+      "destination": "/api/settings?resource=shipping"
     }
   ]
 }
