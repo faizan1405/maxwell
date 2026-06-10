@@ -141,6 +141,15 @@ function CustomersPage() {
   const [filter,  setFilter]  = React.useState('all'); // 'all' | 'account' | 'guest'
   const [page,    setPage]    = React.useState(1);
   const [viewing, setViewing] = React.useState(null);
+  const [isExporting, setIsExporting] = React.useState(false);
+  const [toast, setToast] = React.useState({ visible:false, msg:'', type:'success' });
+  
+  const { isAdmin } = useAuth();
+
+  function showToast(msg, type='success') {
+    setToast({ visible:true, msg, type });
+    setTimeout(() => setToast(t => ({ ...t, visible:false })), 3500);
+  }
 
   const filtered = React.useMemo(() => {
     let list = [...customers];
@@ -174,12 +183,119 @@ function CustomersPage() {
   const avgSpend      = customers.length ? totalRevenue / customers.length : 0;
   const accountCount  = customers.filter(c => c.hasAccount).length;
 
+  /* ── Export handlers ── */
+  const getExportData = React.useCallback(() => {
+    return filtered.map(c => {
+      return [
+        c.name || '—',
+        c.phone || '—',
+        c.email || '—',
+        c.orders?.[0]?.address || '—',
+        c.hasAccount ? new Date(c.accountSince).toLocaleString('en-ZA') : '—',
+        c.orderCount || 0,
+        c.totalSpent || 0,
+        c.lastOrderAt ? new Date(c.lastOrderAt).toLocaleString('en-ZA') : '—'
+      ];
+    });
+  }, [filtered]);
+
+  async function handleExportCSV() {
+    if (!isAdmin) return showToast('Unauthorized', 'error');
+    setIsExporting(true);
+    try {
+      const headers = ['Customer Name', 'Phone', 'Email', 'Address', 'Registration Date', 'Total Orders', 'Total Spent', 'Last Order Date'];
+      const data = getExportData();
+      const escapeCell = (cell) => {
+        if (cell == null) return '""';
+        const str = String(cell);
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      };
+      const csvContent = [
+        headers.map(escapeCell).join(','),
+        ...data.map(row => row.map(escapeCell).join(','))
+      ].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const dateStr = new Date().toISOString().split('T')[0];
+      link.setAttribute("href", url);
+      link.setAttribute("download", `customers-export-${dateStr}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('CSV Export successful');
+    } catch (e) {
+      console.error(e);
+      showToast('Export failed', 'error');
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
+  async function handleExportPDF() {
+    if (!isAdmin) return showToast('Unauthorized', 'error');
+    setIsExporting(true);
+    try {
+      if (!window.jspdf) throw new Error('jsPDF not loaded');
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape');
+      
+      const headers = [['Name', 'Phone', 'Email', 'Address', 'Reg Date', 'Orders', 'Spent', 'Last Order']];
+      const data = filtered.map(c => [
+        c.name || '—',
+        c.phone || '—',
+        c.email || '—',
+        c.orders?.[0]?.address || '—',
+        c.hasAccount ? new Date(c.accountSince).toLocaleDateString('en-ZA') : '—',
+        c.orderCount || 0,
+        `R${(c.totalSpent || 0).toFixed(2)}`,
+        c.lastOrderAt ? new Date(c.lastOrderAt).toLocaleDateString('en-ZA') : '—'
+      ]);
+
+      doc.text('Customers Export', 14, 15);
+      doc.autoTable({
+        startY: 20,
+        head: headers,
+        body: data,
+        styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
+        headStyles: { fillColor: [30, 80, 224] }
+      });
+      
+      const dateStr = new Date().toISOString().split('T')[0];
+      doc.save(`customers-export-${dateStr}.pdf`);
+      showToast('PDF Export successful');
+    } catch (e) {
+      console.error(e);
+      showToast('Export failed', 'error');
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto space-y-5">
+      <AdminToast message={toast.msg} type={toast.type} visible={toast.visible}/>
+
       {/* Header */}
-      <div>
-        <h2 className="text-xl font-800 text-slate-800">Customers</h2>
-        <p className="text-sm text-slate-400 mt-0.5">{customers.length} customers · {accountCount} registered accounts</p>
+      <div className="flex items-start justify-between flex-wrap gap-2">
+        <div>
+          <h2 className="text-xl font-800 text-slate-800">Customers</h2>
+          <p className="text-sm text-slate-400 mt-0.5">{customers.length} customers · {accountCount} registered accounts</p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Btn variant="secondary" size="sm" disabled={isExporting || filtered.length === 0} onClick={handleExportCSV}>
+            {isExporting ? <span className="animate-spin inline-block mr-1">⭘</span> : null}
+            Export CSV
+          </Btn>
+          <Btn variant="secondary" size="sm" disabled={isExporting || filtered.length === 0} onClick={handleExportPDF}>
+            {isExporting ? <span className="animate-spin inline-block mr-1">⭘</span> : null}
+            Export PDF
+          </Btn>
+        </div>
       </div>
 
       {/* Stats */}

@@ -732,6 +732,7 @@ function OrdersPage() {
   const [viewing,           setViewing]           = React.useState(null);
   const [toast,             setToast]             = React.useState({ visible:false, msg:'', type:'success' });
   const [saving,            setSaving]            = React.useState(false);
+  const [isExporting,       setIsExporting]       = React.useState(false);
 
   function showToast(msg, type='success') {
     setToast({ visible:true, msg, type });
@@ -869,6 +870,118 @@ function OrdersPage() {
   /* Proof-needs-attention count */
   const attentionCount = React.useMemo(() => orders.filter(needsAttention).length, [orders]);
 
+  /* ── Export handlers ── */
+  const getExportData = React.useCallback(() => {
+    return filtered.map(o => {
+      const items = o.items || [];
+      const itemNames = items.map(i => i.name).join('\n');
+      const itemQtys = items.map(i => i.qty).join('\n');
+      const itemVars = items.map(i => i.variation || '—').join('\n');
+      return [
+        o.orderNumber,
+        new Date(o.createdAt).toLocaleString('en-ZA'),
+        o.customer?.name || '—',
+        o.customer?.phone || '—',
+        o.customer?.email || '—',
+        o.address || '—',
+        itemNames,
+        itemQtys,
+        itemVars,
+        o.subtotal || 0,
+        o.couponDiscount || 0,
+        o.delivery || 0,
+        o.total || 0,
+        effectivePayMethod(o),
+        effectivePayStatus(o),
+        effectiveOrderStatus(o)
+      ];
+    });
+  }, [filtered]);
+
+  async function handleExportCSV() {
+    if (!isAdmin) return showToast('Unauthorized', 'error');
+    setIsExporting(true);
+    try {
+      const headers = ['Order ID', 'Order Date', 'Customer Name', 'Phone', 'Email', 'Delivery Address', 'Products', 'Quantities', 'Variations', 'Subtotal', 'Discount', 'Delivery', 'Total', 'Payment Method', 'Payment Status', 'Order Status'];
+      const data = getExportData();
+      const escapeCell = (cell) => {
+        if (cell == null) return '""';
+        const str = String(cell);
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      };
+      const csvContent = [
+        headers.map(escapeCell).join(','),
+        ...data.map(row => row.map(escapeCell).join(','))
+      ].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const dateStr = new Date().toISOString().split('T')[0];
+      link.setAttribute("href", url);
+      link.setAttribute("download", `orders-export-${dateStr}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('CSV Export successful');
+    } catch (e) {
+      console.error(e);
+      showToast('Export failed', 'error');
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
+  async function handleExportPDF() {
+    if (!isAdmin) return showToast('Unauthorized', 'error');
+    setIsExporting(true);
+    try {
+      if (!window.jspdf) throw new Error('jsPDF not loaded');
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape');
+      
+      const headers = [['Order ID', 'Date', 'Customer', 'Phone', 'Email', 'Address', 'Products', 'Total', 'Pay Method', 'Pay Status', 'Status']];
+      const data = filtered.map(o => {
+        const items = o.items || [];
+        const products = items.map(i => `${i.qty}x ${i.name}`).join('\n');
+        return [
+          o.orderNumber,
+          new Date(o.createdAt).toLocaleString('en-ZA'),
+          o.customer?.name || '—',
+          o.customer?.phone || '—',
+          o.customer?.email || '—',
+          o.address || '—',
+          products,
+          `R${(o.total || 0).toFixed(2)}`,
+          effectivePayMethod(o),
+          effectivePayStatus(o),
+          effectiveOrderStatus(o)
+        ];
+      });
+
+      doc.text('Orders Export', 14, 15);
+      doc.autoTable({
+        startY: 20,
+        head: headers,
+        body: data,
+        styles: { fontSize: 7, cellPadding: 1.5, overflow: 'linebreak' },
+        headStyles: { fillColor: [30, 80, 224] }
+      });
+      
+      const dateStr = new Date().toISOString().split('T')[0];
+      doc.save(`orders-export-${dateStr}.pdf`);
+      showToast('PDF Export successful');
+    } catch (e) {
+      console.error(e);
+      showToast('Export failed', 'error');
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto space-y-5">
       <AdminToast message={toast.msg} type={toast.type} visible={toast.visible}/>
@@ -879,12 +992,22 @@ function OrdersPage() {
           <h2 className="text-xl font-800 text-slate-800">Orders</h2>
           <p className="text-sm text-slate-400 mt-0.5">{orders.length} total · {filtered.length} shown</p>
         </div>
-        {attentionCount > 0 && (
-          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 cursor-pointer"
-            onClick={() => { setPayStatusFilter('Proof of Payment Submitted'); setPayMethodFilter('EFT'); }}>
-            <span className="text-amber-600 font-700 text-sm">⚠ {attentionCount} proof{attentionCount !== 1 ? 's' : ''} need review</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {attentionCount > 0 && (
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 cursor-pointer"
+              onClick={() => { setPayStatusFilter('Proof of Payment Submitted'); setPayMethodFilter('EFT'); }}>
+              <span className="text-amber-600 font-700 text-sm">⚠ {attentionCount} proof{attentionCount !== 1 ? 's' : ''} need review</span>
+            </div>
+          )}
+          <Btn variant="secondary" size="sm" disabled={isExporting || filtered.length === 0} onClick={handleExportCSV}>
+            {isExporting ? <span className="animate-spin inline-block mr-1">⭘</span> : null}
+            Export CSV
+          </Btn>
+          <Btn variant="secondary" size="sm" disabled={isExporting || filtered.length === 0} onClick={handleExportPDF}>
+            {isExporting ? <span className="animate-spin inline-block mr-1">⭘</span> : null}
+            Export PDF
+          </Btn>
+        </div>
       </div>
 
       {/* Filters */}
