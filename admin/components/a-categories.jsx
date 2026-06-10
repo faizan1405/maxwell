@@ -209,8 +209,8 @@ function CategoriesPage() {
       </div>
 
       {/* Edit/Add Modal */}
-      {(modalMode === 'add' || modalMode === 'edit') && activeItem && (
-        <Modal onClose={() => !isSaving && setModalMode(null)} title={modalMode === 'add' ? 'New Category' : 'Edit Category'} width="lg">
+      <Modal open={modalMode === 'add' || modalMode === 'edit'} onClose={() => !isSaving && setModalMode(null)} title={modalMode === 'add' ? 'New Category' : 'Edit Category'} size="lg">
+        {activeItem && (
           <form onSubmit={onSave} className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <Input label="Category Name" value={activeItem.name} onChange={e => setActiveItem({ ...activeItem, name: e.target.value })} required />
@@ -249,12 +249,12 @@ function CategoriesPage() {
               <Btn type="submit" className="flex-1" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Category'}</Btn>
             </div>
           </form>
-        </Modal>
-      )}
+        )}
+      </Modal>
 
       {/* Delete Confirmation Modal */}
-      {modalMode === 'delete' && activeItem && (
-        <Modal onClose={() => !isSaving && setModalMode(null)} title="Delete Category" width="sm">
+      <Modal open={modalMode === 'delete'} onClose={() => !isSaving && setModalMode(null)} title="Delete Category" size="sm">
+        {activeItem && (
           <div className="space-y-4">
             <p className="text-sm text-slate-600 leading-relaxed">
               Are you sure you want to delete the category <strong className="text-slate-800">{activeItem.name}</strong>?
@@ -289,8 +289,8 @@ function CategoriesPage() {
               </Btn>
             </div>
           </div>
-        </Modal>
-      )}
+        )}
+      </Modal>
     </div>
   );
 }
