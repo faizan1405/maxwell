@@ -13,8 +13,9 @@ function CustomerProvider({ children }) {
   const [customer,     setCustomer]     = React.useState(null);
   const [sessionToken, setSessionToken] = React.useState(null);
   const [authOpen,     setAuthOpen]     = React.useState(false);
-  const [page,         setPageState]    = React.useState(() => {
-    return window.location.hash ? window.location.hash.substring(1).split('?')[0] : 'home';
+  const [page, setPageState] = React.useState(() => {
+    const path = window.location.pathname.substring(1).split('?')[0];
+    return path ? path : 'home';
   });
 
   const setPage = React.useCallback((p) => {
@@ -23,16 +24,22 @@ function CustomerProvider({ children }) {
     }
     setPageState(old => {
       if (old !== p) {
-        window.history.pushState({ page: p }, '', `#${p}`);
+        window.history.pushState({ page: p }, '', p === 'home' ? '/' : `/${p}`);
       }
       return p;
     });
   }, []);
 
   React.useEffect(() => {
-    window.history.replaceState({ page }, '', `#${page}`);
+    window.history.replaceState({ page }, '', page === 'home' ? '/' : `/${page}`);
     const handlePopState = (e) => {
-      const p = e.state?.page || (window.location.hash ? window.location.hash.substring(1).split('?')[0] : 'home');
+      let p = 'home';
+      if (e.state && e.state.page) {
+        p = e.state.page;
+      } else {
+        const path = window.location.pathname.substring(1).split('?')[0];
+        if (path) p = path;
+      }
       setPageState(p);
     };
     window.addEventListener('popstate', handlePopState);

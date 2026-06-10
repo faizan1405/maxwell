@@ -33,6 +33,10 @@
     {
       "source": "/api/shipping",
       "destination": "/api/settings?resource=shipping"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

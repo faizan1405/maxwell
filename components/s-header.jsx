@@ -197,11 +197,11 @@ const Header = ({ onNavCat }) => {
         {/* category nav */}
         <nav className="mx-auto hidden max-w-[1280px] items-center gap-7 px-6 pb-3 lg:flex">
           {NAV.map((n) => {
-            const isActive = n.page === page && (n.page === 'shop' ? (!n.cat || n.cat === window.location.hash.split('=')[1]) : true);
+            const isActive = n.page === page && !n.cat;
             return (
-              <a key={n.label} href={n.href} onClick={(e) => go(e, n)} className={`group relative text-[14px] font-semibold transition-colors hover:text-cobalt ${n.page === page && !n.cat ? 'text-cobalt' : 'text-slate-600'}`}>
+              <a key={n.label} href={n.href} onClick={(e) => go(e, n)} className={`group relative text-[14px] font-semibold transition-colors hover:text-cobalt ${isActive ? 'text-cobalt' : 'text-slate-600'}`}>
                 {n.label}
-                <span className={`absolute -bottom-1 left-0 h-0.5 bg-cobalt transition-all duration-300 ${n.page === page && !n.cat ? 'w-full' : 'w-0 group-hover:w-full'}`} />
+                <span className={`absolute -bottom-1 left-0 h-0.5 bg-cobalt transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`} />
               </a>
             );
           })}
@@ -226,12 +226,15 @@ const Header = ({ onNavCat }) => {
                 className="h-11 w-full rounded-full border border-slate-200 bg-slate-50 pl-11 pr-4 text-[14px] outline-none focus:border-cobalt" />
             </form>
             <nav className="flex flex-col">
-              {NAV.map((n) => (
-                <a key={n.label} href={n.href} onClick={(e) => go(e, n)}
-                  className={`flex items-center justify-between border-b border-slate-50 py-3.5 text-[15px] font-semibold ${n.page === page && !n.cat ? 'text-cobalt' : 'text-ink'}`}>
-                  {n.label} <ChevronRight size={18} className="text-slate-300" />
-                </a>
-              ))}
+              {NAV.map((n) => {
+                const isActive = n.page === page && !n.cat;
+                return (
+                  <a key={n.label} href={n.href} onClick={(e) => go(e, n)}
+                    className={`flex items-center justify-between border-b border-slate-50 py-3.5 text-[15px] font-semibold ${isActive ? 'text-cobalt' : 'text-ink'}`}>
+                    {n.label} <ChevronRight size={18} className="text-slate-300" />
+                  </a>
+                );
+              })}
               <div className="border-b border-slate-50 py-3.5">
                 {isLoggedIn ? (
                   <div className="space-y-2">
