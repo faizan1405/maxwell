@@ -446,8 +446,8 @@ function AdminProvider({ children }) {
   const deleteCategory = useCallback(async (id) => {
     setCategories(prev => prev.filter(c => c.id !== id));
     try {
-      const res = await fetch(`${API_BASE}/api/categories`, {
-        method: 'DELETE', headers: apiHeaders(session?.token), body: JSON.stringify({ id }),
+      const res = await fetch(`${API_BASE}/api/categories?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE', headers: apiHeaders(session?.token)
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));

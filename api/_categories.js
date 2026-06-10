@@ -89,7 +89,7 @@ module.exports = async function handler(req, res) {
 
   /* ── DELETE ────────────────────────────────────────────────────────────────── */
   if (req.method === 'DELETE') {
-    const { id } = body;
+    const id = req.query.id || body.id;
     if (!id) return res.status(400).json({ error: 'Missing id.' });
 
     const categories = await getCategories();
