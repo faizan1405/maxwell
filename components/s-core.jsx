@@ -573,7 +573,7 @@ let PRODUCTS = (() => {
 // Fetch categories from API and live-patch
 (async () => {
   try {
-    const res = await fetch("/api/categories");
+    const res = await fetch("/api/categories?t=" + Date.now());
     if (!res.ok) return;
     const data = await res.json();
     if (Array.isArray(data) && data.length) {
