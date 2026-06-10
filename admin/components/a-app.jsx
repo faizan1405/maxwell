@@ -1,5 +1,206 @@
 /* Admin Panel — Settings Page + App Root */
 
+/* ── Payment Settings Tab ─────────────────────────────────────────────────────── */
+function PaymentSettingsTab({ token }) {
+  const [data,    setData]    = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [saving,  setSaving]  = React.useState(false);
+  const [toast,   setToast]   = React.useState({ visible:false, msg:'', type:'success' });
+
+  function showToast(msg, type='success') {
+    setToast({ visible:true, msg, type });
+    setTimeout(() => setToast(t=>({...t,visible:false})), 3500);
+  }
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/settings', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!res.ok) throw new Error('Failed to load');
+        const s = await res.json();
+        setData(s);
+      } catch {
+        showToast('Could not load payment settings.', 'error');
+      }
+      setLoading(false);
+    })();
+  }, [token]);
+
+  function set(section, key, val) {
+    setData(d => ({ ...d, [section]: { ...d[section], [key]: val } }));
+  }
+
+  async function save(e) {
+    e.preventDefault();
+    if (!data) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ eft: data.eft, cod: data.cod }),
+      });
+      if (!res.ok) throw new Error('Save failed');
+      showToast('Payment settings saved');
+    } catch {
+      showToast('Failed to save. Please try again.', 'error');
+    }
+    setSaving(false);
+  }
+
+  if (loading) return <div className="py-12 text-center text-slate-400 text-sm">Loading payment settings…</div>;
+  if (!data)   return <div className="py-12 text-center text-red-500 text-sm">Could not load payment settings.</div>;
+
+  const eft = data.eft || {};
+  const cod = data.cod || {};
+
+  return (
+    <form onSubmit={save} className="space-y-5">
+      <AdminToast message={toast.msg} type={toast.type} visible={toast.visible}/>
+
+      {/* EFT Section */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-700 text-slate-800">EFT / Bank Transfer</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Bank details shown only after a valid EFT order is placed</p>
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <span className="text-xs font-600 text-slate-600">Enabled</span>
+            <div className={`relative w-10 h-5 rounded-full transition ${eft.enabled ? 'bg-cobalt' : 'bg-slate-200'}`}
+              onClick={() => set('eft','enabled',!eft.enabled)} role="switch" tabIndex={0}
+              onKeyDown={e=>e.key===' '&&set('eft','enabled',!eft.enabled)}>
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${eft.enabled ? 'left-5' : 'left-0.5'}`}/>
+            </div>
+          </label>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-600 text-slate-600 mb-1.5">Bank Name</label>
+            <input value={eft.bankName||''} onChange={e=>set('eft','bankName',e.target.value)}
+              placeholder="e.g. First National Bank"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-cobalt focus:ring-2 focus:ring-cobalt/20"/>
+          </div>
+          <div>
+            <label className="block text-xs font-600 text-slate-600 mb-1.5">Account Holder Name</label>
+            <input value={eft.accountHolder||''} onChange={e=>set('eft','accountHolder',e.target.value)}
+              placeholder="e.g. Amahle Blue (Pty) Ltd"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-cobalt focus:ring-2 focus:ring-cobalt/20"/>
+          </div>
+          <div>
+            <label className="block text-xs font-600 text-slate-600 mb-1.5">Account Number</label>
+            <input value={eft.accountNumber||''} onChange={e=>set('eft','accountNumber',e.target.value)}
+              placeholder="e.g. 62812345678"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-mono outline-none focus:border-cobalt focus:ring-2 focus:ring-cobalt/20"/>
+          </div>
+          <div>
+            <label className="block text-xs font-600 text-slate-600 mb-1.5">Branch Code</label>
+            <input value={eft.branchCode||''} onChange={e=>set('eft','branchCode',e.target.value)}
+              placeholder="e.g. 250655"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-mono outline-none focus:border-cobalt focus:ring-2 focus:ring-cobalt/20"/>
+          </div>
+          <div>
+            <label className="block text-xs font-600 text-slate-600 mb-1.5">Account Type</label>
+            <select value={eft.accountType||'Current'} onChange={e=>set('eft','accountType',e.target.value)}
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white outline-none focus:border-cobalt focus:ring-2 focus:ring-cobalt/20">
+              {['Current','Savings','Cheque','Transmission'].map(t=><option key={t}>{t}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-600 text-slate-600 mb-1.5">SWIFT Code (optional)</label>
+            <input value={eft.swiftCode||''} onChange={e=>set('eft','swiftCode',e.target.value)}
+              placeholder="e.g. FIRNZAJJ"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-mono outline-none focus:border-cobalt focus:ring-2 focus:ring-cobalt/20"/>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-600 text-slate-600 mb-1.5">Additional EFT Instructions (optional)</label>
+          <textarea value={eft.instructions||''} onChange={e=>set('eft','instructions',e.target.value)}
+            rows={2} placeholder="e.g. Please allow 1–2 business days for payment verification."
+            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-cobalt focus:ring-2 focus:ring-cobalt/20 resize-none"/>
+        </div>
+
+        <label className="flex items-center gap-2.5 cursor-pointer">
+          <input type="checkbox" checked={!!eft.allowProofUpload} onChange={e=>set('eft','allowProofUpload',e.target.checked)}
+            className="h-4 w-4 rounded accent-cobalt"/>
+          <span className="text-sm text-slate-600">Allow customers to upload proof of payment</span>
+        </label>
+      </div>
+
+      {/* COD Section */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-700 text-slate-800">Cash on Delivery</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Only authorised admins can mark cash as collected</p>
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <span className="text-xs font-600 text-slate-600">Enabled</span>
+            <div className={`relative w-10 h-5 rounded-full transition ${cod.enabled ? 'bg-cobalt' : 'bg-slate-200'}`}
+              onClick={() => set('cod','enabled',!cod.enabled)} role="switch" tabIndex={0}
+              onKeyDown={e=>e.key===' '&&set('cod','enabled',!cod.enabled)}>
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${cod.enabled ? 'left-5' : 'left-0.5'}`}/>
+            </div>
+          </label>
+        </div>
+
+        <div>
+          <label className="block text-xs font-600 text-slate-600 mb-1.5">Customer-facing description</label>
+          <input value={cod.description||''} onChange={e=>set('cod','description',e.target.value)}
+            placeholder="Pay in cash when your order is delivered."
+            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-cobalt focus:ring-2 focus:ring-cobalt/20"/>
+        </div>
+
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-xs font-600 text-slate-600 mb-1.5">COD Fee (R)</label>
+            <input type="number" min="0" step="0.01" value={cod.codFee||0} onChange={e=>set('cod','codFee',parseFloat(e.target.value)||0)}
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-cobalt focus:ring-2 focus:ring-cobalt/20"/>
+            <p className="text-[10px] text-slate-400 mt-0.5">0 = no fee</p>
+          </div>
+          <div>
+            <label className="block text-xs font-600 text-slate-600 mb-1.5">Min Order (R)</label>
+            <input type="number" min="0" step="0.01" value={cod.minOrderAmount||0} onChange={e=>set('cod','minOrderAmount',parseFloat(e.target.value)||0)}
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-cobalt focus:ring-2 focus:ring-cobalt/20"/>
+            <p className="text-[10px] text-slate-400 mt-0.5">0 = no minimum</p>
+          </div>
+          <div>
+            <label className="block text-xs font-600 text-slate-600 mb-1.5">Max Order (R)</label>
+            <input type="number" min="0" step="0.01" value={cod.maxOrderAmount||0} onChange={e=>set('cod','maxOrderAmount',parseFloat(e.target.value)||0)}
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-cobalt focus:ring-2 focus:ring-cobalt/20"/>
+            <p className="text-[10px] text-slate-400 mt-0.5">0 = no maximum</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Preview */}
+      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3">
+        <p className="text-xs font-700 text-slate-500 uppercase tracking-wide">Checkout Preview</p>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {cod.enabled !== false && (
+            <div className="bg-white border-2 border-cobalt rounded-xl px-4 py-3">
+              <p className="text-sm font-700 text-cobalt">Cash on Delivery</p>
+              <p className="text-xs text-slate-500 mt-0.5">{cod.description || 'Pay in cash when your order is delivered.'}</p>
+            </div>
+          )}
+          {eft.enabled !== false && (
+            <div className="bg-white border-2 border-slate-200 rounded-xl px-4 py-3">
+              <p className="text-sm font-700 text-ink">EFT / Bank Transfer</p>
+              <p className="text-xs text-slate-500 mt-0.5">Pay directly into our bank account. After placing your order, you will receive the bank details and your order reference.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Btn type="submit" disabled={saving}>
+        {saving ? <><Spinner size={14}/> Saving…</> : 'Save Payment Settings'}
+      </Btn>
+    </form>
+  );
+}
+
 function SettingsPage() {
   const { session } = useAuth();
   const [tab,      setTab]      = React.useState('account');
@@ -63,8 +264,8 @@ function SettingsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-white rounded-2xl p-1.5 border border-slate-100 shadow-sm w-fit">
-        {['account','security','store'].map(t => (
+      <div className="flex flex-wrap gap-1 bg-white rounded-2xl p-1.5 border border-slate-100 shadow-sm w-fit">
+        {['account','security','store','payment'].map(t => (
           <button key={t} onClick={()=>setTab(t)} className={`px-4 py-2 rounded-xl text-sm font-500 capitalize transition-all ${tab===t?'bg-cobalt text-white shadow-sm':'text-slate-500 hover:bg-slate-50'}`}>{t}</button>
         ))}
       </div>
@@ -164,6 +365,10 @@ function SettingsPage() {
           </div>
         </div>
       )}
+
+      {tab === 'payment' && (
+        <PaymentSettingsTab token={session?.token} />
+      )}
     </div>
   );
 }
@@ -184,6 +389,7 @@ function AdminApp() {
     settings:  <SettingsPage/>,
     coupons:   <CouponsPage/>,
     reviews:   <ReviewsPage/>,
+    faqs:      <FaqsPage/>,
     abandoned: <AbandonedPage/>,
   };
 

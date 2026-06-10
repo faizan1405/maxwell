@@ -10,6 +10,7 @@ const NAV = [
 const NAV_ADMIN = [
   { id:'coupons',   label:'Coupons',        icon:'Tag',     badge:null },
   { id:'reviews',   label:'Reviews',        icon:'Star',    badge:'reviews' },
+  { id:'faqs',      label:'FAQs',           icon:'Help',    badge:null },
   { id:'abandoned', label:'Abandoned Carts',icon:'Cart',    badge:null },
   { id:'settings',  label:'Settings',       icon:'Settings',badge:null },
 ];
@@ -41,26 +42,21 @@ function Sidebar({ page, setPage, open, onClose, stats }) {
       {/* Mobile overlay */}
       {open && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={onClose}/>}
 
-      <aside className={`fixed top-0 left-0 h-full z-40 flex flex-col transition-transform duration-300
+      <aside className={`fixed top-0 left-0 h-full z-40 flex flex-col transition-transform
         w-64 bg-ink border-r border-white/8
         ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
+        style={{ transitionDuration: '300ms', transitionTimingFunction: 'cubic-bezier(.16,1,.3,1)' }}
         style={{boxShadow:'4px 0 24px rgba(0,0,0,0.15)'}}>
 
         {/* Logo */}
         <div className="flex items-center justify-between px-5 py-5 border-b border-white/8">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-cobalt flex items-center justify-center">
-              <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
-                <circle cx="16" cy="16" r="14" fill="white" fillOpacity=".15"/>
-                <path d="M10 16c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M13 20c0-1.66 1.34-3 3-3s3 1.34 3 3" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                <circle cx="16" cy="22" r="1.5" fill="white"/>
-              </svg>
-            </div>
-            <div>
-              <div className="text-white font-700 text-sm leading-tight">Amahle Blue</div>
-              <div className="text-white/40 text-xs">Admin Panel</div>
-            </div>
+            <img
+              src="assets/amahle-blue-logo.jpg"
+              alt="Amahle Blue"
+              style={{ height: 36, width: 'auto', objectFit: 'contain', background: 'rgba(255,255,255,0.92)', borderRadius: 6, padding: '2px 8px' }}
+            />
+            <div className="text-white/40 text-xs">Admin Panel</div>
           </div>
           <button onClick={onClose} className="lg:hidden p-1 text-white/40 hover:text-white transition-colors"><Icon.Close/></button>
         </div>
@@ -121,7 +117,7 @@ function TopBar({ page, onMenuClick, stats, setPage }) {
   const [userOpen, setUserOpen] = React.useState(false);
   const alertCount = (stats?.byStatus?.pending||0) + (stats?.byStatus?.processing||0);
 
-  const labels = { dashboard:'Dashboard', products:'Products', orders:'Orders', customers:'Customers', settings:'Settings', coupons:'Coupons', reviews:'Reviews', abandoned:'Abandoned Carts' };
+  const labels = { dashboard:'Dashboard', products:'Products', orders:'Orders', customers:'Customers', settings:'Settings', coupons:'Coupons', reviews:'Reviews', faqs:'FAQs', abandoned:'Abandoned Carts' };
   const label  = labels[page] || page;
 
   return (
@@ -166,7 +162,7 @@ function TopBar({ page, onMenuClick, stats, setPage }) {
           {userOpen && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setUserOpen(false)}/>
-              <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 py-1 z-20 animate-fadein">
+              <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 py-1 z-20 ab-modal-enter">
                 <div className="px-4 py-3 border-b border-slate-50">
                   <p className="text-sm font-600 text-slate-800">{session?.user?.name}</p>
                   <p className="text-xs text-slate-400">{session?.user?.email}</p>
@@ -190,7 +186,7 @@ function AdminLayout({ children, page, setPage, stats }) {
       <Sidebar page={page} setPage={setPage} open={sidebarOpen} onClose={() => setSidebarOpen(false)} stats={stats}/>
       <div className="lg:pl-64 flex flex-col min-h-screen">
         <TopBar page={page} onMenuClick={() => setSidebarOpen(true)} stats={stats} setPage={setPage}/>
-        <main className="flex-1 p-4 lg:p-6 animate-fadein">
+        <main key={page} className="flex-1 p-4 lg:p-6 animate-fadein">
           {children}
         </main>
       </div>

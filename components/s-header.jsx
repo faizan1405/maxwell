@@ -1,29 +1,17 @@
 /* Amahle Blue Store — Wordmark, Announcement bar, Header, Cart drawer, Toast */
 
 const Wordmark = ({ className = "", light = false, compact = false }) => (
-  <a href="#top" className={`flex items-center gap-2.5 ${className}`} aria-label="Amahle Blue home">
-    <span className="relative grid place-items-center" style={{ width: 42, height: 42 }}>
-      <svg width="42" height="42" viewBox="0 0 42 42" fill="none" aria-hidden="true">
-        <defs>
-          <linearGradient id="abmark" x1="4" y1="4" x2="38" y2="38" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#2563EB" /><stop offset="1" stopColor="#0B2E6B" />
-          </linearGradient>
-        </defs>
-        <circle cx="21" cy="21" r="20" fill="url(#abmark)" />
-        <path d="M30 13.5c-2.2-1.6-5-2.5-8-2.5a13 13 0 1 0 12.4 16.8c.2-.6-.6-1-1-.5A10.2 10.2 0 1 1 22 13.3c2.2 0 4.3.6 6 1.7.5.3 2.4-.9 2-1.5z" fill="#fff" />
-        <path d="M30.5 9.5l1.05 2.95L34.5 13.5l-2.95 1.05L30.5 17.5l-1.05-2.95L26.5 13.5l2.95-1.05z" fill="#7FC4FF" />
-      </svg>
-    </span>
-    <span className="flex flex-col leading-none">
-      <span className={`font-display text-[19px] font-extrabold tracking-tight ${light ? "text-white" : "text-ink"}`}>
-        Amahle<span className="text-cobalt"> Blue</span>
-      </span>
-      {!compact && (
-        <span className={`mt-[3px] text-[9px] font-bold uppercase tracking-[0.34em] ${light ? "text-sky-200" : "text-slate-400"}`}>
-          Cleaning Solutions
-        </span>
-      )}
-    </span>
+  <a href="#top" className={`flex items-center ${className}`} aria-label="Amahle Blue home">
+    <img
+      src="assets/amahle-blue-logo.jpg"
+      alt="Amahle Blue"
+      style={{
+        height: compact ? 36 : 48,
+        width: 'auto',
+        objectFit: 'contain',
+        ...(light && { background: 'rgba(255,255,255,0.92)', borderRadius: 8, padding: '4px 10px' }),
+      }}
+    />
   </a>
 );
 
@@ -90,7 +78,7 @@ function AccountMenu({ customer, onAccount, onOrders, onLogout }) {
         <ChevronDown size={14} className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-[200px] bg-white rounded-2xl border border-slate-100 shadow-xl py-1.5 z-50" style={{ animation: 'abfade .15s ease' }}>
+        <div className="absolute right-0 top-full mt-2 w-[200px] bg-white rounded-2xl border border-slate-100 shadow-xl py-1.5 z-50" style={{ animation: 'abmodal .22s cubic-bezier(.16,1,.3,1)' }}>
           <div className="px-4 py-2.5 border-b border-slate-100">
             <p className="text-[12px] font-700 text-slate-700 truncate">{customer?.email}</p>
           </div>
@@ -147,9 +135,10 @@ const Header = ({ onNavCat }) => {
   return (
     <div id="top" className="sticky top-0 z-40">
       <AnnouncementBar />
-      <header className="border-b border-slate-200/80 bg-white/95 backdrop-blur-md transition-shadow"
+      <header className="border-b border-slate-200/80 bg-white/95 backdrop-blur-md transition-all duration-300"
         style={{ boxShadow: scrolled ? "0 8px 30px -18px rgba(11,46,107,0.35)" : "none" }}>
-        <div className="mx-auto flex max-w-[1280px] items-center gap-4 px-4 py-3.5 sm:px-6">
+        <div className="mx-auto flex max-w-[1280px] items-center gap-4 px-4 sm:px-6 transition-[padding] duration-300"
+          style={{ paddingTop: scrolled ? '10px' : '14px', paddingBottom: scrolled ? '10px' : '14px' }}>
           <button onClick={() => setMenu(true)} className="grid h-10 w-10 place-items-center rounded-xl text-ink hover:bg-slate-100 lg:hidden" aria-label="Open menu">
             <Menu size={22} />
           </button>
@@ -173,10 +162,13 @@ const Header = ({ onNavCat }) => {
               </button>
             )}
             <button onClick={() => setOpen(true)}
-              className="relative grid h-11 w-11 place-items-center rounded-full bg-cobalt text-white transition hover:bg-cobalt-700" aria-label="Open cart">
+              className="relative grid h-11 w-11 place-items-center rounded-full bg-cobalt text-white transition-all duration-200 hover:bg-cobalt-700 hover:scale-105 active:scale-95" aria-label="Open cart">
               <Cart size={20} />
               {count > 0 && (
-                <span className="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-grass px-1 text-[11px] font-bold text-white ring-2 ring-white">{count}</span>
+                <span key={count} className="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-grass px-1 text-[11px] font-bold text-white ring-2 ring-white"
+                  style={{ animation: 'abpop .35s cubic-bezier(.36,.07,.19,.97)' }}>
+                  {count}
+                </span>
               )}
             </button>
           </div>
@@ -199,7 +191,7 @@ const Header = ({ onNavCat }) => {
       {/* Mobile menu */}
       <div className={`fixed inset-0 z-50 lg:hidden ${menu ? "" : "pointer-events-none"}`}>
         <div onClick={() => setMenu(false)} className="absolute inset-0 bg-ink/50 transition-opacity duration-300" style={{ opacity: menu ? 1 : 0 }} />
-        <div className="absolute left-0 top-0 h-full w-[82%] max-w-[340px] bg-white shadow-2xl transition-transform duration-300" style={{ transform: menu ? "translateX(0)" : "translateX(-100%)" }}>
+        <div className="absolute left-0 top-0 h-full w-[82%] max-w-[340px] bg-white shadow-2xl transition-transform duration-350 ease-[cubic-bezier(.16,1,.3,1)]" style={{ transform: menu ? "translateX(0)" : "translateX(-100%)" }}>
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
             <Wordmark />
             <button onClick={() => setMenu(false)} className="grid h-10 w-10 place-items-center rounded-xl hover:bg-slate-100"><X size={22} /></button>
@@ -266,7 +258,7 @@ const CartDrawer = () => {
   return (
     <div className={`fixed inset-0 z-[60] ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
       <div onClick={() => setOpen(false)} className="absolute inset-0 bg-ink/55 backdrop-blur-[2px] transition-opacity duration-300" style={{ opacity: open ? 1 : 0 }} />
-      <aside className="absolute right-0 top-0 flex h-full w-full max-w-[440px] flex-col bg-white shadow-2xl transition-transform duration-300" style={{ transform: open ? "translateX(0)" : "translateX(100%)" }}>
+      <aside className="absolute right-0 top-0 flex h-full w-full max-w-[440px] flex-col bg-white shadow-2xl transition-transform duration-350 ease-[cubic-bezier(.16,1,.3,1)]" style={{ transform: open ? "translateX(0)" : "translateX(100%)" }}>
 
         {/* Cart header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
@@ -305,7 +297,7 @@ const CartDrawer = () => {
                 {detailed.map(({ product, qty }) => (
                   <li key={product.id} className="flex gap-3">
                     <div className="h-[88px] w-[72px] shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
-                      <img src={product.img} alt={product.name} className="h-full w-full object-cover" />
+                      <img src={product.img} alt={product.name} className="h-full w-full object-cover" onError={e=>{e.target.onerror=null;e.target.src='assets/products/placeholder.svg'}} />
                     </div>
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-start justify-between gap-2">
@@ -369,10 +361,10 @@ const Toast = () => {
   const { toast } = useCart();
   return (
     <div className="pointer-events-none fixed bottom-5 left-1/2 z-[70] -translate-x-1/2"
-      style={{ transition: "all .3s cubic-bezier(.16,1,.3,1)", opacity: toast ? 1 : 0, transform: `translate(-50%, ${toast ? 0 : 16}px)` }}>
+      style={{ transition: "opacity .3s cubic-bezier(.16,1,.3,1), transform .35s cubic-bezier(.16,1,.3,1)", opacity: toast ? 1 : 0, transform: `translate(-50%, ${toast ? 0 : 20}px)` }}>
       {toast && (
         <div className="pointer-events-auto flex items-center gap-2.5 rounded-full bg-ink px-5 py-3 text-[13.5px] font-semibold text-white shadow-2xl">
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-grass text-white"><Check size={15} /></span>
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-grass text-white ab-succ-enter"><Check size={15} /></span>
           {toast}
         </div>
       )}

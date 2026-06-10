@@ -21,32 +21,66 @@ function CkSpinner() {
 
 /* ── Invoice generator ───────────────────────────────────────────────────────── */
 function printInvoice(order) {
-  const R = (n) => {
-    const abs  = Math.abs(n || 0).toFixed(2);
+  const Rfmt = (n) => {
+    const abs = Math.abs(n || 0).toFixed(2);
     const [int, dec] = abs.split('.');
     return 'R ' + int.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + dec;
   };
 
-  /* South African VAT is 15% and our displayed prices are VAT-inclusive,
-     so we show the embedded VAT amount on the invoice for the buyer's
-     SARS record-keeping. */
-  const VAT_RATE     = 0.15;
-  const taxableTotal = (order.total || 0); // VAT-inclusive
-  const vatExcl      = taxableTotal / (1 + VAT_RATE);
-  const vatAmount    = taxableTotal - vatExcl;
-  const vatNumber    = (window.__settings && window.__settings.business && window.__settings.business.vatNumber) || '';
+  const s        = window.__settings || {};
+  const biz      = s.business || {};
+  const bank     = s.bankDetails || {};
+  const bizName  = biz.name    || 'Amahle Blue';
+  const bizAddr  = biz.address || 'Unit H, 13 Main Reef Road, Dunswart, Boksburg, Gauteng, South Africa';
+  const bizPhone = biz.phone   || '067 101 4345';
+  const bizEmail = biz.email   || 'info@amahle-blue.co.za';
+  const vatNum   = biz.vatNumber || '';
+
+  const VAT_RATE  = 0.15;
+  const vatAmount = (order.total || 0) - (order.total || 0) / (1 + VAT_RATE);
+
+  const payMethod   = order.paymentMethod || order.payment?.method || '';
+  const payStatus   = order.paymentStatus || (order.payment?.status === 'paid' ? 'Paid' : order.payment?.status) || 'Pending';
+  const orderStatus = order.orderStatus   || order.status || '';
+  const isPaid      = payStatus === 'Paid' || order.payment?.status === 'paid';
+  const isEFT       = payMethod === 'EFT';
+  const isCOD       = payMethod === 'COD';
+  const eftRef      = order.eftReference || order.orderNumber;
+  const codFee      = order.codFee || 0;
+  const payStatusColor = isPaid ? '#159A4C' : payStatus.includes('Reject') ? '#dc2626' : '#d97706';
 
   const rows = (order.items || []).map(i => `
     <tr>
-      <td style="padding:10px 14px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">${i.name}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">${i.name}${i.variation ? ` <span style="color:#94a3b8;font-size:11px">(${i.variation})</span>` : ''}</td>
       <td style="padding:10px 14px;border-bottom:1px solid #f1f5f9;text-align:center;font-size:13px;color:#64748b;">${i.qty}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #f1f5f9;text-align:right;font-size:13px;color:#64748b;">${R(i.price)}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #f1f5f9;text-align:right;font-size:13px;font-weight:700;color:#0B2545;">${R(i.price * i.qty)}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #f1f5f9;text-align:right;font-size:13px;color:#64748b;">${Rfmt(i.price)}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #f1f5f9;text-align:right;font-size:13px;font-weight:700;color:#0B2545;">${Rfmt(i.price * i.qty)}</td>
     </tr>`).join('');
 
   const couponRow = order.couponDiscount > 0 ? `
-    <tr><td colspan="3" style="padding:8px 14px;text-align:right;font-size:13px;color:#64748b;">Coupon (${order.couponCode})</td>
-    <td style="padding:8px 14px;text-align:right;font-size:13px;font-weight:600;color:#159A4C;">−${R(order.couponDiscount)}</td></tr>` : '';
+    <tr><td colspan="3" style="padding:8px 14px;text-align:right;font-size:13px;color:#64748b;">Coupon (${order.couponCode || ''})</td>
+    <td style="padding:8px 14px;text-align:right;font-size:13px;font-weight:600;color:#159A4C;">−${Rfmt(order.couponDiscount)}</td></tr>` : '';
+
+  const codFeeRow = codFee > 0 ? `
+    <tr><td colspan="3" style="padding:8px 14px;text-align:right;font-size:13px;color:#d97706;">COD Fee</td>
+    <td style="padding:8px 14px;text-align:right;font-size:13px;font-weight:600;color:#d97706;">${Rfmt(codFee)}</td></tr>` : '';
+
+  const eftSection = isEFT && !isPaid ? `
+    <div style="margin-bottom:24px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px 20px;">
+      <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">EFT Payment Instructions</p>
+      <p style="font-size:13px;color:#0B2545;margin-bottom:4px;">Please use <strong>${eftRef}</strong> as your payment reference.</p>
+      ${bank.bankName        ? `<p style="font-size:13px;color:#334155;margin:2px 0;">Bank: <strong>${bank.bankName}</strong></p>` : ''}
+      ${bank.accountHolder   ? `<p style="font-size:13px;color:#334155;margin:2px 0;">Account Holder: <strong>${bank.accountHolder}</strong></p>` : ''}
+      ${bank.accountNumber   ? `<p style="font-size:13px;color:#334155;margin:2px 0;">Account Number: <strong>${bank.accountNumber}</strong></p>` : ''}
+      ${bank.branchCode      ? `<p style="font-size:13px;color:#334155;margin:2px 0;">Branch Code: <strong>${bank.branchCode}</strong></p>` : ''}
+      ${bank.accountType     ? `<p style="font-size:13px;color:#334155;margin:2px 0;">Account Type: <strong>${bank.accountType}</strong></p>` : ''}
+    </div>` : '';
+
+  const codSection = isCOD && !isPaid ? `
+    <div style="margin-bottom:24px;background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;">
+      <p style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Cash on Delivery</p>
+      <p style="font-size:13px;color:#92400e;">Amount due on delivery: <strong>${Rfmt(order.total)}</strong></p>
+    </div>` : '';
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -58,16 +92,8 @@ function printInvoice(order) {
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Helvetica, Arial, sans-serif; background: #fff; color: #0B2545; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .page { max-width: 720px; margin: 0 auto; padding: 40px 40px 60px; }
-    @media print {
-      body { background: #fff; }
-      .no-print { display: none !important; }
-      .page { padding: 20px; }
-    }
+    @media print { body { background: #fff; } .no-print { display: none !important; } .page { padding: 20px; } }
     h1 { font-size: 28px; font-weight: 800; color: #0B2545; }
-    .badge { display:inline-block; padding:4px 12px; border-radius:99px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
-    .badge-pending  { background:#fef3c7; color:#d97706; }
-    .badge-paid     { background:#dcfce7; color:#16a34a; }
-    .badge-cod      { background:#e0f2fe; color:#0369a1; }
     table { width:100%; border-collapse:collapse; }
     th { background:#f8fafc; padding:9px 14px; text-align:left; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:1px; }
     th:last-child, td:last-child { text-align:right; }
@@ -76,18 +102,16 @@ function printInvoice(order) {
 </head>
 <body>
 <div class="page">
-  <!-- Print button -->
-  <div class="no-print" style="text-align:right; margin-bottom:24px;">
+  <div class="no-print" style="text-align:right;margin-bottom:24px;">
     <button onclick="window.print()" style="background:#1E50E0;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">
       🖨️ Print / Save PDF
     </button>
   </div>
 
-  <!-- Header -->
   <div style="background:linear-gradient(135deg,#1E50E0,#0B2545);padding:32px 36px;border-radius:16px;margin-bottom:32px;">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;">
       <div>
-        <div style="color:#7FC4FF;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;">Amahle Blue</div>
+        <div style="color:#7FC4FF;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;">${bizName}</div>
         <h1 style="color:#fff;font-size:26px;font-weight:800;margin:0;">TAX INVOICE</h1>
       </div>
       <div style="text-align:right;">
@@ -97,14 +121,13 @@ function printInvoice(order) {
     </div>
   </div>
 
-  <!-- From / To -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px;">
     <div>
       <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">From</p>
-      <p style="font-weight:700;font-size:15px;color:#0B2545;margin-bottom:4px;">Amahle Blue</p>
-      <p style="font-size:13px;color:#64748b;line-height:1.6;">Unit H, 13 Main Reef Road<br>Dunswart, Boksburg<br>Gauteng, South Africa</p>
-      <p style="font-size:12px;color:#94a3b8;margin-top:6px;">info@amahle-blue.co.za</p>
-      ${vatNumber ? `<p style="font-size:12px;color:#94a3b8;margin-top:2px;">VAT No: ${vatNumber}</p>` : ''}
+      <p style="font-weight:700;font-size:15px;color:#0B2545;margin-bottom:4px;">${bizName}</p>
+      <p style="font-size:13px;color:#64748b;line-height:1.6;">${bizAddr.replace(/,\s*/g, ',<br>')}</p>
+      <p style="font-size:12px;color:#94a3b8;margin-top:6px;">${bizEmail} · ${bizPhone}</p>
+      ${vatNum ? `<p style="font-size:12px;color:#94a3b8;margin-top:2px;">VAT No: ${vatNum}</p>` : ''}
     </div>
     <div>
       <p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Bill / Ship To</p>
@@ -115,7 +138,6 @@ function printInvoice(order) {
     </div>
   </div>
 
-  <!-- Order meta -->
   <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;">
     <div style="background:#f8fafc;border-radius:10px;padding:12px 18px;flex:1;min-width:160px;">
       <p style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Order Number</p>
@@ -123,53 +145,49 @@ function printInvoice(order) {
     </div>
     <div style="background:#f8fafc;border-radius:10px;padding:12px 18px;flex:1;min-width:160px;">
       <p style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Payment Method</p>
-      <p style="font-size:14px;font-weight:600;color:#0B2545;">${order.payment?.method === 'COD' ? 'Cash on Delivery' : order.payment?.method === 'EFT' ? 'Bank Transfer (EFT)' : (order.payment?.method || '')}</p>
+      <p style="font-size:14px;font-weight:600;color:#0B2545;">${isCOD ? 'Cash on Delivery' : isEFT ? 'Bank Transfer (EFT)' : payMethod}</p>
     </div>
     <div style="background:#f8fafc;border-radius:10px;padding:12px 18px;flex:1;min-width:160px;">
       <p style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Payment Status</p>
-      <p style="font-size:14px;font-weight:700;color:${order.payment?.status==='paid'?'#159A4C':'#d97706'};text-transform:capitalize;">${order.payment?.status || 'Pending'}</p>
+      <p style="font-size:13px;font-weight:700;color:${payStatusColor};">${payStatus}</p>
     </div>
     <div style="background:#f8fafc;border-radius:10px;padding:12px 18px;flex:1;min-width:160px;">
       <p style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Order Status</p>
-      <p style="font-size:14px;font-weight:700;color:#0B2545;text-transform:capitalize;">${order.status || ''}</p>
+      <p style="font-size:13px;font-weight:700;color:#0B2545;">${orderStatus}</p>
     </div>
   </div>
 
-  <!-- Items table -->
   <table style="margin-bottom:4px;">
     <thead>
-      <tr>
-        <th>Product</th>
-        <th class="center">Qty</th>
-        <th>Unit Price</th>
-        <th>Amount</th>
-      </tr>
+      <tr><th>Product</th><th class="center">Qty</th><th>Unit Price</th><th>Amount</th></tr>
     </thead>
     <tbody>${rows}</tbody>
   </table>
 
-  <!-- Totals -->
   <table style="margin-bottom:32px;">
     <tbody>
       <tr><td colspan="3" style="padding:10px 14px;text-align:right;font-size:13px;color:#64748b;">Subtotal</td>
-          <td style="padding:10px 14px;text-align:right;font-size:13px;font-weight:600;">${R(order.subtotal)}</td></tr>
+          <td style="padding:10px 14px;text-align:right;font-size:13px;font-weight:600;">${Rfmt(order.subtotal)}</td></tr>
       ${couponRow}
       <tr><td colspan="3" style="padding:10px 14px;text-align:right;font-size:13px;color:#64748b;">Delivery</td>
-          <td style="padding:10px 14px;text-align:right;font-size:13px;font-weight:600;color:${order.delivery===0?'#159A4C':'#0B2545'}">${order.delivery===0?'FREE':R(order.delivery)}</td></tr>
+          <td style="padding:10px 14px;text-align:right;font-size:13px;font-weight:600;color:${order.delivery===0?'#159A4C':'#0B2545'}">${order.delivery===0?'FREE':Rfmt(order.delivery)}</td></tr>
+      ${codFeeRow}
       <tr><td colspan="3" style="padding:10px 14px;text-align:right;font-size:12px;color:#94a3b8;">VAT (15%, included in total)</td>
-          <td style="padding:10px 14px;text-align:right;font-size:12px;color:#94a3b8;">${R(vatAmount)}</td></tr>
+          <td style="padding:10px 14px;text-align:right;font-size:12px;color:#94a3b8;">${Rfmt(vatAmount)}</td></tr>
       <tr style="border-top:2px solid #e2e8f0;">
         <td colspan="3" style="padding:14px 14px;text-align:right;font-size:16px;font-weight:800;color:#0B2545;">Total (incl. VAT)</td>
-        <td style="padding:14px 14px;text-align:right;font-size:18px;font-weight:800;color:#1E50E0;">${R(order.total)}</td>
+        <td style="padding:14px 14px;text-align:right;font-size:18px;font-weight:800;color:#1E50E0;">${Rfmt(order.total)}</td>
       </tr>
     </tbody>
   </table>
 
+  ${eftSection}${codSection}
+
   ${order.notes ? `<div style="background:#f8fafc;border-radius:10px;padding:14px 18px;margin-bottom:20px;"><p style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Order Notes</p><p style="font-size:13px;color:#64748b;font-style:italic;">${order.notes}</p></div>` : ''}
 
   <div style="border-top:2px solid #f1f5f9;padding-top:20px;text-align:center;color:#94a3b8;font-size:12px;">
-    <p>Thank you for your business — Amahle Blue Cleaning Solutions</p>
-    <p style="margin-top:4px;">info@amahle-blue.co.za · 067 101 4345 · Made in 🇿🇦</p>
+    <p>Thank you for your business — ${bizName}</p>
+    <p style="margin-top:4px;">${bizEmail} · ${bizPhone} · Made in 🇿🇦</p>
   </div>
 </div>
 </body></html>`;
@@ -207,7 +225,7 @@ function CartPage({ onGoHome, onCheckout }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 ab-page-enter">
       <div className="bg-white border-b border-slate-200">
         <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-5">
           <button onClick={onGoHome} className="flex items-center gap-1.5 text-[13px] font-600 text-slate-500 hover:text-cobalt transition mb-4">
@@ -250,7 +268,7 @@ function CartPage({ onGoHome, onCheckout }) {
                 return (
                   <div key={product.id} className="flex gap-4 p-5">
                     <div className="h-24 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
-                      <img src={product.img} alt={product.name} className="h-full w-full object-cover" />
+                      <img src={product.img} alt={product.name} className="h-full w-full object-cover" onError={e=>{e.target.onerror=null;e.target.src='assets/products/placeholder.svg'}} />
                     </div>
                     <div className="flex flex-1 flex-col gap-1.5 min-w-0">
                       <div className="flex items-start justify-between gap-3">
@@ -342,7 +360,7 @@ function CheckoutPage({ onBack, onSuccess }) {
   const [form, setForm] = React.useState({
     name: customer?.name || '', email: customer?.email || '', phone: customer?.phone || '',
     addrLine: '', addrCity: '', addrProvince: '', addrPostal: '', addrCountry: 'South Africa',
-    payment: 'COD', notes: '',
+    payment: '', notes: '',
   });
   const [selectedAddr, setSelectedAddr] = React.useState('');
   const [placing,      setPlacing]      = React.useState(false);
@@ -431,6 +449,7 @@ function CheckoutPage({ onBack, onSuccess }) {
     if (!form.addrLine.trim()) { setError('Please enter your street address.'); return; }
     if (!form.addrCity.trim()) { setError('Please enter your city or town.'); return; }
     if (!form.addrProvince)    { setError('Please select a province so we can calculate delivery.'); return; }
+    if (!form.payment)         { setError('Please select a payment method to continue.'); return; }
 
     setPlacing(true); setError('');
 
@@ -473,7 +492,7 @@ function CheckoutPage({ onBack, onSuccess }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 ab-page-enter">
       <div className="bg-white border-b border-slate-200">
         <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-5">
           <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] font-600 text-slate-500 hover:text-cobalt transition mb-4">
@@ -571,28 +590,70 @@ function CheckoutPage({ onBack, onSuccess }) {
               <h3 className="font-display text-[15px] font-extrabold text-ink flex items-center gap-2">
                 <CreditCard size={17} className="text-cobalt" /> Payment Method
               </h3>
-              <div className="grid sm:grid-cols-3 gap-3">
-                {[
-                  { id: 'COD',  label: 'Cash on Delivery', emoji: '💵', desc: 'Pay when you receive' },
-                  { id: 'EFT',  label: 'Bank Transfer',    emoji: '🏦', desc: 'EFT via bank' },
-                  { id: 'Card', label: 'Online Payment',   emoji: '💳', desc: 'Coming soon', disabled: true },
-                ].filter(m => {
-                  if (m.id === 'COD' && settings?.cod?.enabled === false) return false;
-                  return true;
-                }).map(m => (
-                  <button key={m.id} type="button"
-                    onClick={() => !m.disabled && setForm(p => ({ ...p, payment: m.id }))}
-                    disabled={m.disabled}
-                    className={`flex flex-col items-center gap-1.5 rounded-xl border-2 px-3 py-4 text-center transition ${m.disabled ? 'opacity-50 cursor-not-allowed border-slate-100 bg-slate-50' : form.payment === m.id ? 'border-cobalt bg-cobalt/5' : 'border-slate-200 hover:border-cobalt/40'}`}>
-                    <span className="text-2xl">{m.emoji}</span>
-                    <span className={`text-[12.5px] font-700 ${form.payment === m.id ? 'text-cobalt' : 'text-ink'}`}>{m.label}</span>
-                    <span className="text-[11px] text-slate-400 leading-tight">{m.desc}</span>
-                  </button>
-                ))}
+
+              {/* Radio cards — COD and EFT only */}
+              <div className="grid sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Select payment method">
+                {/* Cash on Delivery */}
+                {settings?.cod?.enabled !== false && (
+                  <label
+                    className={`flex items-start gap-3 rounded-xl border-2 px-4 py-4 cursor-pointer transition focus-within:ring-2 focus-within:ring-cobalt/30 ${form.payment === 'COD' ? 'border-cobalt bg-cobalt/5' : 'border-slate-200 hover:border-cobalt/40'}`}
+                  >
+                    <input
+                      type="radio" name="paymentMethod" value="COD"
+                      checked={form.payment === 'COD'}
+                      onChange={() => setForm(p => ({ ...p, payment: 'COD' }))}
+                      className="mt-0.5 shrink-0 accent-cobalt h-4 w-4"
+                      aria-label="Cash on Delivery"
+                    />
+                    <div className="min-w-0">
+                      <p className={`text-[13.5px] font-700 ${form.payment === 'COD' ? 'text-cobalt' : 'text-ink'}`}>
+                        Cash on Delivery
+                      </p>
+                      <p className="text-[12px] text-slate-500 mt-0.5 leading-snug">
+                        Pay in cash when your order is delivered.
+                      </p>
+                    </div>
+                  </label>
+                )}
+
+                {/* EFT / Bank Transfer */}
+                {settings?.eft?.enabled !== false && (
+                  <label
+                    className={`flex items-start gap-3 rounded-xl border-2 px-4 py-4 cursor-pointer transition focus-within:ring-2 focus-within:ring-cobalt/30 ${form.payment === 'EFT' ? 'border-cobalt bg-cobalt/5' : 'border-slate-200 hover:border-cobalt/40'}`}
+                  >
+                    <input
+                      type="radio" name="paymentMethod" value="EFT"
+                      checked={form.payment === 'EFT'}
+                      onChange={() => setForm(p => ({ ...p, payment: 'EFT' }))}
+                      className="mt-0.5 shrink-0 accent-cobalt h-4 w-4"
+                      aria-label="EFT / Bank Transfer"
+                    />
+                    <div className="min-w-0">
+                      <p className={`text-[13.5px] font-700 ${form.payment === 'EFT' ? 'text-cobalt' : 'text-ink'}`}>
+                        EFT / Bank Transfer
+                      </p>
+                      <p className="text-[12px] text-slate-500 mt-0.5 leading-snug">
+                        Pay directly into our bank account. After placing your order, you will receive the bank details and your order reference. Your order will be processed after the payment has been verified.
+                      </p>
+                    </div>
+                  </label>
+                )}
               </div>
+
+              {/* EFT note */}
               {form.payment === 'EFT' && (
-                <div className="rounded-xl bg-sky-50 border border-sky-200 px-4 py-3 text-[12.5px] text-sky-700">
-                  <strong>EFT instructions</strong> will be emailed after your order is confirmed.
+                <div className="rounded-xl bg-sky-50 border border-sky-200 px-4 py-3 flex items-start gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0369a1" strokeWidth="2" className="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <p className="text-[12.5px] text-sky-700 leading-snug">
+                    Bank details and your payment reference will be shown after placing your order and emailed to you. Do not share your banking password, PIN, or OTP with anyone.
+                  </p>
+                </div>
+              )}
+
+              {/* No payment methods available fallback */}
+              {settings?.cod?.enabled === false && settings?.eft?.enabled === false && (
+                <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-[13px] text-red-700">
+                  No payment methods are currently available. Please contact us for assistance.
                 </div>
               )}
             </div>
@@ -603,7 +664,7 @@ function CheckoutPage({ onBack, onSuccess }) {
                 <Tag size={16} className="text-cobalt" /> Coupon Code
               </h3>
               {coupon ? (
-                <div className="flex items-center justify-between bg-green-50 rounded-xl px-4 py-3 ring-1 ring-green-200">
+                <div className="flex items-center justify-between bg-green-50 rounded-xl px-4 py-3 ring-1 ring-green-200 ab-fade-in">
                   <div className="flex items-center gap-2">
                     <CheckCircle size={16} className="text-grass shrink-0" />
                     <div>
@@ -629,7 +690,7 @@ function CheckoutPage({ onBack, onSuccess }) {
                   </button>
                 </div>
               )}
-              {couponError && <p className="text-[12px] text-red-500">{couponError}</p>}
+              {couponError && <p key={couponError} className="text-[12px] text-red-500 ab-fade-in">{couponError}</p>}
             </div>
 
             {/* Order notes */}
@@ -641,7 +702,8 @@ function CheckoutPage({ onBack, onSuccess }) {
             </div>
 
             {error && (
-              <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3.5">
+              <div key={error} className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3.5"
+                style={{ animation: 'abshake .4s ease, abfade .2s ease' }}>
                 <AlertCircle size={17} className="text-red-500 shrink-0 mt-0.5" />
                 <p className="text-[13px] text-red-600 leading-snug">{error}</p>
               </div>
@@ -655,7 +717,7 @@ function CheckoutPage({ onBack, onSuccess }) {
               {detailed.map(({ product, qty }) => (
                 <div key={product.id} className="flex items-center gap-3">
                   <div className="h-12 w-10 shrink-0 overflow-hidden rounded-lg bg-slate-50 border border-slate-100">
-                    <img src={product.img} alt={product.name} className="h-full w-full object-cover" />
+                    <img src={product.img} alt={product.name} className="h-full w-full object-cover" onError={e=>{e.target.onerror=null;e.target.src='assets/products/placeholder.svg'}} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[12.5px] font-600 text-ink truncate">{product.name}</p>
@@ -689,7 +751,7 @@ function CheckoutPage({ onBack, onSuccess }) {
             </div>
             <p className="text-[11px] text-slate-400">Prices include 15% VAT.</p>
             <button form="ck-form" type="submit" disabled={placing}
-              className="w-full flex items-center justify-center gap-2 rounded-full bg-cobalt py-3.5 text-[15px] font-bold text-white hover:bg-cobalt-700 transition disabled:opacity-60">
+              className="w-full flex items-center justify-center gap-2 rounded-full bg-cobalt py-3.5 text-[15px] font-bold text-white hover:bg-cobalt-700 transition-all duration-200 active:scale-95 disabled:opacity-60">
               {placing ? <><CkSpinner /> Placing order…</> : <><Lock size={16} /> Place Order · {money(total)}</>}
             </button>
             <p className="flex items-center justify-center gap-1.5 text-[11.5px] text-slate-400">
@@ -712,24 +774,130 @@ function OrderConfirmedPage({ order, onGoHome, onGoOrders }) {
     );
   }
 
-  const PAY_LABELS = { COD: 'Cash on Delivery', EFT: 'Bank Transfer (EFT)', Card: 'Online Payment' };
+  const payMethod = order.paymentMethod || order.payment?.method || '';
+  const isCOD     = payMethod === 'COD';
+  const isEFT     = payMethod === 'EFT';
+  const codFee    = order.codFee || 0;
+  const bank      = order.eftBankDetails || {};
+  const hasBankDetails = isEFT && (bank.bankName || bank.accountNumber);
+
+  const displayPayStatus = order.paymentStatus
+    || (isCOD ? 'Cash Payment Pending' : isEFT ? 'Awaiting EFT Payment' : (order.payment?.status || 'Pending'));
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-start justify-center pt-12 pb-16 px-4">
+    <div className="min-h-screen bg-slate-50 flex items-start justify-center pt-12 pb-16 px-4 ab-page-enter">
       <div className="w-full max-w-[580px]">
         <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-lg">
-          {/* Header */}
-          <div className="bg-gradient-to-br from-grass to-emerald-600 px-8 py-10 text-center">
-            <div className="inline-grid h-16 w-16 place-items-center rounded-full bg-white/20 mb-4">
+
+          {/* Header — green for COD, cobalt for EFT */}
+          <div className={`px-8 py-10 text-center bg-gradient-to-br ${isCOD ? 'from-grass to-emerald-600' : 'from-cobalt to-[#0B2545]'}`}>
+            <div className="inline-grid h-16 w-16 place-items-center rounded-full bg-white/20 mb-4 ab-succ-enter">
               <CheckCircle size={34} className="text-white" />
             </div>
-            <h2 className="font-display text-[24px] font-extrabold text-white">Order Placed!</h2>
-            <p className="text-emerald-100 mt-1.5 text-[14px]">
-              Thanks for your order — we'll get it processed shortly.
+            <h2 className="font-display text-[24px] font-extrabold text-white">
+              {isCOD ? 'Order Placed!' : 'Order Received!'}
+            </h2>
+            <p className="mt-1.5 text-[14px]" style={{ color: isCOD ? '#d1fae5' : '#bfdbfe' }}>
+              {isCOD
+                ? 'Your order has been placed successfully.'
+                : "We've received your order — please complete your payment."
+              }
             </p>
           </div>
 
           <div className="p-7 sm:p-8 space-y-5">
+
+            {/* COD callout */}
+            {isCOD && (
+              <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-4">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" className="shrink-0 mt-0.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                <div>
+                  <p className="text-[13.5px] font-700 text-amber-800">Cash on Delivery</p>
+                  <p className="text-[12.5px] text-amber-700 mt-0.5 leading-snug">
+                    Please keep the required cash amount ready when your order is delivered.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* EFT payment instructions */}
+            {isEFT && (
+              <div className="space-y-3">
+                <div className="bg-cobalt/5 border border-cobalt/20 rounded-xl px-4 py-4">
+                  <div className="flex items-start gap-2 mb-3">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E50E0" strokeWidth="2" className="shrink-0 mt-0.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    <div>
+                      <p className="text-[13.5px] font-700 text-cobalt">EFT / Bank Transfer</p>
+                      <p className="text-[12.5px] text-slate-600 mt-0.5 leading-snug">
+                        Please use your order number as the payment reference. Your order will be processed after the payment has been verified.
+                      </p>
+                    </div>
+                  </div>
+                  {/* Payment reference */}
+                  <div className="bg-white border border-cobalt/15 rounded-xl px-4 py-3">
+                    <p className="text-[10px] font-700 text-slate-400 uppercase tracking-wide mb-1">Payment Reference</p>
+                    <p className="font-display text-[18px] font-extrabold text-cobalt font-mono">
+                      {order.eftReference || order.orderNumber}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Bank details */}
+                {hasBankDetails && (
+                  <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                    <div className="bg-slate-50 px-4 py-2.5 border-b border-slate-100">
+                      <p className="text-[11px] font-700 text-slate-500 uppercase tracking-wide">Bank Details</p>
+                    </div>
+                    <div className="divide-y divide-slate-50 px-4 py-1">
+                      {bank.accountHolder && (
+                        <div className="flex justify-between py-2.5 text-[13px]">
+                          <span className="text-slate-500">Account Holder</span>
+                          <span className="font-700 text-ink">{bank.accountHolder}</span>
+                        </div>
+                      )}
+                      {bank.bankName && (
+                        <div className="flex justify-between py-2.5 text-[13px]">
+                          <span className="text-slate-500">Bank</span>
+                          <span className="font-700 text-ink">{bank.bankName}</span>
+                        </div>
+                      )}
+                      {bank.accountNumber && (
+                        <div className="flex justify-between py-2.5 text-[13px]">
+                          <span className="text-slate-500">Account Number</span>
+                          <span className="font-700 text-ink font-mono">{bank.accountNumber}</span>
+                        </div>
+                      )}
+                      {bank.branchCode && (
+                        <div className="flex justify-between py-2.5 text-[13px]">
+                          <span className="text-slate-500">Branch Code</span>
+                          <span className="font-700 text-ink font-mono">{bank.branchCode}</span>
+                        </div>
+                      )}
+                      {bank.accountType && (
+                        <div className="flex justify-between py-2.5 text-[13px]">
+                          <span className="text-slate-500">Account Type</span>
+                          <span className="font-700 text-ink">{bank.accountType}</span>
+                        </div>
+                      )}
+                      {bank.swiftCode && (
+                        <div className="flex justify-between py-2.5 text-[13px]">
+                          <span className="text-slate-500">SWIFT Code</span>
+                          <span className="font-700 text-ink font-mono">{bank.swiftCode}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="bg-cobalt px-4 py-3 flex justify-between items-center">
+                      <span className="text-[13px] font-700 text-white">Amount Payable</span>
+                      <span className="text-[16px] font-800 text-white">{money(order.total)}</span>
+                    </div>
+                  </div>
+                )}
+                {bank.instructions && (
+                  <p className="text-[12px] text-slate-500 italic px-1">{bank.instructions}</p>
+                )}
+              </div>
+            )}
+
             {/* Order number + total */}
             <div className="flex items-center justify-between bg-slate-50 rounded-2xl px-5 py-4">
               <div>
@@ -765,14 +933,20 @@ function OrderConfirmedPage({ order, onGoHome, onGoOrders }) {
               {order.couponDiscount > 0 && (
                 <div className="flex justify-between"><span className="text-grass font-600">Coupon ({order.couponCode})</span><span className="font-700 text-grass">−{money(order.couponDiscount)}</span></div>
               )}
-              <div className="flex justify-between"><span className="text-slate-500">Delivery</span><span className={`font-600 ${order.delivery === 0 ? 'text-grass' : ''}`}>{order.delivery === 0 ? 'FREE' : money(order.delivery)}</span></div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Delivery</span>
+                <span className={`font-600 ${order.delivery === 0 ? 'text-grass' : ''}`}>{order.delivery === 0 ? 'FREE' : money(order.delivery)}</span>
+              </div>
+              {codFee > 0 && (
+                <div className="flex justify-between"><span className="text-slate-500">COD Fee</span><span className="font-600">{money(codFee)}</span></div>
+              )}
               <div className="flex justify-between border-t border-slate-200 pt-2 mt-1">
                 <span className="font-700 text-ink">Total</span>
                 <span className="font-800 text-cobalt text-[15px]">{money(order.total)}</span>
               </div>
             </div>
 
-            {/* Delivery + payment */}
+            {/* Delivery + payment status */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="bg-slate-50 rounded-xl px-4 py-3.5">
                 <p className="text-[11px] font-700 text-slate-400 uppercase tracking-wide mb-1">Delivery Address</p>
@@ -780,8 +954,10 @@ function OrderConfirmedPage({ order, onGoHome, onGoOrders }) {
               </div>
               <div className="bg-slate-50 rounded-xl px-4 py-3.5">
                 <p className="text-[11px] font-700 text-slate-400 uppercase tracking-wide mb-1">Payment</p>
-                <p className="text-[13px] font-600 text-ink">{PAY_LABELS[order.payment?.method] || order.payment?.method}</p>
-                <p className="text-[12px] font-600 text-amber-600 capitalize mt-0.5">{order.payment?.status}</p>
+                <p className="text-[13px] font-600 text-ink">
+                  {isCOD ? 'Cash on Delivery' : isEFT ? 'EFT / Bank Transfer' : payMethod}
+                </p>
+                <p className="text-[12px] font-600 text-amber-600 mt-0.5">{displayPayStatus}</p>
               </div>
             </div>
 

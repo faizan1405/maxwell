@@ -10,11 +10,11 @@ const Footer = ({ onShopCat }) => (
           { icon: Lock, t: "Secure checkout", s: "Your details stay protected" },
           { icon: Award, t: "Quality guaranteed", s: "Consistent, tested batches" },
           { icon: Whatsapp, t: "Talk to us", s: "Quick help on WhatsApp" },
-        ].map((x) => (
-          <div key={x.t} className="flex items-center gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/8 text-sky-300"><x.icon size={20} /></span>
+        ].map((x, i) => (
+          <FadeReveal key={x.t} delay={i * 60} className="flex items-center gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/8 text-sky-300 transition-transform duration-200 hover:scale-110"><x.icon size={20} /></span>
             <div className="leading-tight"><p className="text-[14px] font-bold text-white">{x.t}</p><p className="text-[12.5px] text-slate-400">{x.s}</p></div>
-          </div>
+          </FadeReveal>
         ))}
       </div>
 
@@ -23,9 +23,9 @@ const Footer = ({ onShopCat }) => (
           <Wordmark light />
           <p className="mt-5 max-w-sm text-[14.5px] leading-relaxed text-slate-400">Premium, locally-manufactured cleaning, car-care and sanitising solutions. Powerful results with a fresh, clean finish — delivered across South Africa.</p>
           <div className="mt-5 flex gap-2.5">
-            <a href={BRAND.facebook} target="_blank" rel="noopener noreferrer" className="grid h-10 w-10 place-items-center rounded-xl bg-white/8 text-white transition hover:bg-cobalt" aria-label="Facebook"><Facebook size={18} /></a>
-            <a href={BRAND.instagram} target="_blank" rel="noopener noreferrer" className="grid h-10 w-10 place-items-center rounded-xl bg-white/8 text-white transition hover:bg-cobalt" aria-label="Instagram"><Instagram size={18} /></a>
-            <a href={BRAND.wa} target="_blank" rel="noopener noreferrer" className="grid h-10 w-10 place-items-center rounded-xl bg-white/8 text-white transition hover:bg-grass" aria-label="WhatsApp"><Whatsapp size={18} /></a>
+            <a href={BRAND.facebook} target="_blank" rel="noopener noreferrer" className="grid h-10 w-10 place-items-center rounded-xl bg-white/8 text-white transition-all duration-200 hover:bg-cobalt hover:scale-110 hover:-translate-y-0.5 active:scale-95" aria-label="Facebook"><Facebook size={18} /></a>
+            <a href={BRAND.instagram} target="_blank" rel="noopener noreferrer" className="grid h-10 w-10 place-items-center rounded-xl bg-white/8 text-white transition-all duration-200 hover:bg-cobalt hover:scale-110 hover:-translate-y-0.5 active:scale-95" aria-label="Instagram"><Instagram size={18} /></a>
+            <a href={BRAND.wa} target="_blank" rel="noopener noreferrer" className="grid h-10 w-10 place-items-center rounded-xl bg-white/8 text-white transition-all duration-200 hover:bg-grass hover:scale-110 hover:-translate-y-0.5 active:scale-95" aria-label="WhatsApp"><Whatsapp size={18} /></a>
           </div>
         </div>
 
@@ -46,6 +46,14 @@ const Footer = ({ onShopCat }) => (
             <li><a href="#contact" className="text-slate-400 transition hover:text-white">Contact</a></li>
             <li><a href={BRAND.wa} target="_blank" rel="noopener noreferrer" className="text-slate-400 transition hover:text-white">Bulk &amp; trade</a></li>
             <li><a href="#shop" className="text-slate-400 transition hover:text-white">Delivery &amp; returns</a></li>
+            <li>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('ab:go-page', { detail: 'faq' }))}
+                className="text-slate-400 transition hover:text-white"
+              >
+                FAQs
+              </button>
+            </li>
           </ul>
         </div>
 
@@ -72,7 +80,10 @@ const Footer = ({ onShopCat }) => (
 );
 
 const WhatsappFab = () => (
-  <a href={BRAND.wa} target="_blank" rel="noopener noreferrer" className="group fixed bottom-5 right-5 z-30 inline-flex items-center gap-0 overflow-hidden rounded-full bg-grass px-4 py-4 text-white shadow-[0_16px_40px_-10px_rgba(21,154,76,0.8)] transition-all hover:px-5" aria-label="Chat on WhatsApp">
+  <a href={BRAND.wa} target="_blank" rel="noopener noreferrer"
+    className="group fixed bottom-5 right-5 z-30 inline-flex items-center gap-0 overflow-hidden rounded-full bg-grass px-4 py-4 text-white shadow-[0_16px_40px_-10px_rgba(21,154,76,0.8)] transition-all duration-300 hover:px-5 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+    style={{ animation: 'abfloat 4s ease-in-out infinite' }}
+    aria-label="Chat on WhatsApp">
     <Whatsapp size={26} />
     <span className="max-w-0 overflow-hidden whitespace-nowrap text-[14px] font-bold opacity-0 transition-all duration-300 group-hover:ml-2.5 group-hover:max-w-[120px] group-hover:opacity-100">Need help?</span>
   </a>
@@ -162,10 +173,16 @@ function StoreRouter() {
     );
   }
 
+  if (page === "faq") {
+    return shell(
+      <FaqPage onGoHome={goHome} />
+    );
+  }
+
   return (
     <React.Fragment>
       <Header onNavCat={onNavCat} />
-      <main>
+      <main className="ab-page-enter">
         <Hero onShopCat={onShopCat} />
         <TrustStrip />
         <CategoryShowcase onShopCat={onShopCat} />
@@ -175,6 +192,7 @@ function StoreRouter() {
         <WhyUs />
         <Reviews />
         <Newsletter />
+        <HomepageFaqSection />
       </main>
       <Footer onShopCat={onShopCat} />
       <CartDrawer />

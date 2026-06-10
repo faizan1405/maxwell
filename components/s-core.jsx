@@ -747,4 +747,24 @@ const CatIcon = ({ name, ...rest }) => {
   return <C {...rest} />;
 };
 
-Object.assign(window, { BRAND, CATEGORIES, PRODUCTS, money, catOf, FREE_SHIP, getGuestId, CartContext, CartProvider, useCart, useInView, Reveal, Stars, CatIcon });
+/* ── Product media helpers ─────────────────────────────────────────────────── */
+
+function getPrimaryImg(p) {
+  if (p && p.media && p.media.length > 0) {
+    const primary = p.media.find(m => m.isPrimary && m.type === 'image');
+    if (primary && primary.url) return primary.url;
+    const firstImg = p.media.find(m => m.type === 'image');
+    if (firstImg && firstImg.url) return firstImg.url;
+  }
+  return (p && p.img) ? p.img : 'assets/products/placeholder.svg';
+}
+
+function getSecondImg(p) {
+  if (!p || !p.media || p.media.length < 2) return null;
+  const images = p.media.filter(m => m.type === 'image' && m.url);
+  if (images.length < 2) return null;
+  const secondary = images.find(m => !m.isPrimary);
+  return secondary ? secondary.url : null;
+}
+
+Object.assign(window, { BRAND, CATEGORIES, PRODUCTS, money, catOf, FREE_SHIP, getGuestId, CartContext, CartProvider, useCart, useInView, Reveal, Stars, CatIcon, getPrimaryImg, getSecondImg });

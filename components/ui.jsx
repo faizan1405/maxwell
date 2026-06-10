@@ -1,4 +1,5 @@
-/* Shared UI primitives: Reveal (rise-in), Counter (count-up), Placeholder image, Pill */
+/* Shared UI primitives: Reveal (rise-in), Counter (count-up), Placeholder image, Pill,
+   FadeReveal (opacity+rise), SkeletonBox (shimmer loader), PageEnter (page transition) */
 
 /* Robust in-view arming. Content is ALWAYS rendered opaque (see Reveal); this hook
    only decides when to play the gentle rise. Multiple initial checks + scroll/resize
@@ -110,4 +111,56 @@ const Pill = ({ children, className = "" }) => (
   </span>
 );
 
-Object.assign(window, { Reveal, Counter, Placeholder, Pill, useInView });
+/* FadeReveal: opacity + rise for non-critical decorative elements.
+   Unlike Reveal, starts at opacity:0 — do NOT use for primary text content
+   that must be visible to crawlers before JS executes. */
+const FadeReveal = ({ children, className = "", delay = 0, y = 16, as = "div" }) => {
+  const [ref, vis] = useInView();
+  const Tag = as;
+  return (
+    <Tag
+      ref={ref}
+      className={className}
+      style={{
+        transition: `opacity .55s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1)`,
+        transitionDelay: `${delay}ms`,
+        opacity: vis ? 1 : 0,
+        transform: vis ? "translateY(0)" : `translateY(${y}px)`,
+      }}
+    >
+      {children}
+    </Tag>
+  );
+};
+
+/* SkeletonBox: shimmer loading placeholder */
+const SkeletonBox = ({ className = "", rounded = "rounded-xl" }) => (
+  <div className={`ab-skeleton ${rounded} ${className}`} aria-hidden="true" />
+);
+
+/* ProductCardSkeleton: matches ProductCard dimensions */
+const ProductCardSkeleton = () => (
+  <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_2px_10px_rgba(11,46,107,0.04)]">
+    <SkeletonBox className="aspect-[3/4] w-full" rounded="rounded-none" />
+    <div className="flex flex-col p-4 gap-3">
+      <SkeletonBox className="h-3 w-16" />
+      <SkeletonBox className="h-5 w-4/5" />
+      <SkeletonBox className="h-3 w-full" />
+      <SkeletonBox className="h-3 w-3/5" />
+      <div className="mt-2 flex items-end justify-between">
+        <SkeletonBox className="h-7 w-20" />
+        <SkeletonBox className="h-5 w-14" />
+      </div>
+      <SkeletonBox className="h-10 w-full rounded-full" />
+    </div>
+  </div>
+);
+
+/* PageEnter: wraps page content with entrance animation */
+const PageEnter = ({ children, className = "" }) => (
+  <div className={`ab-page-enter ${className}`}>
+    {children}
+  </div>
+);
+
+Object.assign(window, { Reveal, Counter, Placeholder, Pill, useInView, FadeReveal, SkeletonBox, ProductCardSkeleton, PageEnter });

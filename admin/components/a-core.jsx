@@ -47,6 +47,7 @@ function AdminProvider({ children }) {
   const [coupons,             setCoupons]             = useState([]);
   const [reviews,             setReviews]             = useState([]);
   const [abandonedCarts,      setAbandonedCarts]      = useState([]);
+  const [faqs,                setFaqs]               = useState([]);
 
   // Init — restore session from sessionStorage, then fetch data
   useEffect(() => {
@@ -61,7 +62,7 @@ function AdminProvider({ children }) {
         await Promise.all([
           fetchProducts(sess.token), fetchOrders(sess.token), fetchRegisteredCustomers(sess.token),
           fetchCoupons(sess.token), fetchReviews(sess.token), fetchAbandonedCarts(sess.token),
-          fetchSettings(),
+          fetchFaqs(sess.token), fetchSettings(),
         ]);
       }
       setReady(true);
@@ -127,6 +128,15 @@ function AdminProvider({ children }) {
     } catch {}
   }
 
+  async function fetchFaqs(token) {
+    try {
+      const res = await fetch(`${API_BASE}/api/faqs`, { headers: apiHeaders(token) });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data)) setFaqs(data);
+    } catch {}
+  }
+
   async function fetchAbandonedCarts(token) {
     try {
       const res = await fetch(`${API_BASE}/api/carts`, { headers: apiHeaders(token) });
@@ -164,7 +174,7 @@ function AdminProvider({ children }) {
       await Promise.all([
         fetchProducts(token), fetchOrders(token), fetchRegisteredCustomers(token),
         fetchCoupons(token), fetchReviews(token), fetchAbandonedCarts(token),
-        fetchSettings(),
+        fetchFaqs(token), fetchSettings(),
       ]);
       return { ok: true };
     } catch (err) {
@@ -186,41 +196,58 @@ function AdminProvider({ children }) {
 
   // ── Product CRUD ──────────────────────────────────────────────────────────
   const addProduct = useCallback(async (p) => {
-    const res = await fetch(`${API_BASE}/api/products`, {
+    const res  = await fetch(`${API_BASE}/api/products`, {
       method: 'POST',
       headers: apiHeaders(session?.token),
       body: JSON.stringify(p),
     });
-    const np = await res.json();
-    setProducts(prev => [...prev, np]);
-    return np;
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
+    setProducts(prev => [...prev, data]);
+    return data;
   }, [session]);
 
   const updateProduct = useCallback(async (id, patch) => {
-    // Optimistic update
     setProducts(prev => prev.map(p => p.id===id ? {...p,...patch,updatedAt:Date.now()} : p));
+    let errMsg = null;
     try {
-      await fetch(`${API_BASE}/api/products`, {
+      const res = await fetch(`${API_BASE}/api/products`, {
         method: 'PATCH',
         headers: apiHeaders(session?.token),
         body: JSON.stringify({ id, ...patch }),
       });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        errMsg = d.error || `Server error ${res.status}`;
+      }
     } catch {
-      // Rollback on failure by re-fetching
+      errMsg = 'Network error — please try again.';
+    }
+    if (errMsg) {
       fetchProducts(session?.token);
+      throw new Error(errMsg);
     }
   }, [session]);
 
   const deleteProduct = useCallback(async (id) => {
     setProducts(prev => prev.filter(p => p.id !== id));
+    let errMsg = null;
     try {
-      await fetch(`${API_BASE}/api/products`, {
+      const res = await fetch(`${API_BASE}/api/products`, {
         method: 'DELETE',
         headers: apiHeaders(session?.token),
         body: JSON.stringify({ id }),
       });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        errMsg = d.error || `Server error ${res.status}`;
+      }
     } catch {
+      errMsg = 'Network error — please try again.';
+    }
+    if (errMsg) {
       fetchProducts(session?.token);
+      throw new Error(errMsg);
     }
   }, [session]);
 
@@ -305,6 +332,34 @@ function AdminProvider({ children }) {
     } catch { fetchCoupons(session?.token); }
   }, [session]);
 
+  // ── FAQ CRUD ──────────────────────────────────────────────────────────────
+  const addFaq = useCallback(async (payload) => {
+    const res  = await fetch(`${API_BASE}/api/faqs`, {
+      method: 'POST', headers: apiHeaders(session?.token), body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (res.ok) setFaqs(prev => [...prev, data].sort((a, b) => (a.order || 0) - (b.order || 0)));
+    return data;
+  }, [session]);
+
+  const updateFaq = useCallback(async (id, patch) => {
+    setFaqs(prev => prev.map(f => f.id === id ? { ...f, ...patch, updatedAt: Date.now() } : f));
+    try {
+      await fetch(`${API_BASE}/api/faqs`, {
+        method: 'PATCH', headers: apiHeaders(session?.token), body: JSON.stringify({ id, ...patch }),
+      });
+    } catch { fetchFaqs(session?.token); }
+  }, [session]);
+
+  const deleteFaq = useCallback(async (id) => {
+    setFaqs(prev => prev.filter(f => f.id !== id));
+    try {
+      await fetch(`${API_BASE}/api/faqs`, {
+        method: 'DELETE', headers: apiHeaders(session?.token), body: JSON.stringify({ id }),
+      });
+    } catch { fetchFaqs(session?.token); }
+  }, [session]);
+
   // ── Review moderation ─────────────────────────────────────────────────────
   const updateReview = useCallback(async (id, patch) => {
     setReviews(prev => prev.map(r => r.id===id ? {...r,...patch,updatedAt:Date.now()} : r));
@@ -381,6 +436,7 @@ function AdminProvider({ children }) {
     coupons, addCoupon, updateCoupon, deleteCoupon,
     reviews, updateReview, deleteReview,
     abandonedCarts,
+    faqs, addFaq, updateFaq, deleteFaq,
     fmtMoney, fmtDate, fmtDateTime, initials,
   };
 

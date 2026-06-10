@@ -1,6 +1,11 @@
 /* Products API — GET (public), POST/PATCH/DELETE (auth required) */
+const { del }                 = require('@vercel/blob');
 const { verifySession, cors } = require('./_auth');
 const { readBlob, writeBlob } = require('./_blob');
+
+function isVercelBlob(url) {
+  return typeof url === 'string' && url.includes('.vercel-storage.com');
+}
 
 const PRODUCTS_PATH = 'data/maxwell-products.json';
 
@@ -87,19 +92,39 @@ const SEED_PRODUCTS = [
 ];
 
 async function getProducts() {
+  let products;
   const stored = await readBlob(PRODUCTS_PATH);
   if (Array.isArray(stored) && stored.length) {
-    const storedIds = new Set(stored.map(p => p.id));
-    const newSeeds = SEED_PRODUCTS.filter(p => !storedIds.has(p.id));
-    if (newSeeds.length) {
-      const merged = [...stored, ...newSeeds];
-      await writeBlob(PRODUCTS_PATH, merged);
-      return merged;
-    }
-    return stored;
+    products = stored;
+  } else {
+    /* First-time bootstrap only — never re-inject seeds after that */
+    await writeBlob(PRODUCTS_PATH, SEED_PRODUCTS);
+    products = SEED_PRODUCTS;
   }
-  await writeBlob(PRODUCTS_PATH, SEED_PRODUCTS);
-  return SEED_PRODUCTS;
+
+  /* Virtual media migration — products with only img get a synthetic media array
+     so the storefront and admin can always read product.media.
+     We do NOT re-write to the blob here; actual media is persisted on next save. */
+  return products.map(p => {
+    if (p.media && p.media.length > 0) return p;
+    if (!p.img) return { ...p, media: [] };
+    return {
+      ...p,
+      media: [{
+        id:         p.id + '-img',
+        type:       'image',
+        url:        p.img,
+        storageKey: null,
+        altText:    p.name || '',
+        sortOrder:  0,
+        isPrimary:  true,
+        fileName:   p.img.split('/').pop(),
+        mimeType:   p.img.endsWith('.png') ? 'image/png' : 'image/jpeg',
+        fileSize:   0,
+        createdAt:  p.createdAt || Date.now(),
+      }],
+    };
+  });
 }
 
 module.exports = async function handler(req, res) {
@@ -134,6 +159,25 @@ module.exports = async function handler(req, res) {
     if (input.scent     !== undefined) out.scent     = input.scent == null ? null : String(input.scent).slice(0, 80);
     if (input.badge     !== undefined) out.badge     = input.badge == null ? null : String(input.badge).slice(0, 40);
     if (input.img       !== undefined) out.img       = String(input.img).slice(0, 1024);
+    if (Array.isArray(input.media)) {
+      out.media = input.media.slice(0, 12).map((m, i) => ({
+        id:         String(m.id || `${Date.now()}-${i}`).slice(0, 60),
+        type:       m.type === 'video' ? 'video' : 'image',
+        url:        String(m.url || '').slice(0, 1024),
+        storageKey: m.storageKey ? String(m.storageKey).slice(0, 500) : null,
+        altText:    m.altText    ? String(m.altText).slice(0, 200)    : '',
+        sortOrder:  Number.isInteger(m.sortOrder) ? m.sortOrder : i,
+        isPrimary:  !!m.isPrimary,
+        fileName:   m.fileName   ? String(m.fileName).slice(0, 200)   : '',
+        mimeType:   m.mimeType   ? String(m.mimeType).slice(0, 50)    : '',
+        fileSize:   Math.max(0, Number(m.fileSize) || 0),
+        createdAt:  m.createdAt  || Date.now(),
+      }));
+      /* Keep img in sync with the primary image URL */
+      const primary = out.media.find(m => m.isPrimary && m.type === 'image')
+                   || out.media.find(m => m.type === 'image');
+      if (primary) out.img = primary.url;
+    }
     if (input.desc      !== undefined) out.desc      = String(input.desc).slice(0, 4000);
     if (input.stock     !== undefined) out.stock     = Math.max(0, parseInt(input.stock, 10) || 0);
     if (input.lowStockThreshold !== undefined) out.lowStockThreshold = Math.max(0, parseInt(input.lowStockThreshold, 10) || 0);
@@ -183,6 +227,21 @@ module.exports = async function handler(req, res) {
     const { id } = body;
     if (!id) return res.status(400).json({ error: 'Missing id' });
     const products = await getProducts();
+    const product  = products.find(p => p.id === id);
+
+    /* Clean up Vercel Blob media files when the product is permanently deleted */
+    if (product && Array.isArray(product.media)) {
+      const blobUrls = product.media.map(m => m.url).filter(isVercelBlob);
+      if (blobUrls.length) {
+        try {
+          const token = process.env.BLOB_READ_WRITE_TOKEN;
+          await del(blobUrls, { token });
+        } catch (e) {
+          console.error('[/api/products DELETE] media cleanup error:', e.message);
+        }
+      }
+    }
+
     await writeBlob(PRODUCTS_PATH, products.filter(p => p.id !== id));
     return res.status(200).json({ ok: true });
   }

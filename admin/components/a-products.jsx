@@ -11,9 +11,24 @@ const BADGES  = [null,'Bestseller','New','High Purity','Sale'];
 const STATUSES= ['active','draft','archived'];
 const PAGE_SIZE = 8;
 
-// ── Blank product form ────────────────────────────────────────────────────────
+const MEDIA_LIMITS   = { maxItems: 12, maxImageBytes: 5*1024*1024, maxVideoBytes: 50*1024*1024 };
+const _ALLOWED_IMGS  = new Set(['image/jpeg','image/png','image/webp']);
+const _ALLOWED_VIDS  = new Set(['video/mp4','video/webm']);
+
+// ── Admin-side primary image helper ──────────────────────────────────────────
+function getPrimaryImg(p) {
+  if (p && p.media && p.media.length > 0) {
+    const pri = p.media.find(m => m.isPrimary && m.type === 'image');
+    if (pri && pri.url) return pri.url;
+    const fi = p.media.find(m => m.type === 'image');
+    if (fi && fi.url) return fi.url;
+  }
+  return (p && p.img) ? p.img : '../assets/products/placeholder.svg';
+}
+
+// ── Blank product ─────────────────────────────────────────────────────────────
 function blankProduct() {
-  return { name:'', cat:'household', sub:'', price:'', was:'', size:'', sku:'', scent:'', badge:null, img:'', desc:'', stock:0, lowStockThreshold:10, status:'active', benefits:['','','',''], variants:[], rating:4.8, reviews:0 };
+  return { name:'', cat:'household', sub:'', price:'', was:'', size:'', sku:'', scent:'', badge:null, img:'', media:[], desc:'', stock:0, lowStockThreshold:10, status:'active', benefits:['','','',''], variants:[], rating:4.8, reviews:0 };
 }
 
 // ── Variant row ───────────────────────────────────────────────────────────────
@@ -33,24 +48,273 @@ function VariantRow({ v, idx, onChange, onRemove }) {
   );
 }
 
+// ── Media Gallery Section ─────────────────────────────────────────────────────
+function MediaGallerySection({ items, onFilesSelected, onReorder, onSetPrimary, onDelete, disabled }) {
+  const fileRef              = React.useRef();
+  const [dropZone, setDropZone] = React.useState(false);
+  const [dragSrc,  setDragSrc]  = React.useState(null);
+  const [dragOver, setDragOver] = React.useState(null);
+  const canAdd = items.length < MEDIA_LIMITS.maxItems;
+
+  function handleZoneDrop(e) {
+    e.preventDefault();
+    setDropZone(false);
+    const files = Array.from(e.dataTransfer.files || []);
+    if (files.length) onFilesSelected(files);
+  }
+
+  function startDrag(e, idx) {
+    setDragSrc(idx);
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  function overItem(e, idx) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (idx !== dragOver) setDragOver(idx);
+  }
+
+  function dropItem(e, idx) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (dragSrc !== null && dragSrc !== idx) onReorder(dragSrc, idx);
+    setDragSrc(null);
+    setDragOver(null);
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <label className="block text-sm font-600 text-slate-700">
+          Media Gallery
+          <span className="ml-1.5 text-xs font-400 text-slate-400">({items.length}/{MEDIA_LIMITS.maxItems} · drag to reorder)</span>
+        </label>
+        {canAdd && !disabled && (
+          <button type="button" onClick={()=>fileRef.current?.click()}
+            className="text-xs text-cobalt hover:underline font-600">+ Add files</button>
+        )}
+      </div>
+
+      {/* Drop zone */}
+      {canAdd && (
+        <div
+          onDragEnter={e=>{e.preventDefault();setDropZone(true);}}
+          onDragOver={e=>{e.preventDefault();setDropZone(true);}}
+          onDragLeave={()=>setDropZone(false)}
+          onDrop={handleZoneDrop}
+          onClick={()=>!disabled&&fileRef.current?.click()}
+          className={`mb-3 flex flex-col items-center justify-center h-16 rounded-xl border-2 border-dashed transition-colors
+            ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
+            ${dropZone ? 'border-cobalt bg-cobalt/10' : 'border-slate-200 bg-slate-50 hover:border-cobalt/40 hover:bg-cobalt/5'}`}
+        >
+          <div className="flex items-center gap-2 text-slate-400 pointer-events-none">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span className="text-xs font-600">Drop files or click to upload</span>
+          </div>
+          <span className="text-[11px] text-slate-300 mt-0.5 pointer-events-none">Images: JPG/PNG/WEBP ≤5 MB · Videos: MP4/WEBM ≤50 MB</span>
+        </div>
+      )}
+
+      {/* Thumbnail grid */}
+      {items.length > 0 && (
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+          {items.map((item, idx) => (
+            <div
+              key={item.id}
+              draggable={item.status === 'done'}
+              onDragStart={e=>startDrag(e, idx)}
+              onDragOver={e=>overItem(e, idx)}
+              onDrop={e=>dropItem(e, idx)}
+              onDragEnd={()=>{setDragSrc(null);setDragOver(null);}}
+              className={`relative rounded-xl overflow-hidden bg-slate-100 aspect-square select-none transition-all
+                ${item.status==='done' ? 'cursor-grab' : 'cursor-default'}
+                ${dragOver===idx && dragSrc!==idx ? 'ring-2 ring-cobalt scale-105' : ''}
+                ${dragSrc===idx ? 'opacity-40' : ''}`}
+            >
+              {/* Thumbnail */}
+              {item.type === 'video' ? (
+                <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </div>
+              ) : (
+                <img src={item.previewUrl || item.url} alt={item.altText||''} className="w-full h-full object-cover" draggable="false"/>
+              )}
+
+              {/* Uploading overlay */}
+              {item.status === 'uploading' && (
+                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1">
+                  <Spinner size={18}/>
+                  <span className="text-white text-[10px]">Uploading…</span>
+                </div>
+              )}
+
+              {/* Error overlay */}
+              {item.status === 'error' && (
+                <div className="absolute inset-0 bg-red-800/80 flex flex-col items-center justify-center p-1 gap-0.5">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span className="text-white text-[9px] text-center leading-tight">{item.error||'Failed'}</span>
+                  <button type="button" onClick={()=>onDelete(idx)} className="text-white text-[9px] underline">Remove</button>
+                </div>
+              )}
+
+              {/* Badges */}
+              {item.status === 'done' && (
+                <>
+                  {item.isPrimary && item.type === 'image' && (
+                    <span className="absolute top-1 left-1 bg-cobalt text-white text-[9px] font-700 px-1 py-0.5 rounded leading-none">★</span>
+                  )}
+                  {item.type === 'video' && (
+                    <span className="absolute top-1 right-1 bg-slate-700/80 text-white text-[9px] font-600 px-1 py-0.5 rounded leading-none">VID</span>
+                  )}
+                </>
+              )}
+
+              {/* Hover actions */}
+              {item.status === 'done' && (
+                <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity bg-black/40 flex flex-col items-end justify-between p-1">
+                  <button type="button" onClick={e=>{e.stopPropagation();onDelete(idx);}}
+                    className="bg-red-500 hover:bg-red-600 text-white rounded-lg p-0.5">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                  {item.type === 'image' && !item.isPrimary && (
+                    <button type="button" onClick={e=>{e.stopPropagation();onSetPrimary(idx);}}
+                      className="bg-white/90 hover:bg-white text-cobalt text-[9px] font-700 px-1.5 py-0.5 rounded leading-none">
+                      Set main
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Sort number */}
+              <span className="absolute bottom-0.5 right-0.5 bg-black/40 text-white text-[8px] rounded px-0.5 leading-tight pointer-events-none">{idx+1}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png,.webp,.mp4,.webm" multiple className="hidden"
+        onChange={e=>{ const f=Array.from(e.target.files||[]); if(f.length) onFilesSelected(f); e.target.value=''; }}/>
+    </div>
+  );
+}
+
 // ── Product Form Modal ────────────────────────────────────────────────────────
 function ProductForm({ open, onClose, initial, onSave }) {
-  const [form,   setForm]   = React.useState(blankProduct);
-  const [saving, setSaving] = React.useState(false);
-  const [errors,       setErrors]       = React.useState({});
-  const [imgUploading, setImgUploading] = React.useState(false);
-  const [imgError,     setImgError]     = React.useState('');
+  const { session }                    = useAuth();
+  const [form,       setForm]          = React.useState(blankProduct);
+  const [saving,     setSaving]        = React.useState(false);
+  const [errors,     setErrors]        = React.useState({});
+  const [formError,  setFormError]     = React.useState('');
+  const [mediaItems, setMediaItems]    = React.useState([]);
 
   React.useEffect(() => {
-    if (open) { setForm(initial ? {...initial, benefits: (initial.benefits||['','','','']).slice(0,4).concat(['','','','']).slice(0,4) } : blankProduct()); setImgError(''); }
-    if (!open) setErrors({});
+    if (open) {
+      setForm(initial
+        ? { ...initial, benefits: (initial.benefits||['','','','']).slice(0,4).concat(['','','','']).slice(0,4) }
+        : blankProduct()
+      );
+      setErrors({});
+      setFormError('');
+      if (initial && Array.isArray(initial.media) && initial.media.length > 0) {
+        setMediaItems(initial.media.map(m => ({ ...m, previewUrl: m.url, status: 'done', error: '', _file: null })));
+      } else if (initial && initial.img) {
+        setMediaItems([{
+          id: (initial.id||'legacy') + '-img',
+          type: 'image', url: initial.img, previewUrl: initial.img,
+          storageKey: null, altText: initial.name||'', sortOrder: 0, isPrimary: true,
+          fileName: initial.img.split('/').pop()||'image', mimeType: 'image/jpeg',
+          fileSize: 0, createdAt: initial.createdAt||Date.now(),
+          status: 'done', error: '', _file: null,
+        }]);
+      } else {
+        setMediaItems([]);
+      }
+    }
   }, [open, initial]);
 
-  const set = (field, val) => setForm(f => ({...f, [field]: val}));
-  const setBenefit = (i, val) => setForm(f => { const b=[...f.benefits]; b[i]=val; return {...f,benefits:b}; });
-  const addVariant = () => setForm(f => ({...f, variants:[...f.variants, {name:'',price:'',stock:0}]}));
-  const removeVariant = i => setForm(f => ({...f, variants:f.variants.filter((_,idx)=>idx!==i)}));
+  const set         = (field, val) => setForm(f => ({...f, [field]: val}));
+  const setBenefit  = (i, val)     => setForm(f => { const b=[...f.benefits]; b[i]=val; return {...f,benefits:b}; });
+  const addVariant  = ()           => setForm(f => ({...f, variants:[...f.variants, {name:'',price:'',stock:0}]}));
+  const removeVariant = i          => setForm(f => ({...f, variants:f.variants.filter((_,idx)=>idx!==i)}));
   const changeVariant = (i,field,val) => setForm(f => { const v=[...f.variants]; v[i]={...v[i],[field]:field==='stock'?parseInt(val)||0:field==='price'?parseFloat(val)||0:val}; return {...f,variants:v}; });
+
+  async function handleFilesSelected(files) {
+    const token  = session?.token;
+    const canAdd = MEDIA_LIMITS.maxItems - mediaItems.length;
+    const toAdd  = Array.from(files).slice(0, canAdd);
+    if (!toAdd.length) return;
+
+    const newItems = toAdd.map(file => ({
+      id:         `new-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      type:       _ALLOWED_VIDS.has(file.type) ? 'video' : 'image',
+      url:        '',
+      previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
+      storageKey: null, altText: '', sortOrder: 0, isPrimary: false,
+      fileName: file.name, mimeType: file.type, fileSize: file.size,
+      createdAt: Date.now(),
+      status: 'uploading', error: '', _file: file,
+    }));
+
+    setMediaItems(prev => [...prev, ...newItems]);
+
+    await Promise.all(newItems.map(async item => {
+      try {
+        const isVid = _ALLOWED_VIDS.has(item.mimeType);
+        const isImg = _ALLOWED_IMGS.has(item.mimeType);
+        if (!isImg && !isVid) throw new Error('Unsupported file type');
+        const maxBytes = isVid ? MEDIA_LIMITS.maxVideoBytes : MEDIA_LIMITS.maxImageBytes;
+        if (item.fileSize > maxBytes) throw new Error(`Exceeds ${isVid?'50':'5'} MB limit`);
+
+        const res = await fetch('/api/upload', {
+          method:  'POST',
+          headers: {
+            'Content-Type': item.mimeType,
+            'x-filename':   item.fileName,
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
+          body: item._file,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+        setMediaItems(prev => prev.map(m => m.id !== item.id ? m : {
+          ...m, url: data.url, storageKey: data.storageKey||null,
+          type: data.type || m.type,
+          status: 'done', error: '', _file: null,
+        }));
+      } catch (err) {
+        setMediaItems(prev => prev.map(m => m.id !== item.id ? m : {
+          ...m, status: 'error', error: err.message, _file: null,
+        }));
+      }
+    }));
+  }
+
+  function reorderMedia(srcIdx, dstIdx) {
+    setMediaItems(prev => {
+      const next = [...prev];
+      const [item] = next.splice(srcIdx, 1);
+      next.splice(dstIdx, 0, item);
+      return next.map((m, i) => ({ ...m, sortOrder: i }));
+    });
+  }
+
+  function setPrimaryMedia(idx) {
+    setMediaItems(prev => prev.map((m, i) => ({ ...m, isPrimary: i === idx && m.type === 'image' })));
+  }
+
+  function deleteMediaItem(idx) {
+    setMediaItems(prev => {
+      const removed = prev[idx];
+      const next    = prev.filter((_,i) => i !== idx).map((m,i) => ({ ...m, sortOrder: i }));
+      if (removed.isPrimary && removed.type === 'image') {
+        const fi = next.find(m => m.type === 'image');
+        if (fi) fi.isPrimary = true;
+      }
+      if (removed.previewUrl && removed.previewUrl.startsWith('blob:')) URL.revokeObjectURL(removed.previewUrl);
+      return next;
+    });
+  }
 
   function validate() {
     const e = {};
@@ -64,24 +328,55 @@ function ProductForm({ open, onClose, initial, onSave }) {
   async function handleSave() {
     if (!validate()) return;
     setSaving(true);
+
+    const doneMedia = mediaItems
+      .filter(m => m.status === 'done')
+      .map(({ _file, previewUrl, status, error, ...rest }) => rest)
+      .map((m, i) => ({ ...m, sortOrder: i }));
+
+    if (!doneMedia.some(m => m.isPrimary && m.type === 'image')) {
+      const fi = doneMedia.find(m => m.type === 'image');
+      if (fi) fi.isPrimary = true;
+    }
+
+    const primaryImg = doneMedia.find(m => m.isPrimary && m.type === 'image') || doneMedia.find(m => m.type === 'image');
+
     const data = {
       ...form,
-      price: parseFloat(form.price)||0,
-      was:   form.was ? parseFloat(form.was)||null : null,
-      stock: parseInt(form.stock)||0,
+      price:             parseFloat(form.price)||0,
+      was:               form.was ? parseFloat(form.was)||null : null,
+      stock:             parseInt(form.stock)||0,
       lowStockThreshold: parseInt(form.lowStockThreshold)||10,
-      benefits: form.benefits.filter(Boolean),
+      benefits:          form.benefits.filter(Boolean),
+      media:             doneMedia,
+      img:               primaryImg ? primaryImg.url : (form.img || ''),
     };
-    await onSave(data);
-    setSaving(false);
-    onClose();
+    try {
+      await onSave(data);
+      setSaving(false);
+      onClose();
+    } catch (err) {
+      setSaving(false);
+      setFormError(err.message || 'Failed to save product. Please try again.');
+    }
   }
 
-  const isEdit = !!initial;
+  const uploadingCount = mediaItems.filter(m => m.status === 'uploading').length;
+  const isEdit         = !!initial;
 
   return (
     <Modal open={open} onClose={onClose} size="xl" title={isEdit ? `Edit: ${initial?.name}` : 'Add New Product'}
-      footer={<><Btn variant="secondary" onClick={onClose}>Cancel</Btn><Btn onClick={handleSave} disabled={saving}>{saving?<><Spinner size={14}/>Saving…</>:isEdit?'Save Changes':'Add Product'}</Btn></>}
+      footer={<>
+        {formError && <span className="flex-1 text-xs text-red-600 font-500 mr-2">{formError}</span>}
+        <Btn variant="secondary" onClick={onClose}>Cancel</Btn>
+        <Btn onClick={handleSave} disabled={saving||uploadingCount>0}>
+          {saving
+            ? <><Spinner size={14}/>Saving…</>
+            : uploadingCount > 0
+              ? <><Spinner size={14}/>{uploadingCount} uploading…</>
+              : isEdit ? 'Save Changes' : 'Add Product'}
+        </Btn>
+      </>}
     >
       <div className="space-y-5">
         {/* Basic Info */}
@@ -114,67 +409,18 @@ function ProductForm({ open, onClose, initial, onSave }) {
           </Select>
         </div>
 
-        {/* Image & Scent */}
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-600 text-slate-700 mb-1">Product Image</label>
-            <label className={`relative flex flex-col items-center justify-center w-full h-28 sm:h-36 rounded-xl border-2 border-dashed transition-colors overflow-hidden
-              ${imgUploading ? 'border-cobalt/40 bg-cobalt/5 cursor-wait' : form.img ? 'border-cobalt/40 bg-cobalt/5 cursor-pointer' : 'border-slate-200 bg-slate-50 hover:border-cobalt/40 hover:bg-cobalt/5 cursor-pointer'}`}>
-              {form.img && !imgUploading && (
-                <img src={form.img} alt="preview" className="absolute inset-0 w-full h-full object-cover rounded-xl"/>
-              )}
-              {imgUploading ? (
-                <div className="flex flex-col items-center gap-2 text-cobalt z-10">
-                  <Spinner size={24}/>
-                  <span className="text-xs font-600">Uploading…</span>
-                </div>
-              ) : !form.img ? (
-                <div className="flex flex-col items-center gap-1 text-slate-400 pointer-events-none">
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                  <span className="text-xs font-600">Click to upload image</span>
-                  <span className="text-xs text-slate-300">JPG, PNG, WEBP · max 5 MB</span>
-                </div>
-              ) : (
-                <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl z-10">
-                  <span className="text-white text-xs font-600">Change image</span>
-                </div>
-              )}
-              <input type="file" accept="image/*" disabled={imgUploading} className="hidden" onChange={async e => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                setImgError('');
-                // Instant local preview
-                const reader = new FileReader();
-                reader.onload = ev => set('img', ev.target.result);
-                reader.readAsDataURL(file);
-                // Upload to Vercel Blob
-                setImgUploading(true);
-                try {
-                  const res = await fetch('/api/upload', {
-                    method: 'POST',
-                    headers: { 'Content-Type': file.type, 'x-filename': file.name },
-                    body: file,
-                  });
-                  const data = await res.json();
-                  if (!res.ok) throw new Error(data.error || 'Upload failed');
-                  set('img', data.url); // replace base64 with permanent CDN URL
-                } catch (err) {
-                  setImgError('Upload failed — image saved locally only. ' + err.message);
-                } finally {
-                  setImgUploading(false);
-                }
-              }}/>
-            </label>
-            {imgError && <p className="text-xs text-amber-600 mt-1">{imgError}</p>}
-            {form.img && !imgUploading && (
-              <button type="button" onClick={() => { set('img',''); setImgError(''); }}
-                className="mt-1.5 text-xs text-red-500 hover:text-red-700 hover:underline">
-                Remove image
-              </button>
-            )}
-          </div>
-          <Input label="Scent / Type" value={form.scent||''} onChange={e=>set('scent',e.target.value)} placeholder="e.g. Fresh Citrus"/>
-        </div>
+        {/* Media Gallery */}
+        <MediaGallerySection
+          items={mediaItems}
+          onFilesSelected={handleFilesSelected}
+          onReorder={reorderMedia}
+          onSetPrimary={setPrimaryMedia}
+          onDelete={deleteMediaItem}
+          disabled={saving}
+        />
+
+        {/* Scent */}
+        <Input label="Scent / Type" value={form.scent||''} onChange={e=>set('scent',e.target.value)} placeholder="e.g. Fresh Citrus"/>
 
         {/* Description */}
         <Textarea label="Description" value={form.desc} onChange={e=>set('desc',e.target.value)} rows={3} placeholder="Describe the product…"/>
@@ -234,7 +480,6 @@ function ProductsPage() {
     setTimeout(() => setToast(t=>({...t,visible:false})), 3000);
   }
 
-  // Filter + sort
   const filtered = React.useMemo(() => {
     let list = [...products];
     if (search.trim()) {
@@ -258,13 +503,11 @@ function ProductsPage() {
   const paged = filtered.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
   React.useEffect(() => setPage(1), [search, catFilter, statusFilter, sort]);
 
-  // Stats
-  const activeCount  = products.filter(p=>p.status==='active').length;
-  const draftCount   = products.filter(p=>p.status==='draft').length;
-  const archivedCount= products.filter(p=>p.status==='archived').length;
-  const lowCount     = products.filter(p=>p.status==='active'&&p.stock<=p.lowStockThreshold).length;
+  const activeCount   = products.filter(p=>p.status==='active').length;
+  const draftCount    = products.filter(p=>p.status==='draft').length;
+  const archivedCount = products.filter(p=>p.status==='archived').length;
+  const lowCount      = products.filter(p=>p.status==='active'&&p.stock<=p.lowStockThreshold).length;
 
-  // Bulk select
   function toggleSelect(id) {
     setSelected(s => { const n=new Set(s); n.has(id)?n.delete(id):n.add(id); return n; });
   }
@@ -272,7 +515,6 @@ function ProductsPage() {
     if (selected.size===paged.length) setSelected(new Set());
     else setSelected(new Set(paged.map(p=>p.id)));
   }
-
   function bulkArchive() {
     selected.forEach(id => updateProduct(id, {status:'archived'}));
     showToast(`${selected.size} product(s) archived`);
@@ -280,8 +522,13 @@ function ProductsPage() {
   }
 
   async function handleSave(data) {
-    if (editing) { updateProduct(editing.id, data); showToast('Product updated successfully'); }
-    else { addProduct(data); showToast('Product added successfully'); }
+    if (editing) {
+      await updateProduct(editing.id, data);
+      showToast('Product updated successfully');
+    } else {
+      await addProduct(data);
+      showToast('Product added successfully');
+    }
   }
 
   const catLabel = { household:'Household', sanitiser:'Sanitiser', car:'Car Care', 'car-exterior':'Car Exterior', industrial:'Industrial' };
@@ -375,7 +622,7 @@ function ProductsPage() {
                         </td>
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-3">
-                            <img src={p.img} alt={p.name} className="w-10 h-10 rounded-xl object-cover bg-slate-50 border border-slate-100 flex-shrink-0" onError={e=>e.target.style.opacity='.3'}/>
+                            <img src={getPrimaryImg(p)} alt={p.name} className="w-10 h-10 rounded-xl object-cover bg-slate-50 border border-slate-100 flex-shrink-0" onError={e=>e.target.style.opacity='.3'}/>
                             <div className="min-w-0">
                               <p className="font-600 text-slate-800 truncate max-w-[160px]">{p.name}</p>
                               <p className="text-xs text-slate-400 truncate max-w-[160px]">{p.sub}</p>
@@ -428,14 +675,28 @@ function ProductsPage() {
       <ConfirmDialog open={!!archiving} onClose={()=>setArchiving(null)}
         title="Archive Product" confirmLabel="Archive" variant="secondary"
         message={`Archive "${archiving?.name}"? It will be hidden from the storefront but not deleted.`}
-        onConfirm={()=>{ updateProduct(archiving.id,{status:'archived'}); showToast('Product archived'); }}
+        onConfirm={async () => {
+          try {
+            await updateProduct(archiving.id, {status:'archived'});
+            showToast('Product archived');
+          } catch(err) {
+            showToast(err.message || 'Failed to archive product', 'error');
+          }
+        }}
       />
 
       {/* Delete confirm */}
       <ConfirmDialog open={!!deleting} onClose={()=>setDeleting(null)}
         title="Delete Product" confirmLabel="Delete" variant="danger"
         message={`Permanently delete "${deleting?.name}"? This action cannot be undone.`}
-        onConfirm={()=>{ deleteProduct(deleting.id); showToast('Product deleted','error'); }}
+        onConfirm={async () => {
+          try {
+            await deleteProduct(deleting.id);
+            showToast('Product deleted');
+          } catch(err) {
+            showToast(err.message || 'Failed to delete product', 'error');
+          }
+        }}
       />
     </div>
   );

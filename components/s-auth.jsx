@@ -186,8 +186,8 @@ function AuthModal() {
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-      <div onClick={closeAuth} className="absolute inset-0 bg-ink/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-[420px] rounded-2xl bg-white shadow-2xl overflow-hidden" style={{ animation: 'abfade .2s ease' }}>
+      <div onClick={closeAuth} className="absolute inset-0 bg-ink/60 backdrop-blur-sm ab-fade-in" />
+      <div className="relative w-full max-w-[420px] rounded-2xl bg-white shadow-2xl overflow-hidden ab-modal-enter">
 
         {/* Header gradient */}
         <div className="bg-gradient-to-br from-cobalt to-ink px-7 py-6 relative">
@@ -213,7 +213,7 @@ function AuthModal() {
         {/* Body */}
         <div className="px-7 py-6">
           {step === 'email' ? (
-            <form onSubmit={doSendOtp} className="space-y-4">
+            <form key="email" onSubmit={doSendOtp} className="space-y-4 ab-fade-in">
               <div>
                 <label className="block text-[13px] font-700 text-slate-700 mb-1.5">Email address</label>
                 <input type="email" value={email}
@@ -221,10 +221,10 @@ function AuthModal() {
                   placeholder="your@email.com" autoFocus
                   className={`w-full h-12 rounded-xl border px-4 text-[14px] outline-none transition focus:ring-4 ${error ? 'border-red-400 focus:border-red-400 focus:ring-red-100' : 'border-slate-200 focus:border-cobalt focus:ring-cobalt/10'}`}
                 />
-                {error && <p className="mt-1.5 text-[12px] text-red-500">{error}</p>}
+                {error && <p key={error} className="mt-1.5 text-[12px] text-red-500 ab-fade-in">{error}</p>}
               </div>
               <button type="submit" disabled={loading}
-                className="w-full h-12 rounded-xl bg-cobalt font-bold text-[14px] text-white transition hover:bg-cobalt-700 disabled:opacity-60 flex items-center justify-center gap-2">
+                className="w-full h-12 rounded-xl bg-cobalt font-bold text-[14px] text-white transition-all duration-200 hover:bg-cobalt-700 active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2">
                 {loading ? <><AuthSpinner /> Sending…</> : 'Send sign-in code →'}
               </button>
               <p className="text-[12px] text-slate-400 text-center leading-relaxed">
@@ -232,7 +232,7 @@ function AuthModal() {
               </p>
             </form>
           ) : (
-            <form ref={otpFormRef} onSubmit={doVerifyOtp} className="space-y-4">
+            <form key="otp" ref={otpFormRef} onSubmit={doVerifyOtp} className="space-y-4 ab-fade-in">
               {devOtp && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
                   Email delivery paused — domain not yet verified. Code pre-filled for testing.
@@ -245,10 +245,10 @@ function AuthModal() {
                   placeholder="000000"
                   className={`w-full h-16 rounded-xl border text-center text-[32px] font-mono font-bold outline-none tracking-[10px] transition focus:ring-4 ${error ? 'border-red-400 focus:border-red-400 focus:ring-red-100' : 'border-slate-200 focus:border-cobalt focus:ring-cobalt/10'}`}
                 />
-                {error && <p className="mt-1.5 text-[12px] text-red-500">{error}</p>}
+                {error && <p key={error} className="mt-1.5 text-[12px] text-red-500 ab-fade-in">{error}</p>}
               </div>
               <button type="submit" disabled={loading || otp.length !== 6}
-                className="w-full h-12 rounded-xl bg-cobalt font-bold text-[14px] text-white transition hover:bg-cobalt-700 disabled:opacity-60 flex items-center justify-center gap-2">
+                className="w-full h-12 rounded-xl bg-cobalt font-bold text-[14px] text-white transition-all duration-200 hover:bg-cobalt-700 active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2">
                 {loading ? <><AuthSpinner /> Verifying…</> : 'Verify & sign in →'}
               </button>
               <div className="flex items-center justify-between text-[12.5px]">

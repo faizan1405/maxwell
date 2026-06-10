@@ -28,15 +28,14 @@ function LoginPage() {
       <div className="relative w-full max-w-[420px] animate-fadein">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm mb-4">
-            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-              <circle cx="16" cy="16" r="15" fill="#1E50E0" fillOpacity=".2" stroke="white" strokeWidth="1.5"/>
-              <path d="M10 16c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M13 20c0-1.66 1.34-3 3-3s3 1.34 3 3" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-              <circle cx="16" cy="22" r="1.5" fill="white"/>
-            </svg>
+          <div className="inline-flex items-center justify-center mb-4">
+            <img
+              src="assets/amahle-blue-logo.jpg"
+              alt="Amahle Blue"
+              style={{ height: 64, width: 'auto', objectFit: 'contain', background: 'rgba(255,255,255,0.95)', borderRadius: 12, padding: '8px 16px' }}
+            />
           </div>
-          <h1 className="text-2xl font-800 text-white mb-1">Amahle Blue Admin</h1>
+          <h1 className="text-2xl font-800 text-white mb-1">Admin Panel</h1>
           <p className="text-sm text-white/60">Sign in to manage your store</p>
         </div>
 

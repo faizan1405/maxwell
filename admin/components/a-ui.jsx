@@ -133,7 +133,7 @@ function Modal({ open, onClose, title, children, size='md', footer }) {
     >
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" style={{position:'absolute', inset:0}} onClick={onClose}/>
       <div
-        className="relative bg-white rounded-2xl shadow-2xl w-full animate-slideup"
+        className="relative bg-white rounded-2xl shadow-2xl w-full ab-modal-enter"
         role="dialog"
         aria-modal="true"
         aria-labelledby="admin-modal-title"
@@ -165,9 +165,19 @@ function Modal({ open, onClose, title, children, size='md', footer }) {
 
 // ── Confirm Dialog ────────────────────────────────────────────────────────────
 function ConfirmDialog({ open, onClose, onConfirm, title, message, confirmLabel='Delete', variant='danger' }) {
+  const [busy, setBusy] = React.useState(false);
+  async function handleConfirm() {
+    setBusy(true);
+    try { await onConfirm(); } finally { setBusy(false); onClose(); }
+  }
   return (
     <Modal open={open} onClose={onClose} title={title} size="sm"
-      footer={<><Btn variant="secondary" onClick={onClose}>Cancel</Btn><Btn variant={variant} onClick={() => { onConfirm(); onClose(); }}>{confirmLabel}</Btn></>}
+      footer={<>
+        <Btn variant="secondary" onClick={onClose} disabled={busy}>Cancel</Btn>
+        <Btn variant={variant} onClick={handleConfirm} disabled={busy}>
+          {busy ? <><Spinner size={14}/> Please wait…</> : confirmLabel}
+        </Btn>
+      </>}
     >
       <p className="text-sm text-slate-600">{message}</p>
     </Modal>
@@ -195,7 +205,7 @@ function StatCard({ icon, label, value, sub, color='cobalt', trend, onClick, cla
     purple: 'bg-purple-100 text-purple-600',
   };
   return (
-    <div className={`bg-white rounded-2xl p-5 shadow-sm border border-slate-100 ${onClick?'cursor-pointer hover:border-cobalt/30 hover:shadow-md transition-all':''} ${className}`} onClick={onClick}>
+    <div className={`bg-white rounded-2xl p-5 shadow-sm border border-slate-100 transition-all duration-200 ${onClick?'cursor-pointer hover:border-cobalt/30 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0':''} ${className}`} onClick={onClick}>
       <div className="flex items-start justify-between mb-3">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${colors[color]}`}>{icon}</div>
         {trend !== undefined && (
@@ -255,7 +265,7 @@ function Alert({ type='info', message, onClose }) {
     error:   'bg-red-50 text-red-700 border-red-200',
   };
   return (
-    <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border text-sm animate-fadein ${styles[type]}`}>
+    <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border text-sm ab-fade-in ${styles[type]}`}>
       <span className="flex-1">{message}</span>
       {onClose && <button onClick={onClose} className="opacity-60 hover:opacity-100 transition-opacity shrink-0 mt-0.5">✕</button>}
     </div>
@@ -266,8 +276,13 @@ function Alert({ type='info', message, onClose }) {
 function AdminToast({ message, type='success', visible }) {
   if (!visible) return null;
   const colors = { success:'bg-slate-800 text-white', error:'bg-red-600 text-white' };
+  const icon = type === 'success'
+    ? <span className="grid h-5 w-5 place-items-center rounded-full bg-green-500 text-white shrink-0 ab-succ-enter"><Icon.Check/></span>
+    : <span className="grid h-5 w-5 place-items-center rounded-full bg-red-400 text-white shrink-0">!</span>;
   return (
-    <div className={`fixed bottom-6 right-6 z-[100] px-4 py-3 rounded-xl shadow-lg text-sm font-500 animate-fadein ${colors[type]}`}>
+    <div className={`fixed bottom-6 right-6 z-[100] flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-sm font-500 ab-fade-in ${colors[type]}`}
+      style={{ animation: 'abmodal .3s cubic-bezier(.16,1,.3,1)' }}>
+      {icon}
       {message}
     </div>
   );
@@ -298,6 +313,7 @@ const Icon = {
   Tag:       () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
   Star:      () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
   Cart:      () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>,
+  Help:      () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
 };
 
 window.Spinner=Spinner; window.Badge=Badge; window.Avatar=Avatar; window.Btn=Btn;

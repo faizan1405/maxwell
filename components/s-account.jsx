@@ -3,13 +3,35 @@
 const ORDER_STATUSES = ['pending','confirmed','processing','packed','shipped','delivered'];
 
 const STATUS_META = {
-  pending:    { label:'Pending',    color:'text-amber-600',  bg:'bg-amber-50',  ring:'ring-amber-200' },
-  confirmed:  { label:'Confirmed',  color:'text-blue-600',   bg:'bg-blue-50',   ring:'ring-blue-200' },
+  /* Simple legacy statuses */
+  pending:    { label:'Pending',    color:'text-amber-600',  bg:'bg-amber-50',  ring:'ring-amber-200'  },
+  confirmed:  { label:'Confirmed',  color:'text-blue-600',   bg:'bg-blue-50',   ring:'ring-blue-200'   },
   processing: { label:'Processing', color:'text-indigo-600', bg:'bg-indigo-50', ring:'ring-indigo-200' },
   packed:     { label:'Packed',     color:'text-violet-600', bg:'bg-violet-50', ring:'ring-violet-200' },
-  shipped:    { label:'Shipped',    color:'text-sky-600',    bg:'bg-sky-50',    ring:'ring-sky-200' },
-  delivered:  { label:'Delivered',  color:'text-grass',      bg:'bg-green-50',  ring:'ring-green-200' },
-  cancelled:  { label:'Cancelled',  color:'text-red-600',    bg:'bg-red-50',    ring:'ring-red-200' },
+  shipped:    { label:'Dispatched', color:'text-sky-600',    bg:'bg-sky-50',    ring:'ring-sky-200'    },
+  delivered:  { label:'Delivered',  color:'text-grass',      bg:'bg-green-50',  ring:'ring-green-200'  },
+  cancelled:  { label:'Cancelled',  color:'text-red-600',    bg:'bg-red-50',    ring:'ring-red-200'    },
+  /* Descriptive order statuses */
+  'Order Placed':     { label:'Order Placed',    color:'text-amber-600',  bg:'bg-amber-50',  ring:'ring-amber-200'  },
+  'Awaiting Payment': { label:'Awaiting Payment',color:'text-amber-600',  bg:'bg-amber-50',  ring:'ring-amber-200'  },
+  'Confirmed':        { label:'Confirmed',       color:'text-blue-600',   bg:'bg-blue-50',   ring:'ring-blue-200'   },
+  'Processing':       { label:'Processing',      color:'text-indigo-600', bg:'bg-indigo-50', ring:'ring-indigo-200' },
+  'Dispatched':       { label:'Dispatched',      color:'text-sky-600',    bg:'bg-sky-50',    ring:'ring-sky-200'    },
+  'Delivered':        { label:'Delivered',       color:'text-grass',      bg:'bg-green-50',  ring:'ring-green-200'  },
+  'Cancelled':        { label:'Cancelled',       color:'text-red-600',    bg:'bg-red-50',    ring:'ring-red-200'    },
+};
+
+const PAY_STATUS_META = {
+  'Cash Payment Pending':       { label:'Cash Payment Pending',       color:'text-amber-600', bg:'bg-amber-50',   ring:'ring-amber-200'  },
+  'Awaiting EFT Payment':       { label:'Awaiting EFT Payment',       color:'text-amber-600', bg:'bg-amber-50',   ring:'ring-amber-200'  },
+  'Proof of Payment Submitted': { label:'Proof Submitted',            color:'text-blue-600',  bg:'bg-blue-50',    ring:'ring-blue-200'   },
+  'Payment Verification Required':{ label:'Under Review',             color:'text-indigo-600',bg:'bg-indigo-50',  ring:'ring-indigo-200' },
+  'Paid':                       { label:'Paid',                       color:'text-grass',     bg:'bg-green-50',   ring:'ring-green-200'  },
+  'Payment Rejected':           { label:'Payment Rejected',           color:'text-red-600',   bg:'bg-red-50',     ring:'ring-red-200'    },
+  'Corrected Proof Requested':  { label:'Correction Required',        color:'text-orange-600',bg:'bg-orange-50',  ring:'ring-orange-200' },
+  'Refunded':                   { label:'Refunded',                   color:'text-purple-600',bg:'bg-purple-50',  ring:'ring-purple-200' },
+  'pending':                    { label:'Pending',                    color:'text-amber-600', bg:'bg-amber-50',   ring:'ring-amber-200'  },
+  'paid':                       { label:'Paid',                       color:'text-grass',     bg:'bg-green-50',   ring:'ring-green-200'  },
 };
 
 function fmtOrderDate(ts) {
@@ -20,7 +42,16 @@ function fmtOrderDate(ts) {
 function StatusBadge({ status }) {
   const m = STATUS_META[status] || STATUS_META.pending;
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11.5px] font-700 ${m.color} ${m.bg} ring-1 ${m.ring} capitalize`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11.5px] font-700 ${m.color} ${m.bg} ring-1 ${m.ring}`}>
+      {m.label}
+    </span>
+  );
+}
+
+function PayStatusBadge({ payStatus }) {
+  const m = PAY_STATUS_META[payStatus] || { label: payStatus || 'Pending', color:'text-amber-600', bg:'bg-amber-50', ring:'ring-amber-200' };
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11.5px] font-700 ${m.color} ${m.bg} ring-1 ${m.ring}`}>
       {m.label}
     </span>
   );
@@ -37,9 +68,142 @@ function CustomerAvatar({ name, size = 48 }) {
   );
 }
 
-/* ─── Order Status Tracker ──────────────────────────────────────────────────── */
-function OrderTracker({ status }) {
-  if (status === 'cancelled') {
+/* ─── Proof Upload Widget ────────────────────────────────────────────────────── */
+function ProofUploadWidget({ order, sessionToken, apiBase, onProofUploaded }) {
+  const [file,       setFile]       = React.useState(null);
+  const [uploading,  setUploading]  = React.useState(false);
+  const [error,      setError]      = React.useState('');
+  const [dragOver,   setDragOver]   = React.useState(false);
+  const fileRef = React.useRef(null);
+
+  const ALLOWED_TYPES = new Set(['image/jpeg','image/jpg','image/png','image/webp','application/pdf']);
+  const MAX_SIZE      = 5 * 1024 * 1024; // 5 MB
+
+  function validateFile(f) {
+    if (!f) return 'Please select a file.';
+    if (!ALLOWED_TYPES.has(f.type)) return 'Only PDF, JPG, PNG, or WEBP files are allowed.';
+    if (f.size > MAX_SIZE) return `File must be under 5 MB (selected: ${(f.size / 1048576).toFixed(1)} MB).`;
+    return '';
+  }
+
+  function onFileChange(e) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const err = validateFile(f);
+    setError(err);
+    setFile(err ? null : f);
+  }
+
+  function onDrop(e) {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer.files?.[0];
+    if (!f) return;
+    const err = validateFile(f);
+    setError(err);
+    setFile(err ? null : f);
+  }
+
+  async function upload() {
+    if (!file) { setError('Please select a file.'); return; }
+    const err = validateFile(file);
+    if (err) { setError(err); return; }
+
+    setUploading(true); setError('');
+    try {
+      const res  = await fetch(`${apiBase}/api/proof?orderId=${encodeURIComponent(order.id)}`, {
+        method:  'POST',
+        headers: {
+          'Content-Type': file.type,
+          'x-filename':   file.name,
+          'Authorization': `Bearer ${sessionToken}`,
+        },
+        body: file,
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || 'Upload failed. Please try again.'); setUploading(false); return; }
+      setFile(null);
+      if (fileRef.current) fileRef.current.value = '';
+      onProofUploaded && onProofUploaded(data.order || { ...order, paymentStatus: data.paymentStatus, proofOfPaymentUrl: data.proofUrl });
+    } catch { setError('Network error. Please check your connection and try again.'); }
+    setUploading(false);
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Drop zone */}
+      <div
+        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={onDrop}
+        className={`rounded-xl border-2 border-dashed px-4 py-5 text-center transition cursor-pointer ${
+          dragOver ? 'border-cobalt bg-cobalt/5' : file ? 'border-grass bg-green-50' : 'border-slate-200 hover:border-cobalt/40'
+        }`}
+        onClick={() => fileRef.current?.click()}
+      >
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp,application/pdf"
+          onChange={onFileChange}
+          className="hidden"
+        />
+        {file ? (
+          <div className="flex items-center justify-center gap-2">
+            <CheckCircle size={18} className="text-grass shrink-0" />
+            <div className="text-left">
+              <p className="text-[13px] font-700 text-grass leading-tight">{file.name}</p>
+              <p className="text-[11px] text-slate-500">{(file.size / 1024).toFixed(0)} KB · {file.type.split('/')[1].toUpperCase()}</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" className="mx-auto mb-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p className="text-[13px] font-600 text-slate-600">Drop your proof here or <span className="text-cobalt">browse</span></p>
+            <p className="text-[11px] text-slate-400 mt-1">PDF, JPG, PNG, WEBP · max 5 MB</p>
+          </>
+        )}
+      </div>
+
+      {error && (
+        <div className="flex items-start gap-2 bg-red-50 rounded-xl px-3 py-2.5">
+          <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
+          <p className="text-[12px] text-red-600">{error}</p>
+        </div>
+      )}
+
+      <button
+        onClick={upload}
+        disabled={uploading || !file}
+        className="w-full h-10 rounded-xl bg-cobalt text-white text-[13px] font-700 hover:bg-cobalt-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
+      >
+        {uploading ? (
+          <><span style={{width:14,height:14,border:'2px solid rgba(255,255,255,.3)',borderTopColor:'#fff',borderRadius:'50%',display:'inline-block',animation:'spin .7s linear infinite'}}/> Uploading…</>
+        ) : (
+          <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload Proof</>
+        )}
+      </button>
+    </div>
+  );
+}
+
+/* ─── Order Tracker ──────────────────────────────────────────────────────────── */
+function OrderTracker({ orderStatus, status }) {
+  const STEPS = ['Order Placed','Confirmed','Processing','Dispatched','Delivered'];
+  const currentLabel = orderStatus || (() => {
+    const map = { pending:'Order Placed', confirmed:'Confirmed', processing:'Processing', packed:'Processing', shipped:'Dispatched', delivered:'Delivered' };
+    return map[status] || 'Order Placed';
+  })();
+
+  if (orderStatus === 'Awaiting Payment') {
+    return (
+      <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3 ring-1 ring-amber-200">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span className="text-sm font-600 text-amber-700">Awaiting Payment</span>
+      </div>
+    );
+  }
+  if (orderStatus === 'Cancelled' || status === 'cancelled') {
     return (
       <div className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 ring-1 ring-red-200">
         <X size={16} className="text-red-500" />
@@ -47,46 +211,61 @@ function OrderTracker({ status }) {
       </div>
     );
   }
-  const activeIdx = ORDER_STATUSES.indexOf(status);
+  const activeIdx = STEPS.indexOf(currentLabel);
   return (
-    <div className="relative">
-      <div className="flex items-center">
-        {ORDER_STATUSES.map((s, i) => {
-          const done    = i < activeIdx;
-          const current = i === activeIdx;
-          return (
-            <React.Fragment key={s}>
-              <div className="flex flex-col items-center gap-1">
-                <div className={`grid h-7 w-7 place-items-center rounded-full ring-2 transition-colors ${
-                  done    ? 'bg-cobalt ring-cobalt text-white' :
-                  current ? 'bg-cobalt ring-cobalt ring-offset-2 text-white' :
-                            'bg-white ring-slate-200 text-slate-300'
-                }`}>
-                  {done ? <Check size={13} /> : <span className="text-[10px] font-700">{i+1}</span>}
-                </div>
-                <span className={`text-[9.5px] font-600 text-center leading-tight capitalize ${
-                  done || current ? 'text-cobalt' : 'text-slate-400'
-                }`} style={{ maxWidth:44 }}>{s}</span>
+    <div className="flex items-center">
+      {STEPS.map((s, i) => {
+        const done    = i < activeIdx;
+        const current = i === activeIdx;
+        return (
+          <React.Fragment key={s}>
+            <div className="flex flex-col items-center gap-1">
+              <div className={`grid h-7 w-7 place-items-center rounded-full ring-2 transition-colors ${
+                done    ? 'bg-cobalt ring-cobalt text-white' :
+                current ? 'bg-cobalt ring-cobalt ring-offset-2 text-white' :
+                          'bg-white ring-slate-200 text-slate-300'
+              }`}>
+                {done ? <Check size={13} /> : <span className="text-[10px] font-700">{i+1}</span>}
               </div>
-              {i < ORDER_STATUSES.length - 1 && (
-                <div className={`mb-4 flex-1 h-0.5 mx-1 ${i < activeIdx ? 'bg-cobalt' : 'bg-slate-200'}`} />
-              )}
-            </React.Fragment>
-          );
-        })}
-      </div>
+              <span className={`text-[9px] font-600 text-center leading-tight ${done || current ? 'text-cobalt' : 'text-slate-400'}`} style={{ maxWidth:48 }}>
+                {s}
+              </span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div className={`mb-4 flex-1 h-0.5 mx-1 ${i < activeIdx ? 'bg-cobalt' : 'bg-slate-200'}`} />
+            )}
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 }
 
-const CANCELLABLE_STATUSES = ['pending', 'confirmed', 'processing'];
+const CANCELLABLE_STATUSES = ['pending', 'confirmed', 'processing', 'Order Placed', 'Confirmed', 'Processing'];
 
-/* ─── Order Detail Modal ────────────────────────────────────────────────────── */
-function OrderDetailModal({ order, onClose, onReorder, onCancel }) {
-  const [cancelling, setCancelling] = React.useState(false);
+/* ─── Order Detail Modal ─────────────────────────────────────────────────────── */
+function OrderDetailModal({ order, sessionToken, apiBase, onClose, onReorder, onCancel, onProofUploaded }) {
+  const [cancelling,  setCancelling]  = React.useState(false);
   const [cancelError, setCancelError] = React.useState('');
 
   if (!order) return null;
+
+  const payMethod   = order.paymentMethod || order.payment?.method || '';
+  const isCOD       = payMethod === 'COD';
+  const isEFT       = payMethod === 'EFT';
+  const payStatus   = order.paymentStatus || (order.payment?.status === 'paid' ? 'Paid' : isCOD ? 'Cash Payment Pending' : 'Awaiting EFT Payment');
+  const ordStatus   = order.orderStatus   || order.status || 'pending';
+  const bank        = order.eftBankDetails || {};
+  const hasBankDetails = isEFT && (bank.bankName || bank.accountNumber);
+
+  const canCancel = CANCELLABLE_STATUSES.includes(ordStatus);
+
+  /* Which EFT statuses allow a proof upload/replacement */
+  const canUploadProof = isEFT && ['Awaiting EFT Payment','Proof of Payment Submitted','Payment Verification Required','Corrected Proof Requested','Payment Rejected'].includes(payStatus);
+  const isProofSubmitted  = isEFT && ['Proof of Payment Submitted','Payment Verification Required'].includes(payStatus);
+  const isRejected        = payStatus === 'Payment Rejected';
+  const isCorrectionNeeded = payStatus === 'Corrected Proof Requested';
+  const isPaid            = payStatus === 'Paid' || order.payment?.status === 'paid';
 
   async function handleCancel() {
     if (!confirm('Cancel this order? This cannot be undone.')) return;
@@ -97,32 +276,153 @@ function OrderDetailModal({ order, onClose, onReorder, onCancel }) {
     onClose();
   }
 
-  const canCancel = CANCELLABLE_STATUSES.includes(order.status);
-
   return (
-    <div className="fixed inset-0 z-[90] flex items-start justify-center p-4 pt-16 overflow-y-auto">
+    <div className="fixed inset-0 z-[90] flex items-start justify-center p-4 pt-12 overflow-y-auto">
       <div onClick={onClose} className="fixed inset-0 bg-ink/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-[560px] rounded-2xl bg-white shadow-2xl" style={{ animation:'abfade .2s ease' }}>
+      <div className="relative w-full max-w-[600px] rounded-2xl bg-white shadow-2xl ab-modal-enter mb-8">
+
+        {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-display font-extrabold text-ink">{order.orderNumber}</h3>
-              <StatusBadge status={order.status} />
+              <StatusBadge status={ordStatus} />
+              <PayStatusBadge payStatus={payStatus} />
             </div>
             <p className="text-[12.5px] text-slate-400 mt-0.5">
               {fmtOrderDate(order.createdAt)}
               {order.invoiceNumber && <span className="ml-2 text-slate-300">· {order.invoiceNumber}</span>}
             </p>
           </div>
-          <button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-xl hover:bg-slate-100 text-slate-400"><X size={18}/></button>
+          <button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-xl hover:bg-slate-100 text-slate-400">
+            <X size={18}/>
+          </button>
         </div>
 
         <div className="p-6 space-y-5">
-          {/* Tracker */}
+
+          {/* Order tracker */}
           <div>
-            <p className="text-[11px] font-700 uppercase tracking-wide text-slate-400 mb-3">Order Status</p>
-            <OrderTracker status={order.status} />
+            <p className="text-[11px] font-700 uppercase tracking-wide text-slate-400 mb-3">Order Progress</p>
+            <OrderTracker orderStatus={ordStatus} status={order.status} />
           </div>
+
+          {/* COD-specific panel */}
+          {isCOD && (
+            <div className={`rounded-xl px-4 py-4 ${isPaid ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
+              <div className="flex items-start gap-3">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isPaid ? '#15803d' : '#d97706'} strokeWidth="2" className="shrink-0 mt-0.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                <div>
+                  <p className={`text-[13.5px] font-700 ${isPaid ? 'text-green-800' : 'text-amber-800'}`}>
+                    {isPaid ? 'Cash Payment Collected' : 'Cash on Delivery'}
+                  </p>
+                  {!isPaid && (
+                    <p className="text-[12.5px] text-amber-700 mt-0.5 leading-snug">
+                      Please have <strong>{money(order.total)}</strong> in cash ready when your order is delivered.
+                    </p>
+                  )}
+                  {isPaid && (
+                    <p className="text-[12.5px] text-green-700 mt-0.5">Payment of <strong>{money(order.total)}</strong> received.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* EFT-specific panel */}
+          {isEFT && (
+            <div className="space-y-3">
+              {/* Reference + status */}
+              <div className="bg-cobalt/5 border border-cobalt/15 rounded-xl px-4 py-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-700 text-slate-400 uppercase tracking-wide">EFT Reference</p>
+                  <PayStatusBadge payStatus={payStatus} />
+                </div>
+                <p className="font-display text-[20px] font-extrabold text-cobalt font-mono">
+                  {order.eftReference || order.orderNumber}
+                </p>
+                {!isPaid && (
+                  <p className="text-[12px] text-slate-500 leading-snug">
+                    Use this reference number when making your bank transfer. Amount payable: <strong>{money(order.total)}</strong>.
+                  </p>
+                )}
+              </div>
+
+              {/* Alert banners */}
+              {isRejected && (
+                <div className="flex items-start gap-2.5 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                  <AlertCircle size={16} className="text-red-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[13px] font-700 text-red-700">Payment Rejected</p>
+                    <p className="text-[12px] text-red-600 mt-0.5 leading-snug">Your proof of payment was rejected. Please upload a new, clear proof showing the correct amount and reference.</p>
+                  </div>
+                </div>
+              )}
+              {isCorrectionNeeded && (
+                <div className="flex items-start gap-2.5 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3">
+                  <AlertCircle size={16} className="text-orange-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[13px] font-700 text-orange-700">Corrected Proof Required</p>
+                    <p className="text-[12px] text-orange-600 mt-0.5 leading-snug">Please upload a corrected proof of payment as instructed.</p>
+                  </div>
+                </div>
+              )}
+              {isProofSubmitted && (
+                <div className="flex items-start gap-2.5 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+                  <CheckCircle size={16} className="text-blue-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[13px] font-700 text-blue-700">Proof Submitted — Awaiting Verification</p>
+                    <p className="text-[12px] text-blue-600 mt-0.5 leading-snug">We'll verify your payment within 1–2 business days. You can upload a replacement if needed.</p>
+                  </div>
+                </div>
+              )}
+              {isPaid && (
+                <div className="flex items-start gap-2.5 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                  <CheckCircle size={16} className="text-grass shrink-0 mt-0.5" />
+                  <p className="text-[13px] font-700 text-green-700">EFT Payment Verified — Thank you!</p>
+                </div>
+              )}
+
+              {/* Bank details (shown while waiting for payment) */}
+              {hasBankDetails && !isPaid && (
+                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                  <div className="bg-slate-50 px-4 py-2.5 border-b border-slate-100">
+                    <p className="text-[11px] font-700 text-slate-500 uppercase tracking-wide">Bank Details</p>
+                  </div>
+                  <div className="divide-y divide-slate-50 px-4 py-1">
+                    {bank.accountHolder && <div className="flex justify-between py-2.5 text-[13px]"><span className="text-slate-500">Account Holder</span><span className="font-700 text-ink">{bank.accountHolder}</span></div>}
+                    {bank.bankName      && <div className="flex justify-between py-2.5 text-[13px]"><span className="text-slate-500">Bank</span><span className="font-700 text-ink">{bank.bankName}</span></div>}
+                    {bank.accountNumber && <div className="flex justify-between py-2.5 text-[13px]"><span className="text-slate-500">Account Number</span><span className="font-700 text-ink font-mono">{bank.accountNumber}</span></div>}
+                    {bank.branchCode    && <div className="flex justify-between py-2.5 text-[13px]"><span className="text-slate-500">Branch Code</span><span className="font-700 text-ink font-mono">{bank.branchCode}</span></div>}
+                    {bank.accountType  && <div className="flex justify-between py-2.5 text-[13px]"><span className="text-slate-500">Account Type</span><span className="font-700 text-ink">{bank.accountType}</span></div>}
+                    {bank.swiftCode    && <div className="flex justify-between py-2.5 text-[13px]"><span className="text-slate-500">SWIFT Code</span><span className="font-700 text-ink font-mono">{bank.swiftCode}</span></div>}
+                  </div>
+                  <div className="bg-cobalt px-4 py-3 flex justify-between items-center">
+                    <span className="text-[13px] font-700 text-white">Amount Payable</span>
+                    <span className="text-[16px] font-800 text-white">{money(order.total)}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Proof upload widget */}
+              {canUploadProof && (
+                <div className="bg-slate-50 rounded-xl p-4 space-y-2">
+                  <p className="text-[12px] font-700 text-slate-600 uppercase tracking-wide">
+                    {isProofSubmitted ? 'Replace Proof of Payment' : 'Upload Proof of Payment'}
+                  </p>
+                  <p className="text-[12px] text-slate-500 leading-snug">
+                    Upload your bank proof of payment (PDF, JPG, PNG, or WEBP · max 5 MB).
+                  </p>
+                  <ProofUploadWidget
+                    order={order}
+                    sessionToken={sessionToken}
+                    apiBase={apiBase}
+                    onProofUploaded={onProofUploaded}
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Items */}
           <div>
@@ -132,7 +432,7 @@ function OrderDetailModal({ order, onClose, onReorder, onCancel }) {
                 <div key={i} className="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3">
                   <div>
                     <p className="text-[13.5px] font-600 text-ink leading-snug">{item.name}</p>
-                    <p className="text-[12px] text-slate-400">Qty: {item.qty}</p>
+                    <p className="text-[12px] text-slate-400">Qty: {item.qty} × {money(item.price)}</p>
                   </div>
                   <span className="font-bold text-ink text-[14px]">{money(item.price * item.qty)}</span>
                 </div>
@@ -143,11 +443,20 @@ function OrderDetailModal({ order, onClose, onReorder, onCancel }) {
           {/* Totals */}
           <div className="bg-slate-50 rounded-xl px-4 py-3 space-y-1.5">
             <div className="flex justify-between text-[13px]"><span className="text-slate-500">Subtotal</span><span className="font-600 text-ink">{money(order.subtotal)}</span></div>
-            {order.couponDiscount > 0 && (
+            {(order.couponDiscount || 0) > 0 && (
               <div className="flex justify-between text-[13px]"><span className="text-grass font-600">Coupon ({order.couponCode})</span><span className="font-700 text-grass">−{money(order.couponDiscount)}</span></div>
             )}
-            <div className="flex justify-between text-[13px]"><span className="text-slate-500">Delivery</span><span className={`font-600 ${order.delivery === 0 ? 'text-grass' : 'text-ink'}`}>{order.delivery === 0 ? 'FREE' : money(order.delivery)}</span></div>
-            <div className="flex justify-between text-[14px] border-t border-slate-200 pt-2 mt-1"><span className="font-700 text-ink">Total</span><span className="font-800 text-ink">{money(order.total)}</span></div>
+            <div className="flex justify-between text-[13px]">
+              <span className="text-slate-500">Delivery</span>
+              <span className={`font-600 ${order.delivery === 0 ? 'text-grass' : 'text-ink'}`}>{order.delivery === 0 ? 'FREE' : money(order.delivery)}</span>
+            </div>
+            {(order.codFee || 0) > 0 && (
+              <div className="flex justify-between text-[13px]"><span className="text-slate-500">COD Fee</span><span className="font-600 text-ink">{money(order.codFee)}</span></div>
+            )}
+            <div className="flex justify-between text-[14px] border-t border-slate-200 pt-2 mt-1">
+              <span className="font-700 text-ink">Total</span>
+              <span className="font-800 text-ink">{money(order.total)}</span>
+            </div>
           </div>
 
           {/* Delivery address */}
@@ -161,7 +470,7 @@ function OrderDetailModal({ order, onClose, onReorder, onCancel }) {
             </div>
           )}
 
-          {/* Tracking info */}
+          {/* Tracking */}
           {order.trackingNumber && (
             <div className="flex items-start gap-2.5">
               <Truck size={16} className="text-cobalt mt-0.5 shrink-0" />
@@ -172,22 +481,11 @@ function OrderDetailModal({ order, onClose, onReorder, onCancel }) {
             </div>
           )}
 
-          {/* Payment */}
-          <div className="flex items-center gap-4">
-            <div>
-              <p className="text-[11px] font-700 uppercase tracking-wide text-slate-400">Payment</p>
-              <p className="text-[13px] font-600 text-slate-700">{order.payment?.method === 'COD' ? 'Cash on Delivery' : order.payment?.method}</p>
-            </div>
-            <div>
-              <p className="text-[11px] font-700 uppercase tracking-wide text-slate-400">Status</p>
-              <p className={`text-[13px] font-600 capitalize ${order.payment?.status === 'paid' ? 'text-grass' : 'text-amber-600'}`}>{order.payment?.status}</p>
-            </div>
-          </div>
-
-          {order.notes && <p className="text-[12.5px] text-slate-400 italic">Note: {order.notes}</p>}
+          {order.notes && <p className="text-[12.5px] text-slate-400 italic bg-slate-50 rounded-xl px-4 py-3">Note: {order.notes}</p>}
           {cancelError && <p className="text-[12.5px] text-red-500 font-600">{cancelError}</p>}
         </div>
 
+        {/* Footer actions */}
         <div className="border-t border-slate-100 px-6 py-4 flex flex-wrap gap-3">
           {canCancel && (
             <button onClick={handleCancel} disabled={cancelling}
@@ -200,7 +498,10 @@ function OrderDetailModal({ order, onClose, onReorder, onCancel }) {
             className="h-11 px-4 rounded-xl border border-slate-200 text-[13px] font-600 text-slate-600 hover:bg-slate-50 transition flex items-center gap-1.5">
             <FileText size={15} /> Invoice
           </button>
-          <button onClick={onClose} className="h-11 px-4 rounded-xl border border-slate-200 text-[13.5px] font-600 text-slate-600 hover:bg-slate-50 transition">Close</button>
+          <button onClick={onClose}
+            className="h-11 px-4 rounded-xl border border-slate-200 text-[13.5px] font-600 text-slate-600 hover:bg-slate-50 transition">
+            Close
+          </button>
           <button onClick={() => { onReorder(order); onClose(); }}
             className="flex-1 h-11 rounded-xl bg-cobalt text-white text-[13.5px] font-700 hover:bg-cobalt-700 transition flex items-center justify-center gap-2">
             <RefreshCw size={15} /> Reorder
@@ -211,24 +512,22 @@ function OrderDetailModal({ order, onClose, onReorder, onCancel }) {
   );
 }
 
-/* ─── Orders Tab ────────────────────────────────────────────────────────────── */
+/* ─── Orders Tab ─────────────────────────────────────────────────────────────── */
 function OrdersTab({ sessionToken, apiBase, onReorder }) {
   const [orders,  setOrders]  = React.useState(null);
   const [error,   setError]   = React.useState('');
   const [viewing, setViewing] = React.useState(null);
 
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(`${apiBase}/api/orders`, {
-          headers: { 'Authorization': `Bearer ${sessionToken}` },
-        });
-        const data = await res.json();
-        if (!res.ok) { setError(data.error || 'Failed to load orders.'); setOrders([]); return; }
-        setOrders(Array.isArray(data) ? [...data].sort((a, b) => b.createdAt - a.createdAt) : []);
-      } catch { setError('Network error. Please try again.'); setOrders([]); }
-    })();
-  }, [sessionToken, apiBase]);
+  async function loadOrders() {
+    try {
+      const res  = await fetch(`${apiBase}/api/orders`, { headers: { 'Authorization': `Bearer ${sessionToken}` } });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || 'Failed to load orders.'); setOrders([]); return; }
+      setOrders(Array.isArray(data) ? [...data].sort((a, b) => b.createdAt - a.createdAt) : []);
+    } catch { setError('Network error. Please try again.'); setOrders([]); }
+  }
+
+  React.useEffect(() => { loadOrders(); }, [sessionToken, apiBase]);
 
   async function cancelOrder(orderId) {
     try {
@@ -239,13 +538,20 @@ function OrdersTab({ sessionToken, apiBase, onReorder }) {
       });
       const data = await res.json();
       if (!res.ok) return { error: data.error || 'Failed to cancel order.' };
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o));
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'cancelled', orderStatus: 'Cancelled' } : o));
       return {};
     } catch { return { error: 'Network error. Please try again.' }; }
   }
 
+  function handleProofUploaded(updatedOrder) {
+    setOrders(prev => prev.map(o => o.id === updatedOrder.id ? { ...o, ...updatedOrder } : o));
+    setViewing(prev => prev?.id === updatedOrder.id ? { ...prev, ...updatedOrder } : prev);
+  }
+
   if (orders === null) return (
-    <div className="flex justify-center py-16"><span className="w-8 h-8 rounded-full border-[3px] border-cobalt/20 border-t-cobalt" style={{ animation:'spin .7s linear infinite', display:'inline-block' }}/></div>
+    <div className="flex justify-center py-16">
+      <span className="w-8 h-8 rounded-full border-[3px] border-cobalt/20 border-t-cobalt" style={{ animation:'spin .7s linear infinite', display:'inline-block' }}/>
+    </div>
   );
 
   if (error) return <p className="text-center py-10 text-sm text-red-500">{error}</p>;
@@ -260,42 +566,70 @@ function OrdersTab({ sessionToken, apiBase, onReorder }) {
 
   return (
     <div className="space-y-3">
-      {orders.map(order => (
-        <div key={order.id} onClick={() => setViewing(order)}
-          className="flex items-center justify-between bg-white rounded-2xl border border-slate-100 px-5 py-4 hover:border-cobalt/30 hover:shadow-sm cursor-pointer transition-all">
-          <div className="flex items-center gap-4">
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-cobalt/8 text-cobalt">
-              <Package size={20} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-700 text-ink text-[14px]">{order.orderNumber}</span>
-                <StatusBadge status={order.status} />
+      {orders.map(order => {
+        const payMethod = order.paymentMethod || order.payment?.method || '';
+        const payStatus = order.paymentStatus || (order.payment?.status === 'paid' ? 'Paid' : 'Pending');
+        const ordStatus = order.orderStatus   || order.status || 'pending';
+        const needsAction = isEFTNeedsAction(payStatus);
+
+        return (
+          <div key={order.id} onClick={() => setViewing(order)}
+            className={`flex items-center justify-between bg-white rounded-2xl border px-5 py-4 hover:shadow-sm cursor-pointer transition-all ${needsAction ? 'border-amber-200 hover:border-amber-300' : 'border-slate-100 hover:border-cobalt/30'}`}>
+            <div className="flex items-center gap-4">
+              <div className={`grid h-11 w-11 place-items-center rounded-xl text-cobalt ${needsAction ? 'bg-amber-50' : 'bg-cobalt/8'}`}>
+                {payMethod === 'EFT' ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                ) : (
+                  <Package size={20} />
+                )}
               </div>
-              <p className="text-[12px] text-slate-400 mt-0.5">{fmtOrderDate(order.createdAt)} · {order.items?.length} item{order.items?.length !== 1 ? 's' : ''}</p>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-700 text-ink text-[14px]">{order.orderNumber}</span>
+                  <StatusBadge status={ordStatus} />
+                  <PayStatusBadge payStatus={payStatus} />
+                </div>
+                <p className="text-[12px] text-slate-400 mt-0.5">
+                  {fmtOrderDate(order.createdAt)} · {order.items?.length} item{order.items?.length !== 1 ? 's' : ''}
+                  {payMethod === 'COD' && ' · Cash on Delivery'}
+                  {payMethod === 'EFT' && ' · EFT Transfer'}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="font-800 text-ink text-[15px]">{money(order.total)}</p>
+              <ChevronRight size={16} className="text-slate-300 ml-auto mt-1" />
             </div>
           </div>
-          <div className="text-right">
-            <p className="font-800 text-ink text-[15px]">{money(order.total)}</p>
-            <ChevronRight size={16} className="text-slate-300 ml-auto mt-1" />
-          </div>
-        </div>
-      ))}
-      <OrderDetailModal order={viewing} onClose={() => setViewing(null)} onReorder={onReorder} onCancel={cancelOrder} />
+        );
+      })}
+      {viewing && (
+        <OrderDetailModal
+          order={viewing}
+          sessionToken={sessionToken}
+          apiBase={apiBase}
+          onClose={() => setViewing(null)}
+          onReorder={onReorder}
+          onCancel={cancelOrder}
+          onProofUploaded={handleProofUploaded}
+        />
+      )}
     </div>
   );
 }
 
-/* ─── Profile Tab ───────────────────────────────────────────────────────────── */
+function isEFTNeedsAction(payStatus) {
+  return ['Awaiting EFT Payment', 'Corrected Proof Requested', 'Payment Rejected'].includes(payStatus);
+}
+
+/* ─── Profile Tab ────────────────────────────────────────────────────────────── */
 function ProfileTab({ customer, sessionToken, apiBase, onUpdate }) {
   const [form,    setForm]    = React.useState({ name: customer?.name || '', phone: customer?.phone || '' });
   const [saving,  setSaving]  = React.useState(false);
   const [success, setSuccess] = React.useState(false);
   const [error,   setError]   = React.useState('');
 
-  React.useEffect(() => {
-    setForm({ name: customer?.name || '', phone: customer?.phone || '' });
-  }, [customer?.id]);
+  React.useEffect(() => { setForm({ name: customer?.name || '', phone: customer?.phone || '' }); }, [customer?.id]);
 
   async function saveProfile(e) {
     e.preventDefault();
@@ -337,8 +671,8 @@ function ProfileTab({ customer, sessionToken, apiBase, onUpdate }) {
           placeholder="e.g. 067 101 4345"
           className="w-full h-11 rounded-xl border border-slate-200 px-4 text-[13.5px] outline-none transition focus:border-cobalt focus:ring-4 focus:ring-cobalt/10" />
       </div>
-      {error   && <p className="text-[12.5px] text-red-500">{error}</p>}
-      {success && <p className="flex items-center gap-1.5 text-[12.5px] text-grass font-600"><Check size={14}/> Changes saved!</p>}
+      {error   && <p key={error}   className="text-[12.5px] text-red-500 ab-fade-in">{error}</p>}
+      {success && <p className="flex items-center gap-1.5 text-[12.5px] text-grass font-600 ab-fade-in"><Check size={14}/> Changes saved!</p>}
       <button type="submit" disabled={saving}
         className="h-11 px-6 rounded-xl bg-cobalt text-white font-700 text-[13.5px] transition hover:bg-cobalt-700 disabled:opacity-60 flex items-center gap-2">
         {saving ? <><AccSpinner />Saving…</> : 'Save changes'}
@@ -347,12 +681,12 @@ function ProfileTab({ customer, sessionToken, apiBase, onUpdate }) {
   );
 }
 
-/* ─── Addresses Tab ─────────────────────────────────────────────────────────── */
+/* ─── Addresses Tab ──────────────────────────────────────────────────────────── */
 function AddressesTab({ customer, sessionToken, apiBase, onUpdate }) {
-  const [adding,   setAdding]   = React.useState(false);
-  const [editing,  setEditing]  = React.useState(null);
-  const [saving,   setSaving]   = React.useState(false);
-  const [error,    setError]    = React.useState('');
+  const [adding,  setAdding]  = React.useState(false);
+  const [editing, setEditing] = React.useState(null);
+  const [saving,  setSaving]  = React.useState(false);
+  const [error,   setError]   = React.useState('');
   const blankAddr = { label:'Home', line:'', city:'', province:'', postalCode:'', isDefault:false };
   const [form, setForm] = React.useState(blankAddr);
 
@@ -367,7 +701,7 @@ function AddressesTab({ customer, sessionToken, apiBase, onUpdate }) {
     try {
       const action = editing ? 'updateAddress' : 'addAddress';
       const body   = editing ? { action, addressId: editing, address: form } : { action, address: form };
-      const res  = await fetch(`${apiBase}/api/customer-auth`, {
+      const res    = await fetch(`${apiBase}/api/customer-auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
         body: JSON.stringify(body),
@@ -507,7 +841,7 @@ function AddressesTab({ customer, sessionToken, apiBase, onUpdate }) {
   );
 }
 
-/* ─── Reviews Tab ───────────────────────────────────────────────────────────── */
+/* ─── Reviews Tab ────────────────────────────────────────────────────────────── */
 function ReviewsTab({ customer, sessionToken, apiBase }) {
   const [orders,  setOrders]  = React.useState(null);
   const [reviews, setReviews] = React.useState(null);
@@ -520,22 +854,19 @@ function ReviewsTab({ customer, sessionToken, apiBase }) {
           fetch(`${apiBase}/api/orders`,  { headers: { 'Authorization': `Bearer ${sessionToken}` } }),
           fetch(`${apiBase}/api/reviews`, { headers: { 'Authorization': `Bearer ${sessionToken}` } }),
         ]);
-        const ordData = ordRes.ok  ? await ordRes.json()  : [];
-        const revData = revRes.ok  ? await revRes.json()  : [];
+        const ordData = ordRes.ok ? await ordRes.json() : [];
+        const revData = revRes.ok ? await revRes.json() : [];
         setOrders(Array.isArray(ordData) ? ordData : []);
         setReviews(Array.isArray(revData) ? revData.filter(r => r.customerId === customer?.id || r.email === customer?.email) : []);
       } catch { setOrders([]); setReviews([]); }
     })();
   }, [sessionToken, apiBase, customer?.id]);
 
-  /* Collect reviewable products (from completed orders) */
   const reviewableProducts = React.useMemo(() => {
     if (!orders) return [];
     const map = {};
-    orders.filter(o => ['processing','shipped','delivered'].includes(o.status)).forEach(o => {
-      o.items?.forEach(item => {
-        if (!map[item.productId]) map[item.productId] = item;
-      });
+    orders.filter(o => ['processing','shipped','delivered','Processing','Dispatched','Delivered'].includes(o.status || o.orderStatus)).forEach(o => {
+      o.items?.forEach(item => { if (!map[item.productId]) map[item.productId] = item; });
     });
     return Object.values(map);
   }, [orders]);
@@ -565,14 +896,14 @@ function ReviewsTab({ customer, sessionToken, apiBase }) {
   return (
     <div className="space-y-4 max-w-lg">
       {reviewableProducts.map(item => {
-        const product = (window.PRODUCTS || []).find(p => p.id === item.productId);
+        const product  = (window.PRODUCTS || []).find(p => p.id === item.productId);
         const myReview = myReviewMap[item.productId];
         return (
           <div key={item.productId} className="bg-white rounded-2xl border border-slate-100 p-5">
             <div className="flex items-center gap-3 mb-4">
               {product?.img && (
                 <img src={product.img} alt={product?.name || item.name}
-                  className="w-14 h-14 rounded-xl object-cover border border-slate-100 bg-slate-50" />
+                  className="w-14 h-14 rounded-xl object-cover border border-slate-100 bg-slate-50" onError={e=>{e.target.onerror=null;e.target.src='assets/products/placeholder.svg'}} />
               )}
               <div className="flex-1 min-w-0">
                 <p className="font-700 text-[14px] text-ink truncate">{product?.name || item.name}</p>
@@ -593,7 +924,7 @@ function ReviewsTab({ customer, sessionToken, apiBase }) {
   );
 }
 
-/* ─── Account Page ──────────────────────────────────────────────────────────── */
+/* ─── Account Page ───────────────────────────────────────────────────────────── */
 function AccountPage({ onGoHome }) {
   const { customer, sessionToken, logout, updateCustomerData, apiBase, openAuth } = useCustomer();
   const { add, setOpen: openCart } = useCart();
@@ -612,7 +943,7 @@ function AccountPage({ onGoHome }) {
           <User size={36} />
         </div>
         <h2 className="font-display text-2xl font-extrabold text-ink">Sign in to your account</h2>
-        <p className="mt-2 text-slate-500 text-[15px] max-w-xs">Track your orders, manage addresses, and speed up checkout.</p>
+        <p className="mt-2 text-slate-500 text-[15px] max-w-xs">Track your orders, upload proof of payment, manage addresses, and speed up checkout.</p>
         <div className="mt-6 flex gap-3">
           <button onClick={openAuth} className="h-12 px-6 rounded-full bg-cobalt text-white font-bold hover:bg-cobalt-700 transition">Sign in</button>
           <button onClick={onGoHome} className="h-12 px-6 rounded-full border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition">Continue shopping</button>
@@ -634,7 +965,7 @@ function AccountPage({ onGoHome }) {
   const displayName = customer.name || customer.email.split('@')[0];
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 ab-page-enter">
       <div className="bg-white border-b border-slate-200">
         <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-5">
           <button onClick={onGoHome} className="flex items-center gap-1.5 text-[13px] font-600 text-slate-500 hover:text-cobalt transition mb-5">
@@ -658,34 +989,25 @@ function AccountPage({ onGoHome }) {
       </div>
 
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6 py-8">
-        {/* Tabs */}
         <div className="flex flex-wrap gap-1 bg-white rounded-2xl p-1.5 border border-slate-100 shadow-sm w-fit mb-8">
           {[
-            { id:'profile',   icon:<User size={15}/>,    label:'Profile' },
-            { id:'orders',    icon:<Package size={15}/>, label:'My Orders' },
-            { id:'addresses', icon:<MapPin size={15}/>,  label:'Addresses' },
-            { id:'reviews',   icon:<Star size={15}/>,    label:'Reviews' },
+            { id:'profile',   icon:<User size={15}/>,    label:'Profile'    },
+            { id:'orders',    icon:<Package size={15}/>, label:'My Orders'  },
+            { id:'addresses', icon:<MapPin size={15}/>,  label:'Addresses'  },
+            { id:'reviews',   icon:<Star size={15}/>,    label:'Reviews'    },
           ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13.5px] font-600 transition-all ${tab===t.id?'bg-cobalt text-white shadow-sm':'text-slate-500 hover:bg-slate-50'}`}>
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13.5px] font-600 transition-all duration-200 ${tab===t.id?'bg-cobalt text-white shadow-sm scale-[0.99]':'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}>
               {t.icon}{t.label}
             </button>
           ))}
         </div>
 
-        <div className="animate-fadein">
-          {tab === 'profile' && (
-            <ProfileTab customer={customer} sessionToken={sessionToken} apiBase={apiBase} onUpdate={updateCustomerData} />
-          )}
-          {tab === 'orders' && (
-            <OrdersTab sessionToken={sessionToken} apiBase={apiBase} onReorder={handleReorder} />
-          )}
-          {tab === 'addresses' && (
-            <AddressesTab customer={customer} sessionToken={sessionToken} apiBase={apiBase} onUpdate={updateCustomerData} />
-          )}
-          {tab === 'reviews' && (
-            <ReviewsTab customer={customer} sessionToken={sessionToken} apiBase={apiBase} />
-          )}
+        <div key={tab} className="ab-fade-in">
+          {tab === 'profile'   && <ProfileTab   customer={customer} sessionToken={sessionToken} apiBase={apiBase} onUpdate={updateCustomerData} />}
+          {tab === 'orders'    && <OrdersTab    sessionToken={sessionToken} apiBase={apiBase} onReorder={handleReorder} />}
+          {tab === 'addresses' && <AddressesTab customer={customer} sessionToken={sessionToken} apiBase={apiBase} onUpdate={updateCustomerData} />}
+          {tab === 'reviews'   && <ReviewsTab   customer={customer} sessionToken={sessionToken} apiBase={apiBase} />}
         </div>
       </div>
     </div>
