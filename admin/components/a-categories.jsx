@@ -45,6 +45,16 @@ function CategoriesPage() {
     setModalMode('delete');
   }
 
+  async function handleToggleStatus(c) {
+    const newStatus = c.status === 'active' ? 'inactive' : 'active';
+    try {
+      await updateCategory(c.id, { status: newStatus });
+      showToast(`Category marked as ${newStatus}`);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
   async function onSave(e) {
     e.preventDefault();
     setIsSaving(true);
@@ -171,7 +181,10 @@ function CategoriesPage() {
                       <Badge label={c.status === 'active' ? 'Active' : 'Inactive'} variant={c.status === 'active' ? 'active' : 'draft'} />
                     </td>
                     <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => handleToggleStatus(c)} className="p-1.5 text-slate-400 hover:text-amber-600 bg-white hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all" title={c.status === 'active' ? 'Archive (Set Inactive)' : 'Unarchive (Set Active)'}>
+                          <Icon.Archive size={16} />
+                        </button>
                         <button onClick={() => handleEdit(c)} className="p-1.5 text-slate-400 hover:text-cobalt bg-white hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all" title="Edit">
                           <Icon.Edit size={16} />
                         </button>
