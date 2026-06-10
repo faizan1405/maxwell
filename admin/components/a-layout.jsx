@@ -2,6 +2,7 @@
 
 const NAV = [
   { id:'dashboard',  label:'Dashboard',  icon:'Dashboard',    badge:null },
+  { id:'reports',    label:'Reports',    icon:'Chart',        badge:null },
   { id:'products',   label:'Products',   icon:'Box',          badge:null },
   { id:'orders',     label:'Orders',     icon:'ShoppingBag',  badge:'orders' },
   { id:'customers',  label:'Customers',  icon:'Users',        badge:null },
@@ -118,7 +119,7 @@ function TopBar({ page, onMenuClick, stats, setPage }) {
   const [userOpen, setUserOpen] = React.useState(false);
   const alertCount = (stats?.byStatus?.pending||0) + (stats?.byStatus?.processing||0);
 
-  const labels = { dashboard:'Dashboard', products:'Products', orders:'Orders', customers:'Customers', settings:'Settings', categories: 'Categories', coupons:'Coupons', reviews:'Reviews', faqs:'FAQs', abandoned:'Abandoned Carts' };
+  const labels = { dashboard:'Dashboard', reports:'Reports', products:'Products', orders:'Orders', customers:'Customers', settings:'Settings', categories: 'Categories', coupons:'Coupons', reviews:'Reviews', faqs:'FAQs', abandoned:'Abandoned Carts' };
   const label  = labels[page] || page;
 
   return (

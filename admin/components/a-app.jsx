@@ -383,6 +383,7 @@ function AdminApp() {
 
   const pages = {
     dashboard: <DashboardPage setPage={setPage}/>,
+    reports:   <ReportsPage/>,
     products:  <ProductsPage/>,
     orders:    <OrdersPage/>,
     customers: <CustomersPage/>,
