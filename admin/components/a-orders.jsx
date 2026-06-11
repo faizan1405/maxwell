@@ -391,7 +391,7 @@ function CodActions({ order, onAction }) {
 }
 
 /* ── OrderDetail modal ───────────────────────────────────────────────────────── */
-function OrderDetail({ order, onClose, onOrderStatusChange, onPayStatusChange, onNoteChange, onInternalNoteAdd, onTrackingChange }) {
+function OrderDetail({ order, saving, onClose, onOrderStatusChange, onPayStatusChange, onNoteChange, onInternalNoteAdd, onTrackingChange }) {
   const { fmtMoney, fmtDateTime } = useAdmin();
   const { isAdmin, session } = useAuth();
 
@@ -543,7 +543,7 @@ function OrderDetail({ order, onClose, onOrderStatusChange, onPayStatusChange, o
                       if (val === 'Cancelled') {
                         setConfirmDlg({ type:'cancel', title:'Cancel Order?', message:'This cannot be undone.', confirmLabel:'Cancel Order', confirmVariant:'danger', note:true, noteLabel:'Reason for cancellation', noteRequired:false });
                       } else {
-                        handleOrderStatusChange(order.id, val);
+                        onOrderStatusChange(order.id, val);
                       }
                     }}
                     disabled={saving}
@@ -1212,6 +1212,7 @@ function OrdersPage() {
 
       <OrderDetail
         order={viewing}
+        saving={saving}
         onClose={() => setViewing(null)}
         onOrderStatusChange={handleOrderStatusChange}
         onPayStatusChange={handlePayStatusChange}
