@@ -39,7 +39,9 @@ async function readBlob(pathname) {
         const parsed = JSON.parse(val);
         // Sync to local file when read succeeds
         try {
-          const localPath = path.join(process.cwd(), pathname);
+          const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+          const localDir = isServerless ? '/tmp' : process.cwd();
+          const localPath = path.join(localDir, pathname);
           const dir = path.dirname(localPath);
           if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
           fs.writeFileSync(localPath, JSON.stringify(parsed, null, 2), 'utf8');
@@ -63,7 +65,9 @@ async function readBlob(pathname) {
           const data = await res.json();
           // Cache locally
           try {
-            const localPath = path.join(process.cwd(), pathname);
+            const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+            const localDir = isServerless ? '/tmp' : process.cwd();
+            const localPath = path.join(localDir, pathname);
             const dir = path.dirname(localPath);
             if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
             fs.writeFileSync(localPath, JSON.stringify(data, null, 2), 'utf8');
@@ -77,7 +81,9 @@ async function readBlob(pathname) {
   }
 
   // 3. Fallback to local filesystem copy
-  const localPath = path.join(process.cwd(), pathname);
+  const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+  const localDir = isServerless ? '/tmp' : process.cwd();
+  const localPath = path.join(localDir, pathname);
   if (fs.existsSync(localPath)) {
     try {
       console.log(`[blob] readBlob falling back to local file: ${localPath}`);
@@ -90,8 +96,10 @@ async function readBlob(pathname) {
   return null;
 }
 
+
 async function writeBlob(pathname, data) {
   let cloudSuccess = false;
+  let cloudError = null;
 
   // 1. Try Vercel KV first (if configured)
   if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
@@ -101,10 +109,15 @@ async function writeBlob(pathname, data) {
       if (ok === 'OK') {
         cloudSuccess = true;
         console.log(`[kv] Successfully set key for ${pathname}`);
+      } else {
+        cloudError = new Error(`KV set returned "${ok}"`);
       }
     } catch (err) {
+      cloudError = err;
       console.error(`[kv] Failed to write key for ${pathname}:`, err.message);
     }
+  } else {
+    cloudError = new Error('Vercel KV is not configured. Please link a KV database to your project on Vercel.');
   }
 
   // 2. Try Vercel Blob (if token is configured and KV is not active)
@@ -120,15 +133,20 @@ async function writeBlob(pathname, data) {
           token
         });
         cloudSuccess = true;
+        cloudError = null;
         console.log(`[blob] Successfully wrote to Vercel Blob for ${pathname}`);
       }
     } catch (err) {
+      if (!cloudError) cloudError = err;
       console.error(`[blob] writeBlob Vercel Blob failed for ${pathname}:`, err.message);
     }
   }
 
-  // 3. Always save a local copy on disk as backup/fallback
-  const localPath = path.join(process.cwd(), pathname);
+  // 3. Save a local copy on disk as backup/fallback (use /tmp in serverless environments)
+  const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+  const localDir = isServerless ? '/tmp' : process.cwd();
+  const localPath = path.join(localDir, pathname);
+  
   try {
     const dir = path.dirname(localPath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -136,8 +154,13 @@ async function writeBlob(pathname, data) {
     console.log(`[blob] Successfully saved local copy to ${localPath}`);
   } catch (err) {
     console.error(`[blob] Failed to write local copy for ${pathname}:`, err.message);
-    if (!cloudSuccess) throw err; // Only throw if both failed
+  }
+
+  // Throw the actual cloud write error if the cloud write failed
+  if (!cloudSuccess) {
+    throw cloudError || new Error('Failed to save data to cloud database (KV & Blob).');
   }
 }
+
 
 module.exports = { readBlob, writeBlob };
