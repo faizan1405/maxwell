@@ -288,7 +288,7 @@ function SettingsPage() {
 
     setSaving(true);
     try {
-      const res = await fetch(`${window.API_BASE || ''}/api/restore`, {
+      const res = await fetch(`${window.API_BASE || ''}/api/settings?resource=restore`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

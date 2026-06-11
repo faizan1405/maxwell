@@ -82,6 +82,10 @@ module.exports = async function handler(req, res) {
   if (req.query.resource === 'shipping') {
     return require('./_shipping')(req, res);
   }
+  if (req.query.resource === 'restore') {
+    return require('./_restore')(req, res);
+  }
+
 
   /* ── GET ─────────────────────────────────────────────────────────────────────── */
   if (req.method === 'GET') {
