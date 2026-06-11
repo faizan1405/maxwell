@@ -1,0 +1,2763 @@
+[
+  {
+    "id": "all-purpose-cleaner",
+    "name": "All Purpose Cleaner",
+    "cat": "household",
+    "sub": "Versatile Multi-Surface Cleaning Solution",
+    "price": 89.99,
+    "was": 109.99,
+    "size": "500ml",
+    "rating": 4.8,
+    "reviews": 124,
+    "badge": "Bestseller",
+    "img": "assets/products/all-purpose-cleaner.jpg",
+    "benefits": [
+      "Cuts grease & grime",
+      "Cleans kitchens, bathrooms & counters",
+      "Leaves surfaces fresh & streak-free",
+      "Safe on tiles, stainless steel & sealed surfaces"
+    ],
+    "desc": "A versatile multi-surface cleaning solution designed to cut through grease, dirt and grime — leaving every washable surface sparkling clean and fresh every time.",
+    "scent": "Fresh Clean",
+    "sku": "APC-500-001",
+    "stock": 48,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "500ml",
+        "price": 89.99,
+        "stock": 48
+      },
+      {
+        "name": "1L",
+        "price": 149.99,
+        "stock": 22
+      }
+    ],
+    "createdAt": 1705276800000,
+    "updatedAt": 1730419200000
+  },
+  {
+    "id": "tile-cleaner",
+    "name": "Tile Cleaner",
+    "cat": "household",
+    "sub": "Powerful Floor & Tile Cleaning Solution",
+    "price": 94.99,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 98,
+    "badge": null,
+    "img": "assets/products/tile-cleaner.jpg",
+    "benefits": [
+      "Removes tough stains",
+      "Cuts grease & grime",
+      "Fresh clean finish",
+      "Suitable for ceramic & porcelain tiles"
+    ],
+    "desc": "Powerful cleaning solution formulated to remove tough stains, dirt, grease and soap scum from floor and wall tiles — leaving surfaces sparkling with a fresh finish.",
+    "scent": "Sparkling Fresh",
+    "sku": "TLC-5L-002",
+    "stock": 62,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 94.99,
+        "stock": 62
+      }
+    ],
+    "createdAt": 1705276800000,
+    "updatedAt": 1729555200000
+  },
+  {
+    "id": "carpet-upholstery-shampoo",
+    "name": "Carpet & Upholstery Shampoo",
+    "cat": "household",
+    "sub": "Deep Cleaning Fabric & Carpet Care",
+    "price": 129.99,
+    "was": 149.99,
+    "size": "5L",
+    "rating": 4.9,
+    "reviews": 76,
+    "badge": "Bestseller",
+    "img": "assets/products/carpet-upholstery-shampoo.png",
+    "benefits": [
+      "Lifts dirt & stubborn stains",
+      "Refreshes carpets & upholstery",
+      "Low-foam fresh clean finish",
+      "Suitable for rugs, sofas & fabric seats"
+    ],
+    "desc": "A powerful shampoo specially formulated to remove dirt, stains and embedded grime from carpets, rugs and upholstered surfaces — leaving them cleaner, brighter and fresh-smelling.",
+    "scent": "Fresh Linen",
+    "sku": "CUS-5L-003",
+    "stock": 7,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 129.99,
+        "stock": 7
+      }
+    ],
+    "createdAt": 1707264000000,
+    "updatedAt": 1730764800000
+  },
+  {
+    "id": "linen-spray",
+    "name": "Linen Spray",
+    "cat": "household",
+    "sub": "Fresh Linen Fragrance & Fabric Refresh",
+    "price": 99.99,
+    "was": null,
+    "size": "500ml",
+    "rating": 4.8,
+    "reviews": 61,
+    "badge": "New",
+    "img": "assets/products/linen-spray.jpg",
+    "benefits": [
+      "Refreshes linen & fabrics instantly",
+      "Helps neutralize unwanted odours",
+      "Long-lasting fresh scent",
+      "For bedding, curtains & upholstery"
+    ],
+    "desc": "A fabric freshening spray formulated to refresh linen, bedding, curtains and soft furnishings — eliminating odours while leaving fabrics smelling clean, crisp and pleasantly fresh.",
+    "scent": "Fresh Linen",
+    "sku": "LNS-500-004",
+    "stock": 24,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "500ml",
+        "price": 99.99,
+        "stock": 24
+      }
+    ],
+    "createdAt": 1709251200000,
+    "updatedAt": 1728950400000
+  },
+  {
+    "id": "hand-surface-sanitiser",
+    "name": "Hand & Surface Sanitiser",
+    "cat": "sanitiser",
+    "sub": "Isopropyl Alcohol 85% — Kills 99.9% of germs",
+    "price": 149.99,
+    "was": null,
+    "size": "5L",
+    "rating": 4.9,
+    "reviews": 210,
+    "badge": "Bestseller",
+    "img": "assets/products/hand-surface-sanitiser.jpg",
+    "benefits": [
+      "Kills 99.9% of germs & bacteria",
+      "Fast drying & non-sticky",
+      "No-rinse formula",
+      "Surface friendly"
+    ],
+    "desc": "High-strength hand and surface sanitiser formulated with 85% Isopropyl Alcohol to kill 99.9% of germs and bacteria. Fast-drying and non-sticky — suitable for hands and a wide range of hard surfaces.",
+    "scent": "85% IPA",
+    "sku": "HSS-5L-005",
+    "stock": 5,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "1L",
+        "price": 59.99,
+        "stock": 45
+      },
+      {
+        "name": "5L",
+        "price": 149.99,
+        "stock": 5
+      }
+    ],
+    "createdAt": 1704844800000,
+    "updatedAt": 1731024000000
+  },
+  {
+    "id": "isopropyl-alcohol",
+    "name": "Isopropyl Alcohol 99.99%",
+    "cat": "sanitiser",
+    "sub": "Fast Drying Cleaning & Disinfecting Solution",
+    "price": 179.99,
+    "was": 199.99,
+    "size": "5L",
+    "rating": 4.9,
+    "reviews": 143,
+    "badge": "High Purity",
+    "img": "assets/products/isopropyl-alcohol.jpg",
+    "benefits": [
+      "Quick evaporation & fast drying",
+      "Removes grease, dirt & residue",
+      "Safe for glass, electronics & equipment",
+      "Leaves a clean streak-free finish"
+    ],
+    "desc": "A fast-evaporating 99.99% Isopropyl Alcohol cleaning solution that removes grease, grime and residue from hard surfaces and equipment — drying quickly without leaving heavy residue.",
+    "scent": "99.99% IPA",
+    "sku": "IPA-5L-006",
+    "stock": 22,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "1L",
+        "price": 89.99,
+        "stock": 30
+      },
+      {
+        "name": "5L",
+        "price": 179.99,
+        "stock": 22
+      }
+    ],
+    "createdAt": 1705017600000,
+    "updatedAt": 1729382400000
+  },
+  {
+    "id": "tyre-shine",
+    "name": "Tyre Shine",
+    "cat": "car",
+    "sub": "Deep Black Shine & Long-Lasting Protection",
+    "price": 119.99,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 88,
+    "badge": null,
+    "img": "assets/products/tyre-shine.jpg",
+    "benefits": [
+      "Restores deep black tyre finish",
+      "Instant glossy shine",
+      "Helps protect against cracking & fading",
+      "Repels dust & road grime"
+    ],
+    "desc": "A premium tyre dressing formulated to restore a rich black appearance and a clean, glossy finish — enhancing the look of tyres while protecting against dryness, dullness and everyday road grime.",
+    "scent": null,
+    "sku": "TYS-5L-007",
+    "stock": 31,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "1L",
+        "price": 59.99,
+        "stock": 15
+      },
+      {
+        "name": "5L",
+        "price": 119.99,
+        "stock": 31
+      }
+    ],
+    "createdAt": 1705708800000,
+    "updatedAt": 1730160000000
+  },
+  {
+    "id": "tyre-dash-shine",
+    "name": "Tyre & Dash Shine",
+    "cat": "car",
+    "sub": "Interior & Exterior Dressing Combo",
+    "price": 129.99,
+    "was": null,
+    "size": "5L",
+    "rating": 4.6,
+    "reviews": 55,
+    "badge": null,
+    "img": "assets/products/tyre-dash-shine.jpg",
+    "benefits": [
+      "Shines tyres & interior plastics",
+      "Restores faded black trim",
+      "Non-greasy satin finish",
+      "UV protection built-in"
+    ],
+    "desc": "A versatile 2-in-1 dressing that delivers a clean, satin finish on both tyres and interior plastics — restoring faded trim and protecting against UV damage and everyday wear.",
+    "scent": null,
+    "sku": "TDS-5L-008",
+    "stock": 18,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "1L",
+        "price": 69.99,
+        "stock": 20
+      },
+      {
+        "name": "5L",
+        "price": 129.99,
+        "stock": 18
+      }
+    ],
+    "createdAt": 1707091200000,
+    "updatedAt": 1729728000000
+  },
+  {
+    "id": "wash-up-liquid-green",
+    "name": "Wash-Up Liquid (Green)",
+    "cat": "household",
+    "sub": "Heavy-Duty Dishwashing & Degreasing Liquid",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/wash-up-liquid-green.jpg",
+    "benefits": [
+      "Cuts through grease fast",
+      "Rich lather formula",
+      "Gentle on hands",
+      "For dishes, pots & surfaces"
+    ],
+    "desc": "A powerful green dishwashing liquid formulated to cut through grease and food residue — leaving dishes, pots and kitchen surfaces clean and fresh with minimal effort.",
+    "scent": "Fresh Green",
+    "sku": "WUL-5L-009",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "sanitizers",
+    "name": "Sanitizers",
+    "cat": "household",
+    "sub": "Multi-Surface Sanitizing Solution",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/sanitizers.jpg",
+    "benefits": [
+      "Kills germs & bacteria",
+      "Safe on hard surfaces",
+      "Quick-drying formula",
+      "No harsh residue"
+    ],
+    "desc": "A reliable sanitizing solution for everyday use on hard surfaces — effectively eliminating germs, bacteria and common pathogens to keep your home clean and safe.",
+    "scent": "Clean Fresh",
+    "sku": "SAN-5L-010",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "sani-pine",
+    "name": "Sani-Pine",
+    "cat": "household",
+    "sub": "Pine-Scented Disinfectant Cleaner",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/sani-pine.jpg",
+    "benefits": [
+      "Disinfects & deodorises",
+      "Classic pine fragrance",
+      "Kills household germs",
+      "For floors, toilets & hard surfaces"
+    ],
+    "desc": "A pine-scented disinfectant cleaner that sanitises and deodorises floors, toilets and hard surfaces — leaving behind a fresh, clean pine fragrance.",
+    "scent": "Pine Fresh",
+    "sku": "SNP-5L-011",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "floor-shine-high-traffic",
+    "name": "Floor Shine High Traffic",
+    "cat": "household",
+    "sub": "High-Gloss Floor Polish for Heavy-Use Areas",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/floor-shine-high-traffic.jpg",
+    "benefits": [
+      "High-gloss mirror finish",
+      "Durable in heavy traffic areas",
+      "Protects & seals floor surfaces",
+      "Suitable for vinyl, tiles & linoleum"
+    ],
+    "desc": "A premium floor polish specially formulated for high-traffic areas — delivering a brilliant, long-lasting gloss finish while protecting floor surfaces from daily wear and scuffing.",
+    "scent": null,
+    "sku": "FSH-5L-012",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "shower-gel",
+    "name": "Shower Gel",
+    "cat": "household",
+    "sub": "Gentle Moisturising Body Wash",
+    "price": 0,
+    "was": null,
+    "size": "500ml",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/shower-gel.jpg",
+    "benefits": [
+      "Rich lather & smooth rinse",
+      "Moisturises skin",
+      "Pleasant fragrance",
+      "Gentle on all skin types"
+    ],
+    "desc": "A gentle, moisturising shower gel formulated with a rich lather that cleanses the skin effectively while leaving it feeling soft, smooth and refreshed.",
+    "scent": "Fresh Breeze",
+    "sku": "SHG-500-013",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "500ml",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "sulphuric-acid",
+    "name": "Sulphuric Acid",
+    "cat": "household",
+    "sub": "Drain & Blockage Clearing Solution",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.6,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/sulphuric-acid.jpg",
+    "benefits": [
+      "Clears blocked drains fast",
+      "Breaks down organic blockages",
+      "Industrial strength formula",
+      "For drains, sewers & pipes"
+    ],
+    "desc": "A high-strength sulphuric acid solution for clearing blocked drains and removing organic build-up in pipes and sewers. Use with caution — follow safety instructions carefully.",
+    "scent": null,
+    "sku": "SUL-5L-014",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "toilet-bowl-cleaner",
+    "name": "Toilet Bowl Cleaner",
+    "cat": "household",
+    "sub": "Powerful Toilet Disinfectant & Descaler",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/toilet-bowl-cleaner.jpg",
+    "benefits": [
+      "Removes limescale & stains",
+      "Disinfects & deodorises",
+      "Clings to bowl surface",
+      "Fresh clean scent"
+    ],
+    "desc": "A powerful toilet bowl cleaner that removes limescale, stains and bacteria — disinfecting and deodorising the bowl while leaving a fresh, clean scent.",
+    "scent": "Clean Citrus",
+    "sku": "TBC-5L-015",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "thick-bleach",
+    "name": "Thick Bleach (Domestos Type)",
+    "cat": "household",
+    "sub": "Heavy-Duty Thick Bleach Disinfectant",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/thick-bleach.jpg",
+    "benefits": [
+      "Kills 99.9% of germs",
+      "Thick formula clings to surfaces",
+      "Whitens & disinfects",
+      "For toilets, drains & hard surfaces"
+    ],
+    "desc": "A thick, heavy-duty bleach disinfectant that clings to surfaces for extended contact time — killing 99.9% of germs, whitening surfaces and eliminating tough stains and odours.",
+    "scent": "Clean Bleach",
+    "sku": "TBL-5L-016",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "oxy-o2",
+    "name": "Oxy O2 (Vanish Type)",
+    "cat": "household",
+    "sub": "Oxygen-Powered Stain Remover & Fabric Brightener",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/oxy-o2.jpg",
+    "benefits": [
+      "Removes tough stains on contact",
+      "Brightens & whitens fabrics",
+      "Oxygen-activated formula",
+      "Safe on colours & whites"
+    ],
+    "desc": "An oxygen-powered stain remover formulated to lift tough stains from fabrics, carpets and surfaces — brightening and refreshing without the harsh effects of chlorine bleach.",
+    "scent": null,
+    "sku": "OXY-5L-017",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "industrial-washing-powder",
+    "name": "Industrial Washing Powder",
+    "cat": "household",
+    "sub": "Heavy-Duty Laundry Powder for Commercial Use",
+    "price": 0,
+    "was": null,
+    "size": "25kg",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/industrial-washing-powder.jpg",
+    "benefits": [
+      "Heavy-duty cleaning power",
+      "For commercial laundry use",
+      "Removes tough stains & grime",
+      "High-foaming formula"
+    ],
+    "desc": "A heavy-duty industrial washing powder designed for commercial and high-volume laundry use — delivering powerful cleaning performance to remove tough stains, grease and grime.",
+    "scent": "Clean Fresh",
+    "sku": "IWP-25K-018",
+    "stock": 30,
+    "lowStockThreshold": 5,
+    "status": "active",
+    "variants": [
+      {
+        "name": "25kg",
+        "price": 0,
+        "stock": 30
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "high-foaming-hand-washing-powder",
+    "name": "High Foaming Hand Washing Powder",
+    "cat": "household",
+    "sub": "Premium Hand-Wash Laundry Powder",
+    "price": 0,
+    "was": null,
+    "size": "5kg",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/high-foaming-hand-washing-powder.jpg",
+    "benefits": [
+      "High foam for hand washing",
+      "Removes stains effectively",
+      "Gentle on fabrics",
+      "Pleasant fresh scent"
+    ],
+    "desc": "A high-foaming hand washing powder specially formulated for hand laundry — producing a rich lather to lift dirt and stains while remaining gentle on fabrics and skin.",
+    "scent": "Spring Fresh",
+    "sku": "HFP-5K-019",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5kg",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "bio-ultra",
+    "name": "Bio Ultra (Bio Classic Type)",
+    "cat": "household",
+    "sub": "Biological Enzyme Laundry Liquid",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/bio-ultra.jpg",
+    "benefits": [
+      "Enzyme-powered stain removal",
+      "Works in cool wash temperatures",
+      "Breaks down proteins & oils",
+      "Suitable for all fabrics"
+    ],
+    "desc": "A biological enzyme laundry liquid that uses natural enzymes to break down protein-based stains, grease and oils — working effectively even at low wash temperatures.",
+    "scent": "Fresh Clean",
+    "sku": "BIO-5L-020",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "metal-polish",
+    "name": "Metal Polish",
+    "cat": "household",
+    "sub": "Multi-Metal Shine & Protection Polish",
+    "price": 0,
+    "was": null,
+    "size": "1L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/metal-polish.jpg",
+    "benefits": [
+      "Restores shine to all metals",
+      "Removes tarnish & oxidation",
+      "Leaves a protective coating",
+      "For stainless steel, chrome & brass"
+    ],
+    "desc": "A premium metal polish formulated to restore shine and remove tarnish, rust and oxidation from stainless steel, chrome, brass and other metal surfaces — leaving a brilliant finish with protective coating.",
+    "scent": null,
+    "sku": "MTP-1L-021",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "1L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "mop-and-shine",
+    "name": "Mop & Shine",
+    "cat": "household",
+    "sub": "Floor Cleaner & Shine in One",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/mop-and-shine.jpg",
+    "benefits": [
+      "Cleans & shines in one step",
+      "Long-lasting floor protection",
+      "Pleasant fragrance",
+      "For tiles, vinyl & sealed floors"
+    ],
+    "desc": "A dual-action floor cleaner and shine product that cleans and polishes in a single application — leaving floors sparkling, protected and smelling fresh.",
+    "scent": "Fresh Citrus",
+    "sku": "MAS-5L-022",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "pine-gel",
+    "name": "Pine Gel",
+    "cat": "household",
+    "sub": "Pine-Scented Heavy-Duty Cleaning Gel",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/pine-gel.jpg",
+    "benefits": [
+      "Powerful cleaning & disinfection",
+      "Classic pine fragrance",
+      "Gel formula clings to surfaces",
+      "For floors, tiles & bathrooms"
+    ],
+    "desc": "A thick pine-scented cleaning gel that clings to surfaces for deep cleaning and disinfection — leaving a powerful clean and a long-lasting fresh pine fragrance throughout the home.",
+    "scent": "Pine",
+    "sku": "PNG-5L-023",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "drain-cleaner",
+    "name": "Drain Cleaner",
+    "cat": "household",
+    "sub": "Fast-Acting Drain Unblocking Solution",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/drain-cleaner.jpg",
+    "benefits": [
+      "Clears blocked drains fast",
+      "Dissolves hair, grease & organic matter",
+      "Works in sinks, showers & baths",
+      "Prevents future blockages"
+    ],
+    "desc": "A fast-acting drain cleaning solution formulated to dissolve hair, grease and organic blockages in sinks, showers and pipes — restoring full drainage quickly and effectively.",
+    "scent": null,
+    "sku": "DRC-5L-024",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "fabric-softener",
+    "name": "Fabric Softener (Comfort Type)",
+    "cat": "household",
+    "sub": "Long-Lasting Fabric Conditioner & Softener",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/fabric-softener.jpg",
+    "benefits": [
+      "Softens & conditions fabrics",
+      "Reduces static & wrinkles",
+      "Long-lasting fresh scent",
+      "Suitable for all fabric types"
+    ],
+    "desc": "A premium fabric softener and conditioner that leaves laundry feeling soft, fresh and static-free — delivering long-lasting fragrance and gentle care for all fabric types.",
+    "scent": "Spring Blossom",
+    "sku": "FSO-5L-025",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "floor-stripper",
+    "name": "Floor Stripper",
+    "cat": "household",
+    "sub": "Heavy-Duty Floor Polish & Wax Remover",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/floor-stripper.jpg",
+    "benefits": [
+      "Strips old wax & floor polish",
+      "Prepares surfaces for re-polishing",
+      "Fast-acting formula",
+      "Suitable for vinyl, tiles & linoleum"
+    ],
+    "desc": "A powerful floor stripping solution that removes old wax, polish and build-up from hard floor surfaces — preparing them for a fresh application of floor polish or sealer.",
+    "scent": null,
+    "sku": "FLS-5L-026",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "furniture-polish",
+    "name": "Furniture Polish",
+    "cat": "household",
+    "sub": "Shine & Protect Wood & Furniture Polish",
+    "price": 0,
+    "was": null,
+    "size": "500ml",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/furniture-polish.jpg",
+    "benefits": [
+      "Restores shine to wood furniture",
+      "Protects against dust & scratches",
+      "Pleasant fresh wood scent",
+      "For tables, cabinets & shelves"
+    ],
+    "desc": "A quality furniture polish that cleans, shines and protects wood and laminate furniture — restoring a natural lustre while leaving a pleasant fresh scent and a protective barrier.",
+    "scent": "Fresh Wood",
+    "sku": "FPL-500-027",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "500ml",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "hard-surface-cleaner",
+    "name": "Hard Surface Cleaner (Handy Andy Type)",
+    "cat": "household",
+    "sub": "All-Purpose Cream Cleaner for Tough Surfaces",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/hard-surface-cleaner.jpg",
+    "benefits": [
+      "Removes stubborn marks & stains",
+      "Gentle abrasive cream formula",
+      "Safe on most hard surfaces",
+      "For kitchens, bathrooms & appliances"
+    ],
+    "desc": "An all-purpose cream cleaner formulated to remove tough marks, stains and grease from hard surfaces — using a gentle abrasive formula that cleans without scratching kitchens, bathrooms and appliances.",
+    "scent": "Clean Fresh",
+    "sku": "HSC-5L-028",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "laundry-liquid",
+    "name": "Laundry Liquid (OMO Auto Type)",
+    "cat": "household",
+    "sub": "Automatic Machine Washing Liquid",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/laundry-liquid.jpg",
+    "benefits": [
+      "For front & top loader machines",
+      "Powerful stain removal",
+      "Fresh clean scent",
+      "Low-foam auto formula"
+    ],
+    "desc": "A concentrated automatic laundry liquid formulated for front and top loader washing machines — delivering powerful stain removal and a long-lasting fresh scent with every wash.",
+    "scent": "Spring Fresh",
+    "sku": "LLQ-5L-029",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "overall-washing-powder",
+    "name": "Overall Washing Powder",
+    "cat": "household",
+    "sub": "Industrial-Strength Laundry Washing Powder",
+    "price": 0,
+    "was": null,
+    "size": "10kg",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/overall-washing-powder.jpg",
+    "benefits": [
+      "Industrial cleaning power",
+      "Removes heavy soiling & grease",
+      "High-foaming formula",
+      "For overalls, workwear & heavy fabrics"
+    ],
+    "desc": "A heavy-duty washing powder designed for cleaning overalls, workwear and heavily soiled fabrics — cutting through grease, dirt and industrial grime to deliver a thorough clean.",
+    "scent": "Clean Fresh",
+    "sku": "OWP-10K-030",
+    "stock": 30,
+    "lowStockThreshold": 5,
+    "status": "active",
+    "variants": [
+      {
+        "name": "10kg",
+        "price": 0,
+        "stock": 30
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "bleach-jik-type",
+    "name": "Bleach (Jik Type)",
+    "cat": "household",
+    "sub": "Multi-Purpose Household Bleach",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/bleach-jik-type.jpg",
+    "benefits": [
+      "Whitens & disinfects",
+      "Kills germs & bacteria",
+      "Removes tough stains",
+      "For laundry, toilets & surfaces"
+    ],
+    "desc": "A powerful household bleach that whitens, disinfects and removes tough stains from laundry, toilets and hard surfaces — killing germs and bacteria for a hygienic clean.",
+    "scent": "Clean Bleach",
+    "sku": "BLJ-5L-031",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "deo-blocks",
+    "name": "Deo Blocks",
+    "cat": "household",
+    "sub": "Long-Lasting Toilet & Urinal Deodoriser Blocks",
+    "price": 0,
+    "was": null,
+    "size": "1kg",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/deo-blocks.jpg",
+    "benefits": [
+      "Long-lasting fragrance",
+      "Neutralises unpleasant odours",
+      "For toilets & urinals",
+      "Slow-release formula"
+    ],
+    "desc": "Slow-release deodoriser blocks formulated for toilets and urinals — neutralising unpleasant odours and delivering a long-lasting fresh fragrance in bathroom and restroom environments.",
+    "scent": "Fresh Mint",
+    "sku": "DEO-1K-032",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "1kg",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "bubble-bath",
+    "name": "Bubble Bath",
+    "cat": "household",
+    "sub": "Luxurious Foaming Bubble Bath Formula",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/bubble-bath.jpg",
+    "benefits": [
+      "Rich, long-lasting bubbles",
+      "Gentle on skin",
+      "Pleasant fragrance",
+      "For adults & children"
+    ],
+    "desc": "A luxurious foaming bubble bath formulated to create a rich, long-lasting lather — gentle on skin with a pleasant fragrance that makes bath time a relaxing and enjoyable experience.",
+    "scent": "Ocean Fresh",
+    "sku": "BBT-5L-033",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "dispenser-hand-soap-pink",
+    "name": "Dispenser Hand Soap Pink",
+    "cat": "household",
+    "sub": "Gentle Pink Hand Soap for Dispensers",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/dispenser-hand-soap-pink.jpg",
+    "benefits": [
+      "Gentle & moisturising formula",
+      "For all dispenser types",
+      "Pleasant light fragrance",
+      "Leaves hands soft & clean"
+    ],
+    "desc": "A gentle pink hand soap formulated for soap dispensers in kitchens, bathrooms and commercial settings — effectively cleansing hands while leaving skin feeling soft and fresh.",
+    "scent": "Light Floral",
+    "sku": "DHS-5L-034",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "dribrite-floor-shine",
+    "name": "Dribrite Floor Shine",
+    "cat": "household",
+    "sub": "High-Gloss Floor Polish & Protector",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/dribrite-floor-shine.jpg",
+    "benefits": [
+      "High-gloss mirror finish",
+      "Durable floor protection",
+      "Quick-drying formula",
+      "For vinyl, tiles & sealed wood"
+    ],
+    "desc": "A premium floor polish delivering a brilliant high-gloss finish with long-lasting protection — quick-drying and suitable for vinyl, tiles and sealed floor surfaces in homes and commercial spaces.",
+    "scent": null,
+    "sku": "DFS-5L-035",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "industrial-overall-washing-powders",
+    "name": "Overall Washing Powders",
+    "cat": "industrial",
+    "sub": "Bulk Industrial Laundry Washing Powder",
+    "price": 0,
+    "was": null,
+    "size": "25kg",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/industrial-overall-washing-powders.jpg",
+    "benefits": [
+      "Bulk commercial supply",
+      "Removes heavy soiling & grease",
+      "High-foaming formula",
+      "For overalls, workwear & industrial fabrics"
+    ],
+    "desc": "A bulk industrial laundry washing powder available in large quantities — designed for commercial laundromats, factories and industrial facilities requiring high-volume washing power.",
+    "scent": "Clean Fresh",
+    "sku": "OWP-25K-036",
+    "stock": 20,
+    "lowStockThreshold": 5,
+    "status": "active",
+    "variants": [
+      {
+        "name": "25kg",
+        "price": 0,
+        "stock": 20
+      }
+    ],
+    "createdAt": 1749513600000,
+    "updatedAt": 1749513600000
+  },
+  {
+    "id": "heavy-duty-degreaser",
+    "name": "Heavy Duty Degreaser",
+    "cat": "industrial",
+    "sub": "Industrial-Strength Degreasing Solution",
+    "price": 0,
+    "was": null,
+    "size": "25L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/heavy-duty-degreaser.jpg",
+    "benefits": [
+      "Removes heavy grease & oils",
+      "Fast-acting penetrating formula",
+      "For machinery, engines & floors",
+      "Dilutable for varied applications"
+    ],
+    "desc": "A powerful industrial-strength degreaser formulated to cut through heavy grease, oil, fuel residue and industrial grime — ideal for use on machinery, engines, workshop floors and industrial equipment.",
+    "scent": null,
+    "sku": "HDD-25L-037",
+    "stock": 30,
+    "lowStockThreshold": 5,
+    "status": "active",
+    "variants": [
+      {
+        "name": "25L",
+        "price": 0,
+        "stock": 30
+      }
+    ],
+    "createdAt": 1749513600000,
+    "updatedAt": 1749513600000
+  },
+  {
+    "id": "hd-degreaser",
+    "name": "HD Degreaser",
+    "cat": "industrial",
+    "sub": "High-Performance Industrial Degreaser",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/hd-degreaser.jpg",
+    "benefits": [
+      "High-performance degreasing",
+      "Penetrates tough grease build-up",
+      "Safe on most metals & surfaces",
+      "Suitable for workshops & factories"
+    ],
+    "desc": "An industrial-grade HD degreaser formulated for high-performance grease and oil removal in workshop, factory and manufacturing environments — effective on metals, concrete and most hard surfaces.",
+    "scent": null,
+    "sku": "HDD-5L-038",
+    "stock": 40,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 40
+      }
+    ],
+    "createdAt": 1749513600000,
+    "updatedAt": 1749513600000
+  },
+  {
+    "id": "nr-solvent-degreaser",
+    "name": "NR Solvent Degreaser",
+    "cat": "industrial",
+    "sub": "Non-Residue Solvent-Based Degreaser",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/nr-solvent-degreaser.jpg",
+    "benefits": [
+      "Leaves no residue after drying",
+      "Fast-evaporating solvent formula",
+      "For precision equipment & electronics",
+      "Removes oils, flux & contaminants"
+    ],
+    "desc": "A non-residue solvent-based degreaser that evaporates cleanly without leaving residue — ideal for degreasing precision equipment, electronics, electrical components and sensitive machinery.",
+    "scent": null,
+    "sku": "NRS-5L-039",
+    "stock": 40,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 40
+      }
+    ],
+    "createdAt": 1749513600000,
+    "updatedAt": 1749513600000
+  },
+  {
+    "id": "truck-shampoo",
+    "name": "Truck Shampoo",
+    "cat": "industrial",
+    "sub": "Heavy-Duty Vehicle & Truck Wash Shampoo",
+    "price": 0,
+    "was": null,
+    "size": "25L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/truck-shampoo.jpg",
+    "benefits": [
+      "Removes road grime & diesel soot",
+      "High-foaming concentrate",
+      "Safe on painted surfaces & chrome",
+      "For trucks, buses & heavy vehicles"
+    ],
+    "desc": "A heavy-duty truck and vehicle wash shampoo specially formulated to remove road grime, diesel soot, mud and heavy soiling from trucks, buses and large commercial vehicles.",
+    "scent": "Clean Fresh",
+    "sku": "TKS-25L-040",
+    "stock": 20,
+    "lowStockThreshold": 5,
+    "status": "active",
+    "variants": [
+      {
+        "name": "25L",
+        "price": 0,
+        "stock": 20
+      }
+    ],
+    "createdAt": 1749513600000,
+    "updatedAt": 1749513600000
+  },
+  {
+    "id": "window-dae-scaler",
+    "name": "Window Dae-Scaler",
+    "cat": "industrial",
+    "sub": "Industrial Window & Glass Scale Remover",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/window-dae-scaler.jpg",
+    "benefits": [
+      "Removes mineral scale & hard water marks",
+      "Leaves glass streak-free",
+      "For windows, glass facades & panels",
+      "Industrial concentration"
+    ],
+    "desc": "An industrial-strength window and glass descaler formulated to remove stubborn mineral scale, hard water deposits and calcium build-up from glass surfaces — leaving a clear, streak-free finish.",
+    "scent": null,
+    "sku": "WDS-5L-041",
+    "stock": 40,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 40
+      }
+    ],
+    "createdAt": 1749513600000,
+    "updatedAt": 1749513600000
+  },
+  {
+    "id": "alkaline-washing-powders",
+    "name": "Alkaline Washing Powders",
+    "cat": "industrial",
+    "sub": "High-Alkaline Industrial Cleaning Powder",
+    "price": 0,
+    "was": null,
+    "size": "25kg",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/alkaline-washing-powders.jpg",
+    "benefits": [
+      "High-alkaline formula cuts grease",
+      "For industrial laundry & surface cleaning",
+      "Removes oils, proteins & heavy soiling",
+      "Suitable for commercial washing machines"
+    ],
+    "desc": "A high-alkaline washing powder designed for industrial laundry and surface cleaning applications — effectively cutting through grease, oils and protein-based soiling in commercial and industrial settings.",
+    "scent": "Clean Fresh",
+    "sku": "AWP-25K-042",
+    "stock": 20,
+    "lowStockThreshold": 5,
+    "status": "active",
+    "variants": [
+      {
+        "name": "25kg",
+        "price": 0,
+        "stock": 20
+      }
+    ],
+    "createdAt": 1749513600000,
+    "updatedAt": 1749513600000
+  },
+  {
+    "id": "alubrite",
+    "name": "Alubrite",
+    "cat": "industrial",
+    "sub": "Aluminium Brightener & Cleaner",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/alubrite.jpg",
+    "benefits": [
+      "Brightens & cleans aluminium",
+      "Removes oxidation & staining",
+      "For wheels, tanks & aluminium surfaces",
+      "Restores original shine"
+    ],
+    "desc": "A specialist aluminium brightener and cleaner formulated to remove oxidation, staining and dulling from aluminium surfaces — restoring a bright, clean finish on wheels, tanks and aluminium panels.",
+    "scent": null,
+    "sku": "ALB-5L-043",
+    "stock": 40,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 40
+      }
+    ],
+    "createdAt": 1749513600000,
+    "updatedAt": 1749513600000
+  },
+  {
+    "id": "hf-alubrite",
+    "name": "HF Alubrite",
+    "cat": "industrial",
+    "sub": "High-Foam Aluminium Brightener",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/hf-alubrite.jpg",
+    "benefits": [
+      "High-foam formula for better coverage",
+      "Brightens aluminium fast",
+      "For truck tanks & trailers",
+      "Removes heavy oxidation"
+    ],
+    "desc": "A high-foam aluminium brightener delivering improved surface coverage and faster brightening — specially formulated for truck tanks, trailers and large aluminium surfaces requiring a deep clean and restoration.",
+    "scent": null,
+    "sku": "HFA-5L-044",
+    "stock": 40,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 40
+      }
+    ],
+    "createdAt": 1749513600000,
+    "updatedAt": 1749513600000
+  },
+  {
+    "id": "anti-freeze-concentrate",
+    "name": "Anti-Freeze Concentrate 96%",
+    "cat": "industrial",
+    "sub": "High-Concentration Coolant Anti-Freeze",
+    "price": 0,
+    "was": null,
+    "size": "25L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/anti-freeze-concentrate.jpg",
+    "benefits": [
+      "96% concentrate formula",
+      "Protects against freezing & overheating",
+      "Compatible with most cooling systems",
+      "Extends coolant system life"
+    ],
+    "desc": "A high-concentration 96% anti-freeze coolant formulated to protect vehicle and industrial cooling systems against freezing, overheating and corrosion — compatible with most radiator and cooling systems.",
+    "scent": null,
+    "sku": "AFC-25L-045",
+    "stock": 20,
+    "lowStockThreshold": 5,
+    "status": "active",
+    "variants": [
+      {
+        "name": "25L",
+        "price": 0,
+        "stock": 20
+      }
+    ],
+    "createdAt": 1749513600000,
+    "updatedAt": 1749513600000
+  },
+  {
+    "id": "hand-cleaner-paste-grit",
+    "name": "Hand Cleaner Paste - Grit",
+    "cat": "industrial",
+    "sub": "Heavy-Duty Grit Hand Cleaner for Workshop Use",
+    "price": 0,
+    "was": null,
+    "size": "5kg",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/hand-cleaner-paste-grit.jpg",
+    "benefits": [
+      "Removes grease, oil & industrial grime",
+      "Grit particles for deep scrubbing",
+      "Moisturises while it cleans",
+      "For mechanics, engineers & factory workers"
+    ],
+    "desc": "A heavy-duty grit hand cleaner paste formulated for mechanics, engineers and industrial workers — using fine grit particles to deep-clean grease, oil and stubborn industrial grime from hands.",
+    "scent": "Clean Fresh",
+    "sku": "HCP-5K-046",
+    "stock": 30,
+    "lowStockThreshold": 5,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5kg",
+        "price": 0,
+        "stock": 30
+      }
+    ],
+    "createdAt": 1749513600000,
+    "updatedAt": 1749513600000
+  },
+  {
+    "id": "bio-degreaser-specialised",
+    "name": "Bio Degreaser Specialised",
+    "cat": "industrial",
+    "sub": "Biological Enzyme Industrial Degreaser",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/bio-degreaser-specialised.jpg",
+    "benefits": [
+      "Enzyme-powered biological degreasing",
+      "Eco-friendly & biodegradable",
+      "Breaks down oils & hydrocarbons",
+      "Safe for drains & waterways"
+    ],
+    "desc": "A specialised biological enzyme degreaser that uses natural bacteria and enzymes to break down oils, fats and hydrocarbons — an eco-friendly, biodegradable alternative for industrial degreasing applications.",
+    "scent": null,
+    "sku": "BDS-5L-047",
+    "stock": 40,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 40
+      }
+    ],
+    "createdAt": 1749513600000,
+    "updatedAt": 1749513600000
+  },
+  {
+    "id": "eco-degreaser-hd-red",
+    "name": "Eco Degreaser HD Red",
+    "cat": "industrial",
+    "sub": "Eco-Friendly Heavy-Duty Red Degreaser",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/eco-degreaser-hd-red.jpg",
+    "benefits": [
+      "Heavy-duty eco-friendly formula",
+      "Biodegradable & low-toxicity",
+      "Removes grease & oils effectively",
+      "For industrial & commercial use"
+    ],
+    "desc": "An eco-friendly heavy-duty red degreaser formulated to deliver powerful grease and oil removal while maintaining a low-toxicity, biodegradable profile — suitable for industrial and commercial cleaning applications.",
+    "scent": null,
+    "sku": "EHD-5L-048",
+    "stock": 40,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 40
+      }
+    ],
+    "createdAt": 1749513600000,
+    "updatedAt": 1749513600000
+  },
+  {
+    "id": "waterless-car-wash",
+    "name": "Waterless Car Wash",
+    "cat": "car",
+    "sub": "No-Rinse Spray & Wipe Car Cleaning Solution",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/waterless-car-wash.jpg",
+    "benefits": [
+      "No water or rinsing required",
+      "Lifts dirt & dust safely",
+      "Leaves a streak-free shine",
+      "Saves water & time"
+    ],
+    "desc": "A waterless car wash spray formulated to safely lift and remove dust, light dirt and grime from vehicle surfaces without water — leaving a clean, streak-free finish with minimal effort.",
+    "scent": null,
+    "sku": "WCW-5L-049",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1780963200000,
+    "updatedAt": 1780963200000
+  },
+  {
+    "id": "wash-n-wax-pearly-blue",
+    "name": "Wash 'N Wax (Pearly Blue)",
+    "cat": "car",
+    "sub": "Shampoo & Wax Combo for a Showroom Finish",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/wash-n-wax-pearly-blue.jpg",
+    "benefits": [
+      "Cleans & waxes in one step",
+      "Pearlescent blue formula",
+      "Leaves a glossy protected finish",
+      "Safe on all vehicle paintwork"
+    ],
+    "desc": "A combined car shampoo and wax solution in a striking pearly blue formula — cleaning and protecting vehicle paintwork in a single wash to leave a brilliant glossy, showroom-quality finish.",
+    "scent": "Fresh Blue",
+    "sku": "WNW-5L-050",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1780963200000,
+    "updatedAt": 1780963200000
+  },
+  {
+    "id": "foam-3-concentrate",
+    "name": "Foam 3 Concentrate",
+    "cat": "car",
+    "sub": "High-Foam Concentrated Car Wash Shampoo",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/foam-3-concentrate.jpg",
+    "benefits": [
+      "Ultra-high foam formula",
+      "Concentrated — dilutes far",
+      "Lifts grime without scratching",
+      "Safe on all exterior surfaces"
+    ],
+    "desc": "A highly concentrated high-foam car wash shampoo that produces a thick, lubricating lather to safely lift and remove road grime, dirt and contaminants from all exterior vehicle surfaces.",
+    "scent": null,
+    "sku": "FM3-5L-051",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1780963200000,
+    "updatedAt": 1780963200000
+  },
+  {
+    "id": "blue-shampoo",
+    "name": "Blue Shampoo",
+    "cat": "car",
+    "sub": "Premium Blue Car Wash Shampoo",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/blue-shampoo.jpg",
+    "benefits": [
+      "Rich lather for thorough cleaning",
+      "Removes road grime & dirt",
+      "pH balanced for safe paint use",
+      "Leaves a clean streak-free finish"
+    ],
+    "desc": "A premium blue car shampoo formulated with a rich lather to thoroughly clean vehicle paintwork — removing road grime, traffic film and dirt while remaining pH balanced and safe on all finishes.",
+    "scent": "Fresh Clean",
+    "sku": "BLS-5L-052",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1780963200000,
+    "updatedAt": 1780963200000
+  },
+  {
+    "id": "hi-foam-shampoo-pink",
+    "name": "Hi Foam Shampoo (Pink)",
+    "cat": "car",
+    "sub": "High-Foam Pink Car Wash Shampoo",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/hi-foam-shampoo-pink.jpg",
+    "benefits": [
+      "Extra-high foam formula",
+      "Gentle on paint & clear coat",
+      "Removes dirt & road film",
+      "Pleasant fresh fragrance"
+    ],
+    "desc": "A vibrant pink high-foam car wash shampoo that generates a thick, cushioning lather to gently clean and remove road film, dirt and light contaminants — safe on all vehicle paint types and clear coats.",
+    "scent": "Cherry Fresh",
+    "sku": "HFS-5L-053",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1780963200000,
+    "updatedAt": 1780963200000
+  },
+  {
+    "id": "rinseless-wash",
+    "name": "Rinseless Wash",
+    "cat": "car",
+    "sub": "No-Rinse Waterless Car Cleaning Solution",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/rinseless-wash.jpg",
+    "benefits": [
+      "No rinsing required",
+      "Encapsulates & lifts dirt safely",
+      "Leaves a slick clean finish",
+      "Ideal for indoor & waterless washing"
+    ],
+    "desc": "A rinseless car wash solution that encapsulates and safely removes dirt and contaminants without the need for rinsing — leaving a clean, smooth finish ideal for indoor detailing or water-restricted environments.",
+    "scent": null,
+    "sku": "RLW-5L-054",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1780963200000,
+    "updatedAt": 1780963200000
+  },
+  {
+    "id": "correction-compound",
+    "name": "Correction Compound",
+    "cat": "car",
+    "sub": "Professional Paint Correction & Swirl Remover",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/correction-compound.jpg",
+    "benefits": [
+      "Removes swirl marks & light scratches",
+      "Restores paint clarity & gloss",
+      "Professional-grade formula",
+      "For all paint types & colours"
+    ],
+    "desc": "A professional-grade correction compound formulated to remove swirl marks, light scratches and surface oxidation — restoring paint clarity and preparing surfaces for polishing and protection.",
+    "scent": null,
+    "sku": "CRC-5L-055",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "1L",
+        "price": 0,
+        "stock": 50
+      },
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "easy-gloss-car-polish",
+    "name": "Easy Gloss Car Polish",
+    "cat": "car",
+    "sub": "All-In-One Car Polish & Paint Enhancer",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/easy-gloss-car-polish.jpg",
+    "benefits": [
+      "Deep gloss & shine finish",
+      "Removes light marks & haze",
+      "Easy to apply & buff off",
+      "Suitable for all paint colours"
+    ],
+    "desc": "An easy-to-use car polish that enhances paint gloss and clarity in one step — removing light marks, haze and dullness while leaving a brilliant deep shine on all paint types.",
+    "scent": null,
+    "sku": "EGP-5L-056",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "1L",
+        "price": 0,
+        "stock": 50
+      },
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "claybar",
+    "name": "Claybar",
+    "cat": "car",
+    "sub": "Paint Decontamination & Surface Prep Kit",
+    "price": 0,
+    "was": null,
+    "size": "Kit",
+    "rating": 4.9,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/claybar.jpg",
+    "benefits": [
+      "Removes bonded surface contaminants",
+      "Leaves paint slick & smooth",
+      "Essential pre-polish step",
+      "Includes clay, lubricant & cloths"
+    ],
+    "desc": "A professional clay bar decontamination kit that removes bonded contaminants, industrial fallout and rail dust from paintwork — leaving surfaces perfectly smooth and ready for polishing or ceramic coating.",
+    "scent": null,
+    "sku": "CLB-KIT-057",
+    "stock": 30,
+    "lowStockThreshold": 5,
+    "status": "active",
+    "variants": [
+      {
+        "name": "Kit",
+        "price": 0,
+        "stock": 30
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "quick-detailer",
+    "name": "Quick Detailer",
+    "cat": "car",
+    "sub": "Fast Spray Detailer & Surface Enhancer",
+    "price": 0,
+    "was": null,
+    "size": "500ml",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/quick-detailer.jpg",
+    "benefits": [
+      "Quick spray & wipe shine",
+      "Removes light dust & fingerprints",
+      "Adds gloss & slickness",
+      "Safe on paint, glass & trim"
+    ],
+    "desc": "A fast-acting spray detailer that removes light dust, fingerprints and smears with a simple spray and wipe — enhancing gloss and adding a protective slickness to all exterior surfaces.",
+    "scent": null,
+    "sku": "QDT-500-058",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "500ml",
+        "price": 0,
+        "stock": 50
+      },
+      {
+        "name": "1L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "dura-glaze",
+    "name": "Dura Glaze",
+    "cat": "car",
+    "sub": "Long-Lasting Paint Glaze & Sealant",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/dura-glaze.jpg",
+    "benefits": [
+      "Deep gloss & wet-look finish",
+      "Long-lasting paint protection",
+      "Fills fine scratches & swirls",
+      "Easy wipe-on wipe-off application"
+    ],
+    "desc": "A durable paint glaze and sealant that fills fine scratches, enhances depth and delivers a long-lasting wet-look gloss finish — protecting paintwork from UV, water and environmental contaminants.",
+    "scent": null,
+    "sku": "DGZ-5L-059",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "1L",
+        "price": 0,
+        "stock": 50
+      },
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "medium-cut",
+    "name": "Medium-Cut",
+    "cat": "car",
+    "sub": "Medium Cut Compound for Paint Correction",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/medium-cut.jpg",
+    "benefits": [
+      "Removes moderate scratches & oxidation",
+      "Levels paint surface effectively",
+      "For machine & hand application",
+      "Prepares paint for finishing polish"
+    ],
+    "desc": "A medium-cut polishing compound formulated to remove moderate scratches, oxidation and paint defects — levelling the surface and preparing it for a fine finishing polish and final protection step.",
+    "scent": null,
+    "sku": "MDC-5L-060",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "1L",
+        "price": 0,
+        "stock": 50
+      },
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "high-cut",
+    "name": "High-Cut",
+    "cat": "car",
+    "sub": "Heavy Cutting Compound for Severe Paint Defects",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/high-cut.jpg",
+    "benefits": [
+      "Heavy cutting power",
+      "Removes deep scratches & sanding marks",
+      "Restores neglected paintwork",
+      "For machine polisher use"
+    ],
+    "desc": "A high-cut compound with aggressive cutting power designed to remove deep scratches, heavy oxidation and sanding marks — restoring severely neglected paintwork and preparing it for medium and fine polishing stages.",
+    "scent": null,
+    "sku": "HGC-5L-061",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "1L",
+        "price": 0,
+        "stock": 50
+      },
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "burnishing-compound",
+    "name": "Burnishing Compound",
+    "cat": "car",
+    "sub": "Fine Burnishing Compound for High Gloss Finish",
+    "price": 0,
+    "was": null,
+    "size": "500g",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/burnishing-compound.jpg",
+    "benefits": [
+      "Ultra-fine finishing compound",
+      "High-gloss mirror finish",
+      "Removes fine haze & buffer marks",
+      "For final polishing stage"
+    ],
+    "desc": "An ultra-fine burnishing compound designed for the final polishing stage — removing light haze, fine buffer marks and micro-scratches to deliver a brilliant mirror-like gloss finish.",
+    "scent": null,
+    "sku": "BNC-500-062",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "500g",
+        "price": 0,
+        "stock": 50
+      },
+      {
+        "name": "1kg",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1749427200000,
+    "updatedAt": 1749427200000
+  },
+  {
+    "id": "engine-cleaner-waterbased",
+    "name": "Engine Cleaner (Waterbased)",
+    "cat": "car-exterior",
+    "sub": "Water-Based Engine Degreasing & Cleaning Solution",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/engine-cleaner-waterbased.jpg",
+    "benefits": [
+      "Water-based & safe to use",
+      "Removes grease, oil & grime from engines",
+      "Rinses off cleanly with water",
+      "Safe on rubber & plastic components"
+    ],
+    "desc": "A water-based engine cleaner formulated to degrease and clean engine bays and components — effectively removing grease, oil and grime while being safe on rubber seals, plastic and painted surfaces.",
+    "scent": null,
+    "sku": "ECW-5L-063",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1781136000000,
+    "updatedAt": 1781136000000
+  },
+  {
+    "id": "tar-remover",
+    "name": "Tar Remover",
+    "cat": "car-exterior",
+    "sub": "Fast-Acting Tar, Sap & Road Grime Remover",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/tar-remover.jpg",
+    "benefits": [
+      "Dissolves tar & bitumen on contact",
+      "Removes tree sap & road grime",
+      "Safe on paintwork & clearcoat",
+      "No abrasive scrubbing needed"
+    ],
+    "desc": "A fast-acting tar and road grime remover that dissolves bitumen deposits, tree sap and stubborn road contamination from vehicle paintwork — leaving surfaces clean without abrasive scrubbing.",
+    "scent": null,
+    "sku": "TAR-5L-064",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1781136000000,
+    "updatedAt": 1781136000000
+  },
+  {
+    "id": "auto-spot-cleaner",
+    "name": "Auto Spot Cleaner",
+    "cat": "car-exterior",
+    "sub": "Targeted Spot & Stain Remover for Vehicles",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/auto-spot-cleaner.jpg",
+    "benefits": [
+      "Targets stubborn spots & stains",
+      "Safe on all exterior surfaces",
+      "Quick-acting formula",
+      "Leaves a clean, streak-free finish"
+    ],
+    "desc": "A targeted spot and stain cleaner formulated for vehicle exterior surfaces — quickly removing stubborn marks, stains and localised contamination without damaging paintwork or clearcoat.",
+    "scent": null,
+    "sku": "ASC-5L-065",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1781136000000,
+    "updatedAt": 1781136000000
+  },
+  {
+    "id": "bumper-black",
+    "name": "Bumper Black",
+    "cat": "car-exterior",
+    "sub": "Deep Black Bumper & Plastic Restorer",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/bumper-black.jpg",
+    "benefits": [
+      "Restores deep black finish to bumpers",
+      "Revives faded plastic & rubber trim",
+      "Long-lasting black coating",
+      "UV-resistant protection"
+    ],
+    "desc": "A concentrated black restorer formulated to revive faded bumpers, plastic trim and rubber components — delivering a deep, lasting black finish with UV protection against future fading.",
+    "scent": null,
+    "sku": "BMB-5L-066",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1781136000000,
+    "updatedAt": 1781136000000
+  },
+  {
+    "id": "chassis-black-water-based",
+    "name": "Chassis Black (Water Based)",
+    "cat": "car-exterior",
+    "sub": "Water-Based Black Chassis Protection Coating",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/chassis-black-water-based.jpg",
+    "benefits": [
+      "Water-based & low odour",
+      "Protects chassis from rust & corrosion",
+      "Durable black coating finish",
+      "Easy water clean-up"
+    ],
+    "desc": "A water-based black chassis protection coating that seals and protects underbody metal surfaces against rust, corrosion and road debris — delivering a durable matt-black finish with low odour and easy clean-up.",
+    "scent": null,
+    "sku": "CBW-5L-067",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1781136000000,
+    "updatedAt": 1781136000000
+  },
+  {
+    "id": "concentrated-cleaner-degreaser",
+    "name": "Concentrated Cleaner & Degreaser",
+    "cat": "car-exterior",
+    "sub": "Multi-Purpose Concentrated Vehicle Cleaner",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/concentrated-cleaner-degreaser.jpg",
+    "benefits": [
+      "Highly concentrated — dilutes far",
+      "Removes grease, oil & traffic film",
+      "For engine bays, wheels & exteriors",
+      "Biodegradable formula"
+    ],
+    "desc": "A highly concentrated multi-purpose cleaner and degreaser designed for vehicle surfaces — dilutable for varying cleaning strengths, effective on engine bays, wheels, tyres and all exterior surfaces.",
+    "scent": null,
+    "sku": "CCD-5L-068",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1781136000000,
+    "updatedAt": 1781136000000
+  },
+  {
+    "id": "de-wax",
+    "name": "De-Wax",
+    "cat": "car-exterior",
+    "sub": "Wax, Silicone & Polish Residue Remover",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/de-wax.jpg",
+    "benefits": [
+      "Strips wax & silicone residue",
+      "Prepares surface for fresh wax or polish",
+      "Leaves a clean, bare paintwork surface",
+      "Safe on all automotive finishes"
+    ],
+    "desc": "A specialist de-wax solution formulated to strip wax, silicone and polish residue from vehicle paintwork — preparing the surface for a fresh application of wax, sealant or coating.",
+    "scent": null,
+    "sku": "DWX-5L-069",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1781136000000,
+    "updatedAt": 1781136000000
+  },
+  {
+    "id": "engine-cleaner-solvent-based",
+    "name": "Engine Cleaner (Solvent Based)",
+    "cat": "car-exterior",
+    "sub": "Solvent-Based Heavy-Duty Engine Degreaser",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/engine-cleaner-solvent-based.jpg",
+    "benefits": [
+      "Powerful solvent-based degreasing",
+      "Penetrates heavy grease & oil build-up",
+      "Fast-acting on engine components",
+      "Evaporates cleanly after application"
+    ],
+    "desc": "A heavy-duty solvent-based engine cleaner that penetrates and dissolves stubborn grease, oil and carbon deposits from engine components — fast-acting and effective on even the most heavily soiled engine bays.",
+    "scent": null,
+    "sku": "ECS-5L-070",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1781136000000,
+    "updatedAt": 1781136000000
+  },
+  {
+    "id": "car-perfumes",
+    "name": "Perfumes | Cherry, Lavender, Floral, Nucar, Apple",
+    "cat": "car",
+    "sub": "Multi-Scent Car Interior Air Freshener",
+    "price": 0,
+    "was": null,
+    "size": "100ml",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/car-perfumes.jpg",
+    "benefits": [
+      "5 fragrance options available",
+      "Long-lasting fresh scent",
+      "Eliminates interior odours",
+      "For all vehicle interiors"
+    ],
+    "desc": "A range of premium car interior perfumes available in five popular fragrances — Cherry, Lavender, Floral, Nucar and Apple — designed to eliminate odours and leave your vehicle smelling fresh and inviting.",
+    "scent": "Cherry / Lavender / Floral / Nucar / Apple",
+    "sku": "CPF-100-071",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "100ml",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1780963200000,
+    "updatedAt": 1780963200000
+  },
+  {
+    "id": "quick-dry-upholstery-carpet-shampoo",
+    "name": "Quick Dry Upholstery & Carpet Shampoo",
+    "cat": "car",
+    "sub": "Fast-Drying Interior Fabric & Carpet Cleaner",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/quick-dry-upholstery-carpet-shampoo.jpg",
+    "benefits": [
+      "Quick-dry formula",
+      "Lifts stains from fabric & carpet",
+      "Leaves no sticky residue",
+      "Fresh clean scent"
+    ],
+    "desc": "A fast-drying upholstery and carpet shampoo formulated to remove stains, dirt and odours from car seats, carpets and fabric surfaces — drying quickly without leaving a sticky or stiff residue.",
+    "scent": "Fresh Clean",
+    "sku": "UCS-5L-072",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1780963200000,
+    "updatedAt": 1780963200000
+  },
+  {
+    "id": "window-cleaner",
+    "name": "Window Cleaner",
+    "cat": "car",
+    "sub": "Streak-Free Automotive Glass Cleaner",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/window-cleaner.jpg",
+    "benefits": [
+      "Streak-free clear finish",
+      "Removes grease, grime & smears",
+      "For windscreens & all auto glass",
+      "Fast-drying formula"
+    ],
+    "desc": "A streak-free automotive window and glass cleaner formulated to cut through grease, grime and road film — leaving windscreens, mirrors and all vehicle glass crystal clear with no streaks or smears.",
+    "scent": null,
+    "sku": "WCL-5L-073",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1780963200000,
+    "updatedAt": 1780963200000
+  },
+  {
+    "id": "auto-gloss",
+    "name": "Auto Gloss",
+    "cat": "car",
+    "sub": "High-Gloss Interior & Exterior Shine Dressing",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/auto-gloss.jpg",
+    "benefits": [
+      "Deep gloss finish",
+      "Shines dashboards, plastics & trim",
+      "Repels dust & dirt",
+      "Long-lasting protection"
+    ],
+    "desc": "A high-gloss dressing formulated to restore shine and protect interior and exterior plastic trim, dashboards and rubber surfaces — repelling dust while delivering a rich, long-lasting gloss finish.",
+    "scent": null,
+    "sku": "AGL-5L-074",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1780963200000,
+    "updatedAt": 1780963200000
+  },
+  {
+    "id": "dashboard-polish",
+    "name": "Dashboard Polish",
+    "cat": "car",
+    "sub": "Interior Plastic & Dashboard Polish",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/dashboard-polish.jpg",
+    "benefits": [
+      "Restores faded dashboard plastics",
+      "UV protection formula",
+      "Leaves a clean satin finish",
+      "For dashboards, door panels & trim"
+    ],
+    "desc": "A dashboard polish formulated to restore, protect and shine interior plastics and dashboard surfaces — providing UV protection to prevent fading and cracking while leaving a clean, satin finish.",
+    "scent": "Fresh Clean",
+    "sku": "DBP-5L-075",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1780963200000,
+    "updatedAt": 1780963200000
+  },
+  {
+    "id": "dashboard-polish-blue",
+    "name": "Dashboard Polish (Blue)",
+    "cat": "car",
+    "sub": "Blue Formula Interior Dashboard Dressing",
+    "price": 0,
+    "was": null,
+    "size": "5L",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/dashboard-polish-blue.jpg",
+    "benefits": [
+      "Blue formula for rich finish",
+      "Shines & protects plastics",
+      "Prevents fading & cracking",
+      "Long-lasting fresh fragrance"
+    ],
+    "desc": "A blue-formula dashboard dressing that shines and protects interior plastic surfaces and trim — delivering a rich, clean finish with long-lasting fragrance and protection against UV fading.",
+    "scent": "Ocean Fresh",
+    "sku": "DBP-5L-076",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "5L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1780963200000,
+    "updatedAt": 1780963200000
+  },
+  {
+    "id": "leather-conditioner-cream",
+    "name": "Leather Conditioner Cream",
+    "cat": "car",
+    "sub": "Nourishing Leather Care & Conditioning Cream",
+    "price": 0,
+    "was": null,
+    "size": "500ml",
+    "rating": 4.8,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/leather-conditioner-cream.jpg",
+    "benefits": [
+      "Nourishes & conditions leather",
+      "Prevents cracking & drying",
+      "Restores suppleness & colour",
+      "For car seats, steering wheels & trim"
+    ],
+    "desc": "A nourishing leather conditioning cream formulated to deeply moisturise and restore leather car seats, steering wheels and trim — preventing cracking, fading and drying while leaving leather supple and protected.",
+    "scent": null,
+    "sku": "LCC-500-077",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "500ml",
+        "price": 0,
+        "stock": 50
+      },
+      {
+        "name": "1L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1780963200000,
+    "updatedAt": 1780963200000
+  },
+  {
+    "id": "ultimate-4in1-leather-treatment",
+    "name": "Ultimate 4in1 Leather Treatment *Premium*",
+    "cat": "car",
+    "sub": "Premium 4-in-1 Leather Clean, Condition & Protect",
+    "price": 0,
+    "was": null,
+    "size": "500ml",
+    "rating": 4.9,
+    "reviews": 0,
+    "badge": "Premium",
+    "img": "assets/products/ultimate-4in1-leather-treatment.jpg",
+    "benefits": [
+      "Cleans, conditions, protects & shines",
+      "Premium 4-in-1 formula",
+      "Prevents UV fading & cracking",
+      "For all leather surfaces"
+    ],
+    "desc": "A premium 4-in-1 leather treatment that cleans, conditions, protects and shines in a single application — delivering professional-grade leather care for car seats, steering wheels and all interior leather surfaces.",
+    "scent": null,
+    "sku": "LTR-500-078",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "500ml",
+        "price": 0,
+        "stock": 50
+      },
+      {
+        "name": "1L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1780963200000,
+    "updatedAt": 1780963200000
+  },
+  {
+    "id": "leather-cleaner",
+    "name": "Leather Cleaner",
+    "cat": "car",
+    "sub": "Gentle Deep-Clean Leather Cleaning Solution",
+    "price": 0,
+    "was": null,
+    "size": "500ml",
+    "rating": 4.7,
+    "reviews": 0,
+    "badge": null,
+    "img": "assets/products/leather-cleaner.jpg",
+    "benefits": [
+      "Deep cleans leather surfaces",
+      "Removes dirt, oils & stains",
+      "Safe on all leather types",
+      "Prepares leather for conditioning"
+    ],
+    "desc": "A gentle yet effective leather cleaner formulated to remove dirt, body oils, stains and grime from car leather seats, door panels and trim — preparing the surface for conditioning without stripping natural oils.",
+    "scent": null,
+    "sku": "LCL-500-079",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "status": "active",
+    "variants": [
+      {
+        "name": "500ml",
+        "price": 0,
+        "stock": 50
+      },
+      {
+        "name": "1L",
+        "price": 0,
+        "stock": 50
+      }
+    ],
+    "createdAt": 1780963200000,
+    "updatedAt": 1780963200000
+  }
+]

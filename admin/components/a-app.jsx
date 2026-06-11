@@ -254,6 +254,68 @@ function SettingsPage() {
     showToast('Local cache cleared. Reload to resync from server.');
   }
 
+  async function handleRestoreFromCache() {
+    let localProducts = null;
+    let localOrders = null;
+    
+    try {
+      const rawProd = localStorage.getItem('ab_products') || localStorage.getItem('ab_admin_products_v2');
+      if (rawProd) {
+        const parsed = JSON.parse(rawProd);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          localProducts = parsed;
+        }
+      }
+    } catch (err) {}
+
+    try {
+      const rawOrd = localStorage.getItem('ab_admin_orders_v2');
+      if (rawOrd) {
+        const parsed = JSON.parse(rawOrd);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          localOrders = parsed;
+        }
+      }
+    } catch (err) {}
+
+    if (!localProducts && !localOrders) {
+      showToast('No products or orders found in your browser cache.', 'danger');
+      return;
+    }
+
+    const confirmMsg = `Found ${localProducts ? localProducts.length : 0} products and ${localOrders ? localOrders.length : 0} orders in your browser cache. Do you want to restore them to the database?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setSaving(true);
+    try {
+      const res = await fetch(`${window.API_BASE || ''}/api/restore`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.token}`
+        },
+        body: JSON.stringify({ 
+          products: localProducts, 
+          orders: localOrders 
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || 'Failed to restore database.', 'danger');
+      } else {
+        showToast('Database successfully restored from cache! Reloading...', 'success');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    } catch (err) {
+      showToast('Error: ' + err.message, 'danger');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+
   return (
     <div className="max-w-2xl mx-auto space-y-5">
       <AdminToast message={toast.msg} type={toast.type} visible={toast.visible}/>
@@ -355,9 +417,13 @@ function SettingsPage() {
 
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
             <h3 className="text-sm font-700 text-slate-700 mb-1">Data Management</h3>
-            <p className="text-xs text-slate-400 mb-4">Products and orders are stored in Vercel KV. Clear the local browser cache if you need to force a resync.</p>
-            <Btn variant="danger" size="sm" onClick={handleResetData}>Clear Local Cache</Btn>
+            <p className="text-xs text-slate-400 mb-4">Products and orders are stored in Vercel KV. Clear the local browser cache if you need to force a resync, or restore the database from your browser's local cache if your cloud database was reset.</p>
+            <div className="flex flex-wrap gap-2">
+              <Btn variant="danger" size="sm" onClick={handleResetData}>Clear Local Cache</Btn>
+              <Btn variant="primary" size="sm" onClick={handleRestoreFromCache}>Restore Database from Browser Cache</Btn>
+            </div>
           </div>
+
 
           <div className="bg-green-50 border border-green-200 rounded-2xl p-5">
             <div className="flex gap-2 mb-2"><Icon.Check/><span className="text-sm font-700 text-green-800">Backend Connected</span></div>

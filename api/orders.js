@@ -764,7 +764,15 @@ module.exports = async function handler(req, res) {
       if (trackingNumber !== undefined) patch.trackingNumber = String(trackingNumber).slice(0, 80);
       if (carrier        !== undefined) patch.carrier        = String(carrier).slice(0, 80);
       if (trackingLink   !== undefined) patch.trackingLink   = String(trackingLink).slice(0, 500);
-      if (dispatchDate   !== undefined) patch.dispatchDate   = dispatchDate ? new Date(dispatchDate).getTime() : null;
+      if (dispatchDate   !== undefined) {
+        if (dispatchDate) {
+          const parsedDate = new Date(dispatchDate);
+          patch.dispatchDate = isNaN(parsedDate.getTime()) ? null : parsedDate.getTime();
+        } else {
+          patch.dispatchDate = null;
+        }
+      }
+
 
       if (paymentStatus !== undefined) {
         const VALID_PAY_STATUS = [

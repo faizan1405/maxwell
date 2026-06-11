@@ -406,18 +406,39 @@ function OrderDetail({ order, saving, onClose, onOrderStatusChange, onPayStatusC
   const [confirmDlg,  setConfirmDlg]  = React.useState(null); /* { type, title, message, noteLabel, noteRequired, confirmLabel, confirmVariant } */
   const [activeTab,   setActiveTab]   = React.useState('details');
 
+  const getSafeISODate = (val) => {
+    if (!val) return '';
+    try {
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0];
+    } catch {
+      return '';
+    }
+  };
+
+  const getSafeLocalDate = (val) => {
+    if (!val) return '';
+    try {
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-ZA');
+    } catch {
+      return '';
+    }
+  };
+
   React.useEffect(() => {
     if (order) {
       setNote(order.notes || '');
       setTrackNum(order.trackingNumber || '');
       setCarrier(order.carrier || '');
       setTrackLink(order.trackingLink || '');
-      setDispatchDate(order.dispatchDate ? new Date(order.dispatchDate).toISOString().split('T')[0] : '');
+      setDispatchDate(getSafeISODate(order.dispatchDate));
       setNoteEdit(false);
       setTrackEdit(false);
       setActiveTab('details');
     }
   }, [order?.id]);
+
 
   if (!order) return null;
 
@@ -648,7 +669,7 @@ function OrderDetail({ order, saving, onClose, onOrderStatusChange, onPayStatusC
                     </div>
                   </div>
                   <div className="flex gap-2 justify-end mt-2">
-                    <Btn variant="ghost" size="sm" onClick={() => { setTrackEdit(false); setTrackNum(order.trackingNumber || ''); setCarrier(order.carrier || ''); setTrackLink(order.trackingLink || ''); setDispatchDate(order.dispatchDate ? new Date(order.dispatchDate).toISOString().split('T')[0] : ''); }}>Cancel</Btn>
+                    <Btn variant="ghost" size="sm" onClick={() => { setTrackEdit(false); setTrackNum(order.trackingNumber || ''); setCarrier(order.carrier || ''); setTrackLink(order.trackingLink || ''); setDispatchDate(getSafeISODate(order.dispatchDate)); }}>Cancel</Btn>
                     <Btn size="sm" onClick={saveTracking}>Save</Btn>
                   </div>
                 </div>
@@ -658,8 +679,9 @@ function OrderDetail({ order, saving, onClose, onOrderStatusChange, onPayStatusC
                     <>
                       <p><span className="font-600">{order.carrier || 'Carrier'}</span> · {order.trackingNumber}</p>
                       {order.trackingLink && <p><a href={order.trackingLink} target="_blank" rel="noreferrer" className="text-cobalt hover:underline text-xs">Track Package ↗</a></p>}
-                      {order.dispatchDate && <p className="text-xs text-slate-500">Dispatched: {new Date(order.dispatchDate).toLocaleDateString('en-ZA')}</p>}
+                      {order.dispatchDate && getSafeLocalDate(order.dispatchDate) && <p className="text-xs text-slate-500">Dispatched: {getSafeLocalDate(order.dispatchDate)}</p>}
                     </>
+
                   ) : <span className="italic text-slate-400">No tracking info</span>}
                 </div>
               )}
