@@ -684,7 +684,7 @@ module.exports = async function handler(req, res) {
     let body = req.body;
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
 
-    const { id, status, orderStatus, notes, internalNotes, paymentStatus, trackingNumber, carrier, statusNote } = body;
+    const { id, status, orderStatus, notes, internalNotes, paymentStatus, trackingNumber, carrier, trackingLink, dispatchDate, statusNote } = body;
     if (!id) return res.status(400).json({ error: 'Missing order id' });
 
     const orders = await getOrders();
@@ -763,6 +763,8 @@ module.exports = async function handler(req, res) {
       }
       if (trackingNumber !== undefined) patch.trackingNumber = String(trackingNumber).slice(0, 80);
       if (carrier        !== undefined) patch.carrier        = String(carrier).slice(0, 80);
+      if (trackingLink   !== undefined) patch.trackingLink   = String(trackingLink).slice(0, 500);
+      if (dispatchDate   !== undefined) patch.dispatchDate   = dispatchDate ? new Date(dispatchDate).getTime() : null;
 
       if (paymentStatus !== undefined) {
         const VALID_PAY_STATUS = [

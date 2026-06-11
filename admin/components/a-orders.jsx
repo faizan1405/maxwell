@@ -393,6 +393,8 @@ function OrderDetail({ order, onClose, onOrderStatusChange, onPayStatusChange, o
   const [trackEdit,   setTrackEdit]   = React.useState(false);
   const [trackNum,    setTrackNum]    = React.useState('');
   const [carrier,     setCarrier]     = React.useState('');
+  const [trackLink,   setTrackLink]   = React.useState('');
+  const [dispatchDate, setDispatchDate] = React.useState('');
   const [internalNote, setInternalNote] = React.useState('');
   const [confirmDlg,  setConfirmDlg]  = React.useState(null); /* { type, title, message, noteLabel, noteRequired, confirmLabel, confirmVariant } */
   const [activeTab,   setActiveTab]   = React.useState('details');
@@ -402,6 +404,8 @@ function OrderDetail({ order, onClose, onOrderStatusChange, onPayStatusChange, o
       setNote(order.notes || '');
       setTrackNum(order.trackingNumber || '');
       setCarrier(order.carrier || '');
+      setTrackLink(order.trackingLink || '');
+      setDispatchDate(order.dispatchDate ? new Date(order.dispatchDate).toISOString().split('T')[0] : '');
       setNoteEdit(false);
       setTrackEdit(false);
       setActiveTab('details');
@@ -420,7 +424,7 @@ function OrderDetail({ order, onClose, onOrderStatusChange, onPayStatusChange, o
   const codFee      = order.codFee || 0;
 
   function saveNote() { onNoteChange(order.id, note); setNoteEdit(false); }
-  function saveTracking() { onTrackingChange(order.id, trackNum.trim(), carrier.trim()); setTrackEdit(false); }
+  function saveTracking() { onTrackingChange(order.id, trackNum.trim(), carrier.trim(), trackLink.trim(), dispatchDate); setTrackEdit(false); }
 
   function handleEftAction(type) {
     const configs = {
@@ -458,6 +462,9 @@ function OrderDetail({ order, onClose, onOrderStatusChange, onPayStatusChange, o
     } else if (dlg.type === 'cashCollected') {
       onPayStatusChange(order.id, 'Paid', 'Cash collected on delivery');
     } else if (dlg.type === 'cancel') {
+      if (noteVal) {
+        onInternalNoteAdd(order.id, "Cancellation reason: " + noteVal);
+      }
       onOrderStatusChange(order.id, 'Cancelled');
     }
   }
@@ -476,7 +483,7 @@ function OrderDetail({ order, onClose, onOrderStatusChange, onPayStatusChange, o
           <div className="flex items-center gap-2 w-full flex-wrap">
             <div className="flex-1 flex items-center gap-2 flex-wrap">
               {isAdmin && !isCancelled && !isDelivered && (
-                <Btn variant="ghost" size="sm" onClick={() => setConfirmDlg({ type:'cancel', title:'Cancel Order?', message:'This cannot be undone.', confirmLabel:'Cancel Order', confirmVariant:'danger', note:false })}>
+                <Btn variant="ghost" size="sm" onClick={() => setConfirmDlg({ type:'cancel', title:'Cancel Order?', message:'This cannot be undone.', confirmLabel:'Cancel Order', confirmVariant:'danger', note:true, noteLabel:'Reason for cancellation', noteRequired:false })}>
                   Cancel Order
                 </Btn>
               )}
@@ -588,18 +595,31 @@ function OrderDetail({ order, onClose, onOrderStatusChange, onPayStatusChange, o
                       <input value={carrier} onChange={e => setCarrier(e.target.value)} placeholder="e.g. Courier Guy"
                         className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-cobalt focus:ring-2 focus:ring-cobalt/20"/>
                     </div>
+                    <div>
+                      <label className="block text-[11px] font-600 text-slate-500 mb-1">Tracking Link</label>
+                      <input value={trackLink} onChange={e => setTrackLink(e.target.value)} placeholder="https://"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-cobalt focus:ring-2 focus:ring-cobalt/20"/>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-600 text-slate-500 mb-1">Dispatch Date</label>
+                      <input type="date" value={dispatchDate} onChange={e => setDispatchDate(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-cobalt focus:ring-2 focus:ring-cobalt/20"/>
+                    </div>
                   </div>
-                  <div className="flex gap-2 justify-end">
-                    <Btn variant="ghost" size="sm" onClick={() => { setTrackEdit(false); setTrackNum(order.trackingNumber || ''); setCarrier(order.carrier || ''); }}>Cancel</Btn>
+                  <div className="flex gap-2 justify-end mt-2">
+                    <Btn variant="ghost" size="sm" onClick={() => { setTrackEdit(false); setTrackNum(order.trackingNumber || ''); setCarrier(order.carrier || ''); setTrackLink(order.trackingLink || ''); setDispatchDate(order.dispatchDate ? new Date(order.dispatchDate).toISOString().split('T')[0] : ''); }}>Cancel</Btn>
                     <Btn size="sm" onClick={saveTracking}>Save</Btn>
                   </div>
                 </div>
               ) : (
-                <div className="bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-600 min-h-[40px]">
-                  {order.trackingNumber
-                    ? <span><span className="font-600">{order.carrier || 'Carrier'}</span> · {order.trackingNumber}</span>
-                    : <span className="italic text-slate-300">No tracking info</span>
-                  }
+                <div className="bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-600 space-y-1">
+                  {order.trackingNumber ? (
+                    <>
+                      <p><span className="font-600">{order.carrier || 'Carrier'}</span> · {order.trackingNumber}</p>
+                      {order.trackingLink && <p><a href={order.trackingLink} target="_blank" rel="noreferrer" className="text-cobalt hover:underline text-xs">Track Package ↗</a></p>}
+                      {order.dispatchDate && <p className="text-xs text-slate-500">Dispatched: {new Date(order.dispatchDate).toLocaleDateString('en-ZA')}</p>}
+                    </>
+                  ) : <span className="italic text-slate-400">No tracking info</span>}
                 </div>
               )}
             </div>
@@ -726,6 +746,9 @@ function OrdersPage() {
   const [orderStatusFilter, setOrderStatusFilter] = React.useState('all');
   const [payStatusFilter,   setPayStatusFilter]   = React.useState('all');
   const [payMethodFilter,   setPayMethodFilter]   = React.useState('all');
+  const [dateRangeFilter,   setDateRangeFilter]   = React.useState('all');
+  const [customStart,       setCustomStart]       = React.useState('');
+  const [customEnd,         setCustomEnd]         = React.useState('');
   const [search,            setSearch]            = React.useState('');
   const [sort,              setSort]              = React.useState('newest');
   const [page,              setPage]              = React.useState(1);
@@ -752,6 +775,28 @@ function OrdersPage() {
 
   const filtered = React.useMemo(() => {
     let list = [...orders];
+
+    if (dateRangeFilter !== 'all') {
+      const now = new Date();
+      let start = new Date(0);
+      let end = new Date();
+      if (dateRangeFilter === 'today') {
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (dateRangeFilter === '7d') {
+        start = new Date(now); start.setDate(now.getDate() - 6); start.setHours(0,0,0,0);
+      } else if (dateRangeFilter === '30d') {
+        start = new Date(now); start.setDate(now.getDate() - 29); start.setHours(0,0,0,0);
+      } else if (dateRangeFilter === 'custom') {
+        start = customStart ? new Date(customStart) : new Date(0);
+        end = customEnd ? new Date(customEnd) : new Date();
+        if (customEnd) end.setHours(23, 59, 59, 999);
+      }
+      list = list.filter(o => {
+        const d = new Date(o.createdAt);
+        return d >= start && d <= end;
+      });
+    }
+
     if (orderStatusFilter !== 'all') list = list.filter(o => effectiveOrderStatus(o) === orderStatusFilter);
     if (payStatusFilter   !== 'all') list = list.filter(o => effectivePayStatus(o)   === payStatusFilter);
     if (payMethodFilter   !== 'all') list = list.filter(o => effectivePayMethod(o).toUpperCase() === payMethodFilter.toUpperCase());
@@ -760,12 +805,13 @@ function OrdersPage() {
       list = list.filter(o =>
         (o.orderNumber || '').toLowerCase().includes(q) ||
         (o.customer?.name  || '').toLowerCase().includes(q) ||
-        (o.customer?.email || '').toLowerCase().includes(q)
+        (o.customer?.email || '').toLowerCase().includes(q) ||
+        (o.customer?.phone || '').toLowerCase().includes(q)
       );
     }
     list.sort((a, b) => sort === 'oldest' ? a.createdAt - b.createdAt : b.createdAt - a.createdAt);
     return list;
-  }, [orders, orderStatusFilter, payStatusFilter, payMethodFilter, search, sort]);
+  }, [orders, orderStatusFilter, payStatusFilter, payMethodFilter, dateRangeFilter, customStart, customEnd, search, sort]);
 
   const paged = filtered.slice((page - 1) * ORDERS_PER_PAGE, page * ORDERS_PER_PAGE);
   React.useEffect(() => setPage(1), [orderStatusFilter, payStatusFilter, payMethodFilter, search, sort]);
@@ -852,9 +898,9 @@ function OrdersPage() {
     setViewing(v => v ? { ...v, notes } : null);
   }
 
-  function handleTrackingChange(id, trackingNumber, carrier) {
-    updateTracking(id, trackingNumber, carrier);
-    setViewing(v => v ? { ...v, trackingNumber, carrier } : null);
+  function handleTrackingChange(id, trackingNumber, carrier, trackingLink, dispatchDate) {
+    updateTracking(id, trackingNumber, carrier, trackingLink, dispatchDate);
+    setViewing(v => v ? { ...v, trackingNumber, carrier, trackingLink, dispatchDate } : null);
     showToast('Tracking info saved');
   }
 
@@ -1012,7 +1058,22 @@ function OrdersPage() {
 
       {/* Filters */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-wrap gap-3 items-center">
-        <SearchInput value={search} onChange={setSearch} placeholder="Order # or customer…"/>
+        <SearchInput value={search} onChange={setSearch} placeholder="Order #, name, phone…"/>
+        <select value={dateRangeFilter} onChange={e => setDateRangeFilter(e.target.value)}
+          className="px-3 py-2 rounded-lg border border-slate-200 text-sm outline-none focus:border-cobalt bg-white">
+          <option value="all">All Time</option>
+          <option value="today">Today</option>
+          <option value="7d">Last 7 Days</option>
+          <option value="30d">Last 30 Days</option>
+          <option value="custom">Custom Range</option>
+        </select>
+        {dateRangeFilter === 'custom' && (
+          <div className="flex items-center gap-2">
+            <input type="date" value={customStart} onChange={e=>setCustomStart(e.target.value)} className="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none"/>
+            <span className="text-slate-400">to</span>
+            <input type="date" value={customEnd} onChange={e=>setCustomEnd(e.target.value)} className="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none"/>
+          </div>
+        )}
         <select value={payMethodFilter} onChange={e => setPayMethodFilter(e.target.value)}
           className="px-3 py-2 rounded-lg border border-slate-200 text-sm outline-none focus:border-cobalt bg-white">
           {PAY_METHOD_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}

@@ -320,13 +320,13 @@ function AdminProvider({ children }) {
     }
   }, [session]);
 
-  const updateTracking = useCallback(async (id, trackingNumber, carrier) => {
-    setOrders(prev => prev.map(o => o.id===id ? {...o, trackingNumber, carrier, updatedAt:Date.now()} : o));
+  const updateTracking = useCallback(async (id, trackingNumber, carrier, trackingLink, dispatchDate) => {
+    setOrders(prev => prev.map(o => o.id===id ? {...o, trackingNumber, carrier, trackingLink, dispatchDate, updatedAt:Date.now()} : o));
     try {
       await fetch(`${API_BASE}/api/orders`, {
         method: 'PATCH',
         headers: apiHeaders(session?.token),
-        body: JSON.stringify({ id, trackingNumber, carrier }),
+        body: JSON.stringify({ id, trackingNumber, carrier, trackingLink, dispatchDate }),
       });
     } catch {
       fetchOrders(session?.token);
