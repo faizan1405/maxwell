@@ -25,10 +25,9 @@ const PAY_STATUS_OPTIONS = [
   { value:'all',                            label:'All Payments' },
   { value:'Cash Payment Pending',           label:'Cash Payment Pending' },
   { value:'Awaiting EFT Payment',           label:'Awaiting EFT Payment' },
-  { value:'Proof of Payment Submitted',     label:'Proof Submitted' },
-  { value:'Payment Verification Required',  label:'Verification Required' },
-  { value:'Paid',                           label:'Paid' },
-  { value:'Payment Rejected',               label:'Payment Rejected' },
+  { value:'Proof of Payment Submitted',     label:'Pending Verification' },
+  { value:'Paid',                           label:'Approved' },
+  { value:'Payment Rejected',               label:'Rejected' },
   { value:'Corrected Proof Requested',      label:'Corrected Proof Requested' },
   { value:'Refunded',                       label:'Refunded' },
   { value:'Cancelled',                      label:'Cancelled' },
@@ -90,7 +89,15 @@ function OrderStatusBadge({ status }) {
 }
 function PayStatusBadge({ status }) {
   if (!status) return null;
-  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-600 ${payStatusClass(status)}`}>{status}</span>;
+  let label = status;
+  if (status === 'Proof of Payment Submitted' || status === 'Payment Verification Required') {
+    label = 'Pending Verification';
+  } else if (status === 'Paid' || status === 'paid') {
+    label = 'Approved';
+  } else if (status === 'Payment Rejected') {
+    label = 'Rejected';
+  }
+  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-600 ${payStatusClass(status)}`}>{label}</span>;
 }
 
 /* ── Money formatter ─────────────────────────────────────────────────────────── */
@@ -316,7 +323,7 @@ function EftActions({ order, onAction }) {
     <div className="flex flex-wrap gap-2">
       {canVerify && (
         <Btn variant="success" size="sm" onClick={() => onAction('verify')}>
-          ✓ Verify Payment
+          ✓ Approve Payment
         </Btn>
       )}
       {canReject && (
@@ -428,7 +435,7 @@ function OrderDetail({ order, onClose, onOrderStatusChange, onPayStatusChange, o
 
   function handleEftAction(type) {
     const configs = {
-      verify:         { title:'Verify Payment?',          message:`Mark payment for ${order.orderNumber} as verified and paid. This will also confirm the order if awaiting payment.`, confirmLabel:'Verify & Mark Paid', confirmVariant:'success', note:true, noteLabel:'Note (optional)', noteRequired:false },
+      verify:         { title:'Approve Payment?',          message:`Mark payment for ${order.orderNumber} as approved and paid. This will also confirm the order if awaiting payment.`, confirmLabel:'Approve & Mark Paid', confirmVariant:'success', note:true, noteLabel:'Note (optional)', noteRequired:false },
       reject:         { title:'Reject Payment?',          message:'The customer will be notified and asked to re-upload proof.', confirmLabel:'Reject Payment', confirmVariant:'danger', note:true, noteLabel:'Rejection reason', noteRequired:true },
       correct:        { title:'Request Corrected Proof?', message:'The customer will be notified to upload a new proof of payment.', confirmLabel:'Request Correction', confirmVariant:'secondary', note:true, noteLabel:'What to correct', noteRequired:true },
       moveConfirmed:  { title:'Move to Confirmed?',       message:'Move this order from Awaiting Payment to Confirmed.', confirmLabel:'Move to Confirmed', confirmVariant:'primary', note:false },
@@ -517,6 +524,41 @@ function OrderDetail({ order, onClose, onOrderStatusChange, onPayStatusChange, o
         {/* ── Details tab ─────────────────────────────────────── */}
         {activeTab === 'details' && (
           <div className="space-y-5">
+            {/* Order Status selector */}
+            <div className="bg-slate-50 rounded-xl p-4 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-600 text-slate-500 uppercase tracking-wide mb-1">Order Status</p>
+                <div className="flex items-center gap-2">
+                  <OrderStatusBadge status={orderStatus}/>
+                  {isCancelled && <span className="text-xs text-red-500 font-500">Cancelled</span>}
+                </div>
+              </div>
+              {!isCancelled && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400 font-500">Update status:</span>
+                  <select
+                    value={orderStatus}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === 'Cancelled') {
+                        setConfirmDlg({ type:'cancel', title:'Cancel Order?', message:'This cannot be undone.', confirmLabel:'Cancel Order', confirmVariant:'danger', note:true, noteLabel:'Reason for cancellation', noteRequired:false });
+                      } else {
+                        handleOrderStatusChange(order.id, val);
+                      }
+                    }}
+                    disabled={saving}
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-600 outline-none focus:border-cobalt bg-white cursor-pointer"
+                  >
+                    <option value={isEFT ? 'Awaiting Payment' : 'Order Placed'}>Pending</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Dispatched">Shipped</option>
+                    <option value="Delivered">Delivered</option>
+                  </select>
+                </div>
+              )}
+            </div>
+
             {/* Customer & delivery */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="bg-slate-50 rounded-xl p-4">
