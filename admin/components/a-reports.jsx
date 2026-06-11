@@ -63,7 +63,8 @@ function ReportsPage() {
         to++;
         ts += o.total;
 
-        if (o.payment?.method === 'cod') {
+        const method = (o.paymentMethod || o.payment?.method || '').toUpperCase();
+        if (method === 'COD') {
           cs += o.total;
           cc++;
         } else {
@@ -110,7 +111,7 @@ function ReportsPage() {
       `"${o.customer?.name || ''}"`,
       `"${o.customer?.email || ''}"`,
       o.total,
-      o.payment?.method === 'cod' ? 'COD' : 'EFT',
+      (o.paymentMethod || o.payment?.method || '').toUpperCase() === 'COD' ? 'COD' : 'EFT',
       o.status
     ]);
     const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");

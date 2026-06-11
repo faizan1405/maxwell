@@ -478,7 +478,6 @@ function OrderDetail({ order, saving, onClose, onOrderStatusChange, onPayStatusC
 
   const TABS = [
     { key:'details',  label:'Details' },
-    { key:'payment',  label:'Payment' },
     { key:'history',  label:'History' },
   ];
 
@@ -687,46 +686,55 @@ function OrderDetail({ order, saving, onClose, onOrderStatusChange, onPayStatusC
                 </p>
               )}
             </div>
-          </div>
-        )}
 
-        {/* ── Payment tab ─────────────────────────────────────── */}
-        {activeTab === 'payment' && (
-          <div className="space-y-5">
-            {/* EFT section */}
-            {isEFT && (
-              <>
-                <div>
-                  <p className="text-xs font-600 text-slate-500 uppercase tracking-wide mb-2">Proof of Payment</p>
-                  <ProofViewer order={order}/>
+            {/* Payment Details & Actions Section */}
+            <div className="bg-slate-50 rounded-xl p-4 space-y-3">
+              <p className="text-xs font-600 text-slate-500 uppercase tracking-wide">Payment Details & Actions</p>
+              
+              {isEFT && (
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-500 font-500">Payment Status</span>
+                    <PayStatusBadge status={payStatus}/>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-500 font-500">EFT Reference</span>
+                    <span className="font-600 font-mono bg-slate-100 px-1.5 py-0.5 rounded">{order.eftReference || order.orderNumber}</span>
+                  </div>
+                  
+                  {order.proofOfPaymentUrl && (
+                    <div className="pt-2 border-t border-slate-200/60">
+                      <p className="text-[11px] font-600 text-slate-500 uppercase mb-2">Uploaded Proof</p>
+                      <ProofViewer order={order}/>
+                    </div>
+                  )}
+                  
+                  <div className="pt-2 border-t border-slate-200/60">
+                    <EftActions order={order} onAction={handleEftAction}/>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-600 text-slate-500 uppercase tracking-wide mb-2">EFT Actions</p>
-                  <EftActions order={order} onAction={handleEftAction}/>
-                </div>
-                <div className="bg-slate-50 rounded-xl p-4 text-sm">
-                  <div className="flex justify-between mb-1"><span className="text-slate-500">EFT Reference</span><span className="font-600">{order.eftReference || order.orderNumber}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Payment Status</span><PayStatusBadge status={payStatus}/></div>
-                </div>
-              </>
-            )}
+              )}
 
-            {/* COD section */}
-            {isCOD && (
-              <>
-                <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
-                  <p className="text-xs font-600 text-amber-700 uppercase tracking-wide mb-1">Cash on Delivery</p>
-                  <p className="text-sm text-amber-800">Amount due: <span className="font-700">{fmtMoney(order.total)}</span></p>
-                  {codFee > 0 && <p className="text-xs text-amber-600 mt-0.5">Includes COD fee: {fmtMoney(codFee)}</p>}
+              {isCOD && (
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-500 font-500">Payment Status</span>
+                    <PayStatusBadge status={payStatus}/>
+                  </div>
+                  
+                  <div className="bg-amber-100/50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
+                    <p className="font-500">Amount due on delivery: <span className="font-700 text-amber-900">{fmtMoney(order.total)}</span></p>
+                    {codFee > 0 && <p className="text-xs text-amber-600 mt-0.5">Includes COD fee: {fmtMoney(codFee)}</p>}
+                  </div>
+                  
+                  <div className="pt-2 border-t border-slate-200/60">
+                    <CodActions order={order} onAction={handleCodAction}/>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-600 text-slate-500 uppercase tracking-wide mb-2">Order Progress</p>
-                  <CodActions order={order} onAction={handleCodAction}/>
-                </div>
-              </>
-            )}
+              )}
+            </div>
 
-            {/* Internal notes */}
+            {/* Internal Notes */}
             <div>
               <p className="text-xs font-600 text-slate-500 uppercase tracking-wide mb-2">Internal Notes</p>
               <div className="space-y-2">
