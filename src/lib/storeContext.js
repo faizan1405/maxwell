@@ -213,6 +213,24 @@ export function CustomerProvider({ children }) {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Merge the guest cart into the signed-in customer's cart. The session cookie
+  // is already set server-side (by the OTP verify or Google OAuth callback).
+  const mergeGuestCart = useCallback(() => {
+    const guestId = getGuestId();
+    if (!guestId) return;
+    fetch(`${API_BASE}/api/carts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'merge', guestId }),
+    }).then(r => r.ok ? r.json() : null).then(data => {
+      if (data?.items?.length) {
+        try { localStorage.setItem('ab_cart', JSON.stringify(data.items)); } catch {}
+        window.dispatchEvent(new Event('ab:cart-merged'));
+      }
+    }).catch(() => {});
+  }, []);
+
   // Restore session from server cookie via /api/auth/me
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -223,31 +241,28 @@ export function CustomerProvider({ children }) {
         const res = await fetch(`${API_BASE}/api/auth/me`, { credentials: 'include' });
         if (!res.ok) return;
         const data = await res.json();
-        if (data.customer) setCustomer(data.customer);
+        if (!data.customer) return;
+        setCustomer(data.customer);
+
+        // Returning from the Google OAuth redirect (?login=google): the cookie
+        // was set server-side, so merge the guest cart now and clean the URL.
+        try {
+          const u = new URL(window.location.href);
+          if (u.searchParams.get('login') === 'google') {
+            mergeGuestCart();
+            u.searchParams.delete('login');
+            window.history.replaceState({}, '', u.pathname + u.search + u.hash);
+          }
+        } catch {}
       } catch {}
     })();
-  }, []);
+  }, [mergeGuestCart]);
 
   const login = useCallback((cust) => {
     setCustomer(cust);
     setAuthOpen(false);
-
-    // Merge guest cart into customer cart (cookie is already set by verify endpoint)
-    const guestId = getGuestId();
-    if (guestId) {
-      fetch(`${API_BASE}/api/carts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ action: 'merge', guestId }),
-      }).then(r => r.ok ? r.json() : null).then(data => {
-        if (data?.items?.length) {
-          try { localStorage.setItem('ab_cart', JSON.stringify(data.items)); } catch {}
-          window.dispatchEvent(new Event('ab:cart-merged'));
-        }
-      }).catch(() => {});
-    }
-  }, []);
+    mergeGuestCart();
+  }, [mergeGuestCart]);
 
   const logout = useCallback(async () => {
     try {

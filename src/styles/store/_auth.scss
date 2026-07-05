@@ -203,6 +203,18 @@
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+  &--google {
+    background-color: white;
+    color: $slate-700;
+    border: 1px solid $slate-200;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+
+    &:hover:not(:disabled) {
+      background-color: #f8fafc; // slate-50
+      border-color: $slate-300;
+    }
+  }
 }
 
 .auth-form__footer-text {

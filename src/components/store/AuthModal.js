@@ -1,93 +1,49 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCustomer } from '../../lib/storeContext';
-import { User, X, ArrowLeft, RefreshCw } from '../ui/Icons';
+import { User, X } from '../ui/Icons';
 
-function AuthSpinner() {
+/* Multi-colour Google "G" mark — inlined so the button has no external asset. */
+function GoogleGlyph() {
   return (
-    <span style={{ width:16, height:16, border:'2px solid rgba(255,255,255,.3)', borderTopColor:'#fff', borderRadius:'50%', flexShrink:0, display:'inline-block', animation:'spin .7s linear infinite' }} />
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" style={{ flexShrink: 0 }}>
+      <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/>
+      <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.02-3.7H.96v2.34A9 9 0 0 0 9 18z"/>
+      <path fill="#FBBC05" d="M3.98 10.72a5.4 5.4 0 0 1 0-3.44V4.94H.96a9 9 0 0 0 0 8.12l3.02-2.34z"/>
+      <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.46 3.44 1.35l2.58-2.58C13.47.9 11.43 0 9 0A9 9 0 0 0 .96 4.94l3.02 2.34C4.68 5.16 6.66 3.58 9 3.58z"/>
+    </svg>
   );
 }
 
+const ERROR_MESSAGES = {
+  bad_state:        'Your sign-in session expired. Please try again.',
+  token_exchange:   'Google sign-in failed. Please try again.',
+  token_network:    'Could not reach Google. Check your connection and retry.',
+  email_unverified: 'Your Google email is not verified.',
+  not_configured:   'Google sign-in is not configured yet.',
+  access_denied:    'Sign-in was cancelled.',
+};
+
 export function AuthModal() {
-  const { authOpen, closeAuth, login, apiBase } = useCustomer();
-  const [step,        setStep]        = useState('email'); // 'email' | 'otp'
-  const [email,       setEmail]       = useState('');
-  const [otp,         setOtp]         = useState('');
-  const [loading,     setLoading]     = useState(false);
-  const [error,       setError]       = useState('');
-  const [resendSecs,  setResendSecs]  = useState(0);
-  const [isNew,       setIsNew]       = useState(false);
-  const [devOtp,      setDevOtp]      = useState('');
-  const otpFormRef = useRef(null);
+  const { authOpen, closeAuth } = useCustomer();
+  const [error, setError] = useState('');
 
-  /* Reset on close */
+  /* Surface an OAuth error passed back via ?auth_error= on the account page. */
   useEffect(() => {
-    if (!authOpen) {
-      const t = setTimeout(() => {
-        setStep('email'); setEmail(''); setOtp('');
-        setError(''); setResendSecs(0); setDevOtp('');
-      }, 300);
-      return () => clearTimeout(t);
+    if (typeof window === 'undefined') return;
+    const code = new URLSearchParams(window.location.search).get('auth_error');
+    if (code) {
+      setError(ERROR_MESSAGES[code] || 'Sign-in failed. Please try again.');
+      const u = new URL(window.location.href);
+      u.searchParams.delete('auth_error');
+      window.history.replaceState({}, '', u.pathname + u.search + u.hash);
     }
-  }, [authOpen]);
+  }, []);
 
-  /* Resend countdown */
-  useEffect(() => {
-    if (resendSecs <= 0) return;
-    const t = setTimeout(() => setResendSecs(s => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [resendSecs]);
-
-  async function doSendOtp(e) {
-    if (e) e.preventDefault();
-    const trimEmail = email.trim().toLowerCase();
-    if (!trimEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimEmail)) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    setLoading(true); setError('');
-    try {
-      const res  = await fetch(`${apiBase}/api/auth/otp/request`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: trimEmail }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Failed to send code. Try again.'); setLoading(false); return; }
-      setIsNew(!!data.isNew);
-      setStep('otp');
-      setResendSecs(60);
-      if (data.devOtp) { setOtp(data.devOtp); setDevOtp(data.devOtp); }
-    } catch { setError('Network error. Please try again.'); }
-    setLoading(false);
-  }
-
-  async function doVerifyOtp(e) {
-    if (e) e.preventDefault();
-    const code = otp.trim();
-    if (code.length !== 6) { setError('Please enter the 6-digit code.'); return; }
-    setLoading(true); setError('');
-    try {
-      const res  = await fetch(`${apiBase}/api/auth/otp/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email: email.trim().toLowerCase(), otp: code }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Invalid code. Please try again.'); setOtp(''); setLoading(false); return; }
-      login(data.customer);
-    } catch { setError('Network error. Please try again.'); }
-    setLoading(false);
-  }
-
-  function handleOtpInput(e) {
-    const v = e.target.value.replace(/\D/g, '').slice(0, 6);
-    setOtp(v);
-    setError('');
-    if (v.length === 6) setTimeout(() => otpFormRef.current?.requestSubmit(), 80);
+  function signInWithGoogle() {
+    // Full-page navigation is required for the OAuth redirect handshake.
+    window.location.href = '/api/auth/google';
   }
 
   if (!authOpen) return null;
@@ -106,72 +62,23 @@ export function AuthModal() {
             <span className="icon-wrap"><User size={16} /></span>
             <span className="name">Amahle Blue</span>
           </div>
-          <h2 className="auth-modal__title">
-            {step === 'email'
-              ? (isNew ? 'Create account' : 'Welcome back')
-              : 'Check your email'}
-          </h2>
+          <h2 className="auth-modal__title">Sign in</h2>
           <p className="auth-modal__sub">
-            {step === 'email'
-              ? 'Enter your email to receive a sign-in code — no password needed.'
-              : `We sent a 6-digit code to ${email}`}
+            Continue with your Google account — no password needed.
           </p>
         </div>
 
         {/* Body */}
         <div className="auth-modal__body">
-          {step === 'email' ? (
-            <form key="email" onSubmit={doSendOtp} className="auth-form">
-              <div className="auth-form__field">
-                <label className="auth-form__label">Email address</label>
-                <input type="email" value={email}
-                  onChange={e => { setEmail(e.target.value); setError(''); }}
-                  placeholder="your@email.com" autoFocus
-                  className={`auth-form__input ${error ? 'auth-form__input--error' : ''}`}
-                />
-                {error && <p className="auth-form__error">{error}</p>}
-              </div>
-              <button type="submit" disabled={loading} className="auth-form__btn">
-                {loading ? <><AuthSpinner /> Sending…</> : 'Send sign-in code →'}
-              </button>
-              <p className="auth-form__footer-text">
-                New here? An account is created automatically on first sign-in.
-              </p>
-            </form>
-          ) : (
-            <form key="otp" ref={otpFormRef} onSubmit={doVerifyOtp} className="auth-form">
-              {devOtp && (
-                <div className="auth-form__dev-note">
-                  Email delivery paused — domain not yet verified. Code pre-filled for testing.
-                </div>
-              )}
-              <div className="auth-form__field">
-                <label className="auth-form__label">6-digit code</label>
-                <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={6}
-                  value={otp} onChange={handleOtpInput} autoFocus
-                  placeholder="000000"
-                  className={`auth-form__input-otp ${error ? 'auth-form__input-otp--error' : ''}`}
-                />
-                {error && <p className="auth-form__error">{error}</p>}
-              </div>
-              <button type="submit" disabled={loading || otp.length !== 6} className="auth-form__btn">
-                {loading ? <><AuthSpinner /> Verifying…</> : 'Verify & sign in →'}
-              </button>
-              <div className="auth-form__actions">
-                <button type="button" onClick={() => { setStep('email'); setOtp(''); setError(''); }}
-                  className="auth-form__link">
-                  <ArrowLeft size={14} /> Change email
-                </button>
-                {resendSecs > 0 ? (
-                  <span className="auth-form__link" style={{ cursor: 'default' }}>Resend in {resendSecs}s</span>
-                ) : (
-                  <button type="button" onClick={doSendOtp} className="auth-form__link auth-form__link--primary">
-                    <RefreshCw size={13} /> Resend code
-                  </button>
-                )}
-              </div>
-            </form>
-          )}
+          <div className="auth-form">
+            {error && <p className="auth-form__error">{error}</p>}
+            <button type="button" onClick={signInWithGoogle} className="auth-form__btn auth-form__btn--google">
+              <GoogleGlyph /> Continue with Google
+            </button>
+            <p className="auth-form__footer-text">
+              New here? An account is created automatically on first sign-in.
+            </p>
+          </div>
         </div>
       </div>
     </div>
