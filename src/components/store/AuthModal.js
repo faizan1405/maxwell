@@ -18,11 +18,17 @@ function GoogleGlyph() {
 
 const ERROR_MESSAGES = {
   bad_state:        'Your sign-in session expired. Please try again.',
+  missing_code:     'Sign-in did not complete. Please try again.',
   token_exchange:   'Google sign-in failed. Please try again.',
-  token_network:    'Could not reach Google. Check your connection and retry.',
-  email_unverified: 'Your Google email is not verified.',
-  not_configured:   'Google sign-in is not configured yet.',
+  bad_token:        'We could not verify your Google sign-in. Please try again.',
+  email_unverified: 'Your Google email address is not verified.',
+  account_conflict: 'This email is already linked to another account.',
+  account_exists:   'An account already exists for this email. Please contact support to enable Google sign-in.',
+  not_configured:   'Google sign-in is not available right now.',
+  provider_error:   'Google sign-in failed. Please try again.',
   access_denied:    'Sign-in was cancelled.',
+  db_error:         'Something went wrong. Please try again in a moment.',
+  session_error:    'Something went wrong. Please try again in a moment.',
 };
 
 export function AuthModal() {
@@ -42,8 +48,11 @@ export function AuthModal() {
   }, []);
 
   function signInWithGoogle() {
+    // Return the user to the page they started from (e.g. /checkout, /cart).
+    // Only the path+query is sent; the server re-validates it as same-origin.
+    const returnTo = window.location.pathname + window.location.search;
     // Full-page navigation is required for the OAuth redirect handshake.
-    window.location.href = '/api/auth/google';
+    window.location.href = `/api/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
   }
 
   if (!authOpen) return null;

@@ -219,12 +219,25 @@ const CustomerSchema = new Schema({
   totalSpent: { type: Number, default: 0, min: 0 },
   role: { type: String, default: 'user' },
   avatar: { type: String, default: '' },
+  // Google OAuth 'sub' claim — the permanent, provider-issued identity. Kept
+  // separate from email so a customer changing their email later still signs in.
+  // No default so the unique+sparse index below ignores non-Google accounts.
+  googleSub: { type: String },
   createdAt: { type: Number },
   updatedAt: { type: Number },
 }, { timestamps: true });
 
 CustomerSchema.index({ phone: 1 });
 CustomerSchema.index({ createdAt: -1 });
+// Unique per Google identity, but the constraint applies ONLY to documents
+// where googleSub is an actual string — legacy/email customers (no googleSub)
+// are excluded entirely, so many of them coexist without colliding on null.
+// Keep these options identical to scripts/ensureIndexes.js so autoIndex and the
+// migration script never conflict.
+CustomerSchema.index(
+  { googleSub: 1 },
+  { unique: true, name: 'uniq_google_sub', partialFilterExpression: { googleSub: { $type: 'string' } } }
+);
 
 const CouponSchema = new Schema({
   id: { type: String, required: true, unique: true, index: true },
@@ -379,16 +392,6 @@ const StockHistorySchema = new Schema({
   updatedAt: { type: Number },
 }, { timestamps: true });
 
-const EmailOtpSchema = new Schema({
-  id: { type: String, required: true, unique: true },
-  email: { type: String, required: true, index: true, lowercase: true },
-  otpHash: { type: String, required: true },
-  expiresAt: { type: Number, required: true },
-  attempts: { type: Number, default: 0, min: 0 },
-  consumed: { type: Boolean, default: false },
-  createdAt: { type: Number, required: true },
-});
-
 const CustomerSessionSchema = new Schema({
   id: { type: String, required: true, unique: true },
   customerId: { type: String, required: true, index: true },
@@ -428,6 +431,5 @@ export const Cart = models.Cart || model('Cart', CartSchema);
 export const Settings = models.Settings || model('Settings', SettingsSchema);
 export const Setting = Settings;
 export const StockHistory = models.StockHistory || model('StockHistory', StockHistorySchema);
-export const EmailOtp = models.EmailOtp || model('EmailOtp', EmailOtpSchema);
 export const CustomerSession = models.CustomerSession || model('CustomerSession', CustomerSessionSchema);
 export const NewsletterSubscriber = models.NewsletterSubscriber || model('NewsletterSubscriber', NewsletterSubscriberSchema);
