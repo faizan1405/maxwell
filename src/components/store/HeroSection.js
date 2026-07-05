@@ -7,6 +7,7 @@ import {
 } from '../ui/Icons';
 import { Reveal, Stars, SkeletonLine } from '../ui/index';
 import * as Icons from '../ui/Icons';
+import { StoreImage } from './StoreImage';
 
 const QUOTE_WA = `${BRAND.wa}?text=${encodeURIComponent("Hello Amahle Blue Sales Team, I would like to request a quote for bulk cleaning products. Please share pricing and availability.")}`;
 const SALES_WA = `${BRAND.wa}?text=${encodeURIComponent("Hello Amahle Blue Sales Team, I have a business enquiry about your cleaning product range.")}`;
@@ -102,10 +103,11 @@ export const Hero = ({ onShopCat }) => {
               <div className="hero-showcase__bg-ring" />
 
               <div className="hero-showcase__card-left">
-                <img src={getPrimaryImg(san)} alt={san.name} />
+                <StoreImage src={getPrimaryImg(san)} alt={san.name} sizes="(max-width: 768px) 44vw, 22vw" />
               </div>
               <div className="hero-showcase__card-right">
-                <img src={getPrimaryImg(apc)} alt={apc.name} />
+                {/* Front card is the hero's LCP element — the only image marked priority. */}
+                <StoreImage src={getPrimaryImg(apc)} alt={apc.name} sizes="(max-width: 768px) 50vw, 25vw" priority />
               </div>
 
               {/* Floating chips */}

@@ -77,11 +77,15 @@
   position: relative;
   display: block;
   width: 100%;
+  // Sized box for the fill-based product images (previously the height came
+  // from the in-flow primary <img>'s aspect-ratio). Keeps layout identical.
+  aspect-ratio: 1 / 1;
 }
 
 .product-card__img-primary {
   aspect-ratio: 1 / 1;
   width: 100%;
+  height: 100%;
   object-fit: contain;
   mix-blend-mode: multiply;
   transition: all 0.5s ease;

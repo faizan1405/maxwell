@@ -3,6 +3,7 @@ import { put, del } from '@vercel/blob';
 import { connectToDatabase } from '../../../lib/mongoose';
 import { Product } from '../../../lib/models';
 import { requireAdmin } from '../../../lib/auth';
+import { invalidate, CACHE_TAGS } from '../../../lib/cache';
 
 const ALLOWED_IMAGES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const ALLOWED_VIDEOS = new Set(['video/mp4', 'video/webm']);
@@ -127,6 +128,7 @@ export async function PATCH(req) {
     product.media = cleanMedia;
     product.img = primaryImg ? primaryImg.url : (product.img || '');
     await product.save();
+    invalidate([CACHE_TAGS.products]);
 
     // Diff-and-cleanup: any previously-saved URL that's no longer present in
     // the new media array AND is a Vercel Blob URL is safe to delete.
@@ -213,6 +215,7 @@ export async function DELETE(req) {
     product.media = newMedia;
     product.img = primaryImg ? primaryImg.url : (product.img || '');
     await product.save();
+    invalidate([CACHE_TAGS.products]);
 
     return NextResponse.json(product);
   } catch (err) {

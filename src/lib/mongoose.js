@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { seedDatabase } from './db';
 
 // MONGODB_URI must be set in .env.local (or the deployment environment).
 // The app will refuse to start without it.
@@ -27,17 +26,24 @@ if (!cached) {
 }
 
 /**
- * Opens (or reuses) the MongoDB connection and runs one-time database seeding.
+ * Opens (or reuses) the MongoDB connection.
+ *
+ * This is a *connect-only* helper — it never seeds. Seeding used to run here on
+ * the first connection of every process, which added a burst of
+ * `countDocuments()` calls plus a full product `bulkWrite` to the very first
+ * request after each serverless cold start. Production is already seeded, so
+ * that work was pure cold-start latency on the hot request path.
+ *
+ * Seeding is now an explicit, out-of-band operation: run `npm run seed`
+ * (src/scripts/seed.js) against a fresh database. See `seedDatabase()` in
+ * `./db` for the underlying logic.
  *
  * Connection lifecycle:
  *   1. Return the cached connection immediately if it exists.
- *   2. Initiate a new connection promise if one is not already in flight.
- *   3. Await the connection, then run `seedDatabase()` exactly once per
- *      process lifetime (guarded by `cached.seeded`).
- *      - If seeding fails, `cached.seedPromise` is reset so it can be
- *        retried on the next request rather than hanging indefinitely.
- *   4. On any connection error, clear `cached.promise` so the next call
- *      can attempt a fresh reconnect.
+ *   2. Initiate a new connection promise if one is not already in flight;
+ *      concurrent callers await the same promise (no parallel connections).
+ *   3. On any connection error, clear `cached.promise` so the next call can
+ *      attempt a fresh reconnect.
  *
  * @returns {Promise<typeof mongoose>} The connected Mongoose instance.
  */
@@ -60,27 +66,9 @@ export async function connectToDatabase() {
       return mongoose;
     });
   }
-  
+
   try {
     cached.conn = await cached.promise;
-
-    // Run database seeding once per process. The seedPromise guard prevents
-    // concurrent seed calls when multiple requests arrive before seeding
-    // completes. If seeding throws, seedPromise is cleared so the next
-    // request can retry.
-    if (!cached.seeded) {
-      if (!cached.seedPromise) {
-        cached.seedPromise = seedDatabase()
-          .then(() => {
-            cached.seeded = true;
-          })
-          .catch((err) => {
-            cached.seedPromise = null;
-            throw err;
-          });
-      }
-      await cached.seedPromise;
-    }
   } catch (e) {
     // Clear the promise so the next request attempts a fresh connection
     cached.promise = null;

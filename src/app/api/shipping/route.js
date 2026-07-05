@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '../../../lib/mongoose';
 import { ShippingRate } from '../../../lib/models';
 import { requireAdmin, verifySession } from '../../../lib/auth';
+import { getPublicShippingRates, invalidate, CACHE_TAGS } from '../../../lib/cache';
 
 const DEFAULT_SHIPPING = [
   {
@@ -31,15 +32,18 @@ async function getShippingRates() {
 }
 
 export async function GET(req) {
-  await connectToDatabase();
-  const rates = await getShippingRates();
-  
   const adminSession = verifySession(req);
-  if (adminSession) {
+
+  // Public storefront path — served from the tag-invalidated Data Cache
+  // (active rates only), avoiding a MongoDB round-trip per storefront load.
+  if (!adminSession) {
+    const rates = await getPublicShippingRates();
     return NextResponse.json(rates);
   }
-  
-  return NextResponse.json(rates.filter(r => r.status === 'active'));
+
+  await connectToDatabase();
+  const rates = await getShippingRates();
+  return NextResponse.json(rates);
 }
 
 export async function POST(req) {
@@ -74,6 +78,7 @@ export async function POST(req) {
   }
 
   await ShippingRate.create(newRate);
+  invalidate([CACHE_TAGS.shipping]);
   return NextResponse.json(newRate, { status: 201 });
 }
 
@@ -109,6 +114,7 @@ export async function PATCH(req) {
   }
 
   const updated = await ShippingRate.findOneAndUpdate({ id }, { $set: patch }, { new: true, lean: true });
+  invalidate([CACHE_TAGS.shipping]);
   return NextResponse.json(updated);
 }
 
@@ -126,5 +132,6 @@ export async function DELETE(req) {
   if (!existing) return NextResponse.json({ error: 'Shipping rate not found' }, { status: 404 });
 
   await ShippingRate.findOneAndDelete({ id });
+  invalidate([CACHE_TAGS.shipping]);
   return NextResponse.json({ success: true });
 }

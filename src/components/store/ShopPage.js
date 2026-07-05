@@ -10,6 +10,12 @@ import {
 import { Reveal, Stars, BadgeChip, ProductGridSkeleton, ProductCardSkeleton } from '../ui/index';
 import { ProductReviews } from './ProductReviews';
 import { SwipeCarousel } from './SwipeCarousel';
+import { StoreImage } from './StoreImage';
+
+// Responsive sizes for product-grid images: 2-up on phones, 3-up on tablets,
+// 4-up on desktop — so the browser never downloads a desktop-sized image on
+// mobile.
+const PRODUCT_CARD_SIZES = '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw';
 
 /* ── B2B defaults for product detail (used when a product has no explicit data) ── */
 const DEFAULT_SUITABLE_FOR = [
@@ -95,20 +101,19 @@ export const ProductCard = ({ p }) => {
     <div className="product-card group">
       <div className={`product-card__media ${outOfStock ? 'product-card__media--oos' : ''}`}>
         <button onClick={() => openQuickView(p)} className="product-card__link" aria-label={`Quick view ${p.name}`}>
-          <img
+          <StoreImage
             src={primaryImgUrl}
             alt={p.name}
             className="product-card__img-primary"
-            loading="lazy"
-            onError={e => { e.target.onerror = null; e.target.src = '/assets/products/placeholder.svg'; }}
+            sizes={PRODUCT_CARD_SIZES}
           />
           {secondImgUrl && (
-            <img
+            <StoreImage
               src={secondImgUrl}
               alt=""
               aria-hidden="true"
               className="product-card__img-secondary"
-              loading="lazy"
+              sizes={PRODUCT_CARD_SIZES}
             />
           )}
         </button>

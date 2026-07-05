@@ -191,6 +191,12 @@ OrderSchema.index({ status: 1 });
 OrderSchema.index({ paymentStatus: 1 });
 OrderSchema.index({ paymentMethod: 1 });
 OrderSchema.index({ 'customer.phone': 1 });
+// Non-unique lookup index for admin order-number search. (A UNIQUE index on
+// orderNumber/invoiceNumber must still be created manually in Atlas after the
+// duplicate checks documented in the launch runbook — see the field comment above.)
+OrderSchema.index({ orderNumber: 1 });
+// Speeds up the per-customer coupon usage count performed during checkout.
+OrderSchema.index({ couponId: 1 });
 
 const AddressSchema = new Schema({
   id: { type: String, required: true },

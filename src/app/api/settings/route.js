@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '../../../lib/mongoose';
 import { Settings, StockHistory } from '../../../lib/models';
 import { requireAdmin, requireSession, verifySession } from '../../../lib/auth';
+import { getStoreSettingsValue, invalidate, CACHE_TAGS } from '../../../lib/cache';
 
 function deepMerge(target, source) {
   const out = { ...target };
@@ -77,12 +78,44 @@ Please send me more details and quotation.`,
 };
 
 async function getSettings() {
-  const doc = await Settings.findOne({ key: 'global_settings' });
-  if (!doc) {
-    const newDoc = await Settings.create({ key: 'global_settings', value: DEFAULT_SETTINGS });
-    return newDoc.value;
-  }
-  return deepMerge(DEFAULT_SETTINGS, doc.value);
+  // Reads the stored settings value from the tag-invalidated Data Cache to
+  // avoid a MongoDB round-trip on every storefront settings request. The
+  // deep-merge with defaults stays request-side (cheap, in-memory).
+  const value = await getStoreSettingsValue();
+  if (!value) return DEFAULT_SETTINGS;
+  return deepMerge(DEFAULT_SETTINGS, value);
+}
+
+/**
+ * Public projection of the merged settings — strips bank account details and
+ * other admin-only fields. Shared by the settings GET public branch and the
+ * cached /api/storefront bootstrap so the shape stays identical.
+ */
+function toPublicSettings(s) {
+  return {
+    cod: {
+      enabled: s.cod.enabled,
+      description: s.cod.description,
+      codFee: s.cod.codFee,
+      minOrderAmount: s.cod.minOrderAmount,
+      maxOrderAmount: s.cod.maxOrderAmount,
+    },
+    eft: {
+      enabled: s.eft.enabled,
+    },
+    shipping: s.shipping,
+    business: s.business,
+    whatsapp: {
+      enabled: s.whatsapp?.enabled !== false,
+      number: s.whatsapp?.number || '',
+      defaultMessage: s.whatsapp?.defaultMessage || '',
+    },
+  };
+}
+
+/** Cached public settings for the storefront bootstrap. */
+async function getPublicSettings() {
+  return toPublicSettings(await getSettings());
 }
 
 export async function GET(req) {
@@ -128,25 +161,7 @@ export async function GET(req) {
     }
 
     // Public view: strip bank account details & limits
-    return NextResponse.json({
-      cod: {
-        enabled: s.cod.enabled,
-        description: s.cod.description,
-        codFee: s.cod.codFee,
-        minOrderAmount: s.cod.minOrderAmount,
-        maxOrderAmount: s.cod.maxOrderAmount,
-      },
-      eft: {
-        enabled: s.eft.enabled,
-      },
-      shipping: s.shipping,
-      business: s.business,
-      whatsapp: {
-        enabled: s.whatsapp?.enabled !== false,
-        number: s.whatsapp?.number || '',
-        defaultMessage: s.whatsapp?.defaultMessage || '',
-      },
-    });
+    return NextResponse.json(toPublicSettings(s));
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -234,6 +249,10 @@ export async function PATCH(req) {
       { new: true, upsert: true }
     );
 
+    // Public store settings (payment config, business info, shipping thresholds)
+    // changed — refresh the cached copy.
+    invalidate([CACHE_TAGS.settings]);
+
     return NextResponse.json({
       cod: updated.cod,
       eft: updated.eft,
@@ -256,4 +275,4 @@ export async function OPTIONS() {
     },
   });
 }
-export { getSettings };
+export { getSettings, getPublicSettings, toPublicSettings };

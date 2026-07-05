@@ -11,12 +11,13 @@
  * They call the internal `sendEmail()` function which uses the Resend API.
  * Do not add stubs for them in lib/email.js.
  */
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import mongoose from 'mongoose';
 import { connectToDatabase } from '../../../lib/mongoose';
 import { Order, Product, Settings, Coupon, ShippingRate, StockHistory, Customer, Review, AbandonedCart, NewsletterSubscriber } from '../../../lib/models';
 import { verifySession } from '../../../lib/auth';
 import { verifyCustomerCookie } from '../../../lib/customerAuth';
+import { invalidate, CACHE_TAGS } from '../../../lib/cache';
 import { formatZar } from '../../../utils/currency';
 import { calculateOrderStats } from '../../../utils/accounting';
 import { normalizePurchaseMode } from '../../../utils/purchaseMode';
@@ -358,6 +359,10 @@ async function persistOrderPatchWithInventory(prev, patch, adminSession) {
   } finally {
     await session.endSession();
   }
+
+  // Stock levels / out-of-stock flags changed on one or more products —
+  // refresh the cached public catalogue so cards reflect the new stock.
+  invalidate([CACHE_TAGS.products]);
 
   return updated;
 }
@@ -1084,9 +1089,22 @@ export async function POST(req) {
       }
     }
 
-    if (payMethod === 'COD') { sendCODEmail(newOrder).catch(() => {}); }
-    else                     { sendEFTEmail(newOrder).catch(() => {}); }
-    sendAdminEmail(newOrder).catch(() => {});
+    // The order (and any coupon debit) is now safely persisted, so success is
+    // reported only after the write. Confirmation + admin-notification emails
+    // are non-critical: run them AFTER the response is sent via `after()`, which
+    // (unlike bare fire-and-forget) keeps the serverless function alive until
+    // they resolve, so delivery is both reliable and off the checkout latency
+    // path. `allSettled` ensures one failing email never blocks the others.
+    after(async () => {
+      try {
+        await Promise.allSettled([
+          payMethod === 'COD' ? sendCODEmail(newOrder) : sendEFTEmail(newOrder),
+          sendAdminEmail(newOrder),
+        ]);
+      } catch (e) {
+        console.error('[orders POST] email dispatch error:', e?.message);
+      }
+    });
 
     return NextResponse.json(newOrder, { status: 201 });
   } catch (error) {
@@ -1601,30 +1619,30 @@ export async function PATCH(req) {
       const newPayStatus    = updated.paymentStatus;
       const payMethod       = updated.paymentMethod || updated.payment?.method;
 
-      // Trigger transactional emails on order status transitions.
-      // Emails are fired-and-forgotten (.catch(() => {})) so a failed email
-      // delivery never rolls back or errors the PATCH response.
-      if (newOrderStatus !== prevOrderStatus) {
-        if (newOrderStatus === 'Confirmed')  sendOrderConfirmedEmail(updated).catch(() => {});
-        if (newOrderStatus === 'Dispatched') sendOrderDispatchedEmail(updated).catch(() => {});
-        if (newOrderStatus === 'Delivered')  sendOrderDeliveredEmail(updated).catch(() => {});
-      }
-
-      // Trigger payment-specific emails when the payment status changes.
-      // The payment method determines which email template is used for 'Paid' transitions.
-      if (newPayStatus && newPayStatus !== prevPayStatus) {
-        if (newPayStatus === 'Paid' && payMethod === 'COD') {
-          // Cash physically collected by driver — notify customer of receipt
-          sendCashCollectedEmail(updated).catch(() => {});
-        } else if (newPayStatus === 'Paid' && payMethod === 'EFT') {
-          // Admin verified EFT bank transfer — notify customer of confirmation
-          sendPaymentVerifiedEmail(updated).catch(() => {});
-        } else if (newPayStatus === 'Payment Rejected') {
-          sendPaymentRejectedEmail(updated, statusNote || '').catch(() => {});
-        } else if (newPayStatus === 'Corrected Proof Requested') {
-          sendCorrectedProofEmail(updated, statusNote || '').catch(() => {});
+      // The order + inventory changes are already committed above, so the admin
+      // gets a fast response. Transactional customer emails are dispatched AFTER
+      // the response via `after()` — reliable on Vercel (the function stays
+      // alive until they resolve) yet off the admin's blocking path.
+      after(async () => {
+        const jobs = [];
+        if (newOrderStatus !== prevOrderStatus) {
+          if (newOrderStatus === 'Confirmed')  jobs.push(sendOrderConfirmedEmail(updated));
+          if (newOrderStatus === 'Dispatched') jobs.push(sendOrderDispatchedEmail(updated));
+          if (newOrderStatus === 'Delivered')  jobs.push(sendOrderDeliveredEmail(updated));
         }
-      }
+        if (newPayStatus && newPayStatus !== prevPayStatus) {
+          if (newPayStatus === 'Paid' && payMethod === 'COD') {
+            jobs.push(sendCashCollectedEmail(updated));
+          } else if (newPayStatus === 'Paid' && payMethod === 'EFT') {
+            jobs.push(sendPaymentVerifiedEmail(updated));
+          } else if (newPayStatus === 'Payment Rejected') {
+            jobs.push(sendPaymentRejectedEmail(updated, statusNote || ''));
+          } else if (newPayStatus === 'Corrected Proof Requested') {
+            jobs.push(sendCorrectedProofEmail(updated, statusNote || ''));
+          }
+        }
+        if (jobs.length) await Promise.allSettled(jobs);
+      });
     }
 
     return NextResponse.json(updated, { status: 200 });

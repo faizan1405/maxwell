@@ -1,17 +1,40 @@
 'use client';
 
 import React, { useState, useEffect, useReducer } from 'react';
+import dynamic from 'next/dynamic';
 import { ProductsProvider, CustomerProvider, CartProvider, useCustomer, useCart } from '../lib/storeContext';
 import { Header } from '../components/store/Header';
 import { Hero, TrustStrip, CategoryShowcase, IndustrialBanner } from '../components/store/HeroSection';
-import { Featured, BulkPromo, Shop, QuickView } from '../components/store/ShopPage';
-import { CartPage, CheckoutPage, OrderConfirmedPage } from '../components/store/CartComponents';
-import { AuthModal } from '../components/store/AuthModal';
-import { WhyUs, Reviews, Contact, Newsletter } from '../components/store/ContentSections';
-import { FaqPage, HomepageFaqSection } from '../components/store/FaqPage';
-import { PolicyPage } from '../components/store/PolicyPages';
 import { Footer, WhatsappFab } from '../components/store/Footer';
-import AccountPage from '../components/store/AccountPage';
+
+/* ── Code-splitting ───────────────────────────────────────────────────────────
+ * Only the header, above-the-fold hero sections and the footer ship in the
+ * initial storefront bundle. Everything else — the shop grid, quick view, cart,
+ * checkout, order confirmation, account, auth modal, marketing sections, FAQ
+ * and policy pages — is dynamically imported so it is fetched on demand
+ * (route-specific pages) or lazily below the fold (home page sections),
+ * dramatically shrinking the first-load JavaScript. */
+function PageLoader() {
+  // Reserves vertical space so route swaps don't collapse the layout.
+  return <div aria-hidden="true" style={{ minHeight: '70vh' }} />;
+}
+
+const Featured           = dynamic(() => import('../components/store/ShopPage').then(m => ({ default: m.Featured })));
+const BulkPromo          = dynamic(() => import('../components/store/ShopPage').then(m => ({ default: m.BulkPromo })));
+const Shop               = dynamic(() => import('../components/store/ShopPage').then(m => ({ default: m.Shop })));
+const QuickView          = dynamic(() => import('../components/store/ShopPage').then(m => ({ default: m.QuickView })));
+const CartPage           = dynamic(() => import('../components/store/CartComponents').then(m => ({ default: m.CartPage })), { loading: PageLoader });
+const CheckoutPage       = dynamic(() => import('../components/store/CartComponents').then(m => ({ default: m.CheckoutPage })), { loading: PageLoader });
+const OrderConfirmedPage = dynamic(() => import('../components/store/CartComponents').then(m => ({ default: m.OrderConfirmedPage })), { loading: PageLoader });
+const AuthModal          = dynamic(() => import('../components/store/AuthModal').then(m => ({ default: m.AuthModal })));
+const WhyUs              = dynamic(() => import('../components/store/ContentSections').then(m => ({ default: m.WhyUs })));
+const Reviews            = dynamic(() => import('../components/store/ContentSections').then(m => ({ default: m.Reviews })));
+const Contact            = dynamic(() => import('../components/store/ContentSections').then(m => ({ default: m.Contact })));
+const Newsletter         = dynamic(() => import('../components/store/ContentSections').then(m => ({ default: m.Newsletter })));
+const FaqPage            = dynamic(() => import('../components/store/FaqPage').then(m => ({ default: m.FaqPage })), { loading: PageLoader });
+const HomepageFaqSection = dynamic(() => import('../components/store/FaqPage').then(m => ({ default: m.HomepageFaqSection })));
+const PolicyPage         = dynamic(() => import('../components/store/PolicyPages').then(m => ({ default: m.PolicyPage })), { loading: PageLoader });
+const AccountPage        = dynamic(() => import('../components/store/AccountPage'), { loading: PageLoader });
 
 
 
@@ -36,7 +59,6 @@ function StoreRouter() {
   const [activeCat, setActiveCat] = useState("all");
   const [query, setQuery] = useState("");
   const [confirmedOrder, setConfirmedOrder] = useState(null);
-  const [, forceUpdate] = useReducer(n => n + 1, 0);
   const [urlTick, bumpUrlTick] = useReducer(n => n + 1, 0);
 
   const getShopUrl = (cat = "all", q = "") => {
@@ -55,17 +77,6 @@ function StoreRouter() {
     setActiveCat(params.get("category") || "all");
     setQuery(params.get("q") || "");
   };
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const h = () => forceUpdate();
-    window.addEventListener("ab:products-loaded", h);
-    window.addEventListener("ab:categories-loaded", h);
-    return () => {
-      window.removeEventListener("ab:products-loaded", h);
-      window.removeEventListener("ab:categories-loaded", h);
-    };
-  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

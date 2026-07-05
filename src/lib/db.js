@@ -203,7 +203,12 @@ export async function seedDatabase() {
 /**
  * Legacy default export kept for backward compatibility with any code that
  * imports `dbConnect` directly. New code should use `connectToDatabase` from
- * `src/lib/mongoose.js` which has more robust seeding guard logic.
+ * `src/lib/mongoose.js`.
+ *
+ * This helper is now *connect-only* and no longer seeds. Seeding is an explicit
+ * operation — run `node src/scripts/seed.js` against a fresh database. Running
+ * it on every connection added cold-start latency to production requests even
+ * though production is already seeded.
  */
 async function dbConnect() {
   if (cached.conn) {
@@ -216,15 +221,12 @@ async function dbConnect() {
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
-      console.log('[db] Mongoose connected successfully.');
       return mongooseInstance;
     });
   }
 
   try {
     cached.conn = await cached.promise;
-    // Perform lazy seeding after connection is established
-    await seedDatabase();
   } catch (e) {
     cached.promise = null;
     throw e;

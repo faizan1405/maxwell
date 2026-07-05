@@ -3,6 +3,7 @@ import { connectToDatabase } from '../../../lib/mongoose';
 import { Review, Order, Customer, Product } from '../../../lib/models';
 import { requireAdmin, verifySession } from '../../../lib/auth';
 import { verifyCustomerCookie } from '../../../lib/customerAuth';
+import { getPublicHomepageReviews, invalidate, CACHE_TAGS } from '../../../lib/cache';
 
 const ALLOWED_SOURCES = ['website', 'whatsapp', 'email', 'manual', ''];
 
@@ -135,17 +136,10 @@ export async function GET(req) {
   });
 
   if (homepageOnly) {
-    let docs = await Review.find({ showOnHomepage: true, status: 'approved' })
-      .sort({ updatedAt: -1, createdAt: -1 })
-      .limit(limitParam)
-      .lean();
-    if (docs.length === 0) {
-      docs = await Review.find({ status: 'approved' })
-        .sort({ updatedAt: -1, createdAt: -1 })
-        .limit(limitParam)
-        .lean();
-    }
-    return NextResponse.json(docs.map(stripPii));
+    // Purely-public homepage testimonials — served from the tag-invalidated
+    // Data Cache (PII already stripped inside the cached fetcher).
+    const docs = await getPublicHomepageReviews(limitParam);
+    return NextResponse.json(docs);
   }
 
   const reviews = await Review.find().lean();
@@ -226,6 +220,8 @@ export async function POST(req) {
     };
 
     const created = await Review.create(review);
+    // Admin-created reviews can be approved/homepage-flagged immediately.
+    invalidate([CACHE_TAGS.reviews]);
     return NextResponse.json(created, { status: 201 });
   }
 
@@ -372,6 +368,8 @@ export async function PATCH(req) {
     { new: true, lean: true }
   );
 
+  // Status / homepage / content changes affect the public homepage carousel.
+  invalidate([CACHE_TAGS.reviews]);
   return NextResponse.json(updated);
 }
 
@@ -392,5 +390,6 @@ export async function DELETE(req) {
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
   await Review.findOneAndDelete({ id });
+  invalidate([CACHE_TAGS.reviews]);
   return NextResponse.json({ ok: true });
 }

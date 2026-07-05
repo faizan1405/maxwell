@@ -2,22 +2,20 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '../../../lib/mongoose';
 import { Faq } from '../../../lib/models';
 import { requireAdmin, verifySession } from '../../../lib/auth';
+import { getPublicFaqs, invalidate, CACHE_TAGS } from '../../../lib/cache';
 
 export async function GET(req) {
-  await connectToDatabase();
   const session = verifySession(req);
-  
-  const faqs = await Faq.find().lean();
-  
-  if (session) {
-    return NextResponse.json(faqs);
+
+  // Public storefront path — served from the tag-invalidated Data Cache.
+  if (!session) {
+    const publicFaqs = await getPublicFaqs();
+    return NextResponse.json(publicFaqs);
   }
-  
-  const publicFaqs = faqs
-    .filter(f => f.enabled !== false)
-    .sort((a, b) => (a.order || 0) - (b.order || 0));
-    
-  return NextResponse.json(publicFaqs);
+
+  await connectToDatabase();
+  const faqs = await Faq.find().lean();
+  return NextResponse.json(faqs);
 }
 
 export async function POST(req) {
@@ -46,6 +44,7 @@ export async function POST(req) {
   };
 
   await Faq.create(faq);
+  invalidate([CACHE_TAGS.faqs]);
   return NextResponse.json(faq, { status: 201 });
 }
 
@@ -70,6 +69,7 @@ export async function PATCH(req) {
   if (body.showOnHomepage !== undefined) patch.showOnHomepage = !!body.showOnHomepage;
 
   const updated = await Faq.findOneAndUpdate({ id }, { $set: patch }, { new: true, lean: true });
+  invalidate([CACHE_TAGS.faqs]);
   return NextResponse.json(updated);
 }
 
@@ -83,5 +83,6 @@ export async function DELETE(req) {
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
   await Faq.findOneAndDelete({ id });
+  invalidate([CACHE_TAGS.faqs]);
   return NextResponse.json({ ok: true });
 }

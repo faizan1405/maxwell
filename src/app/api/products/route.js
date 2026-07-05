@@ -3,6 +3,7 @@ import { connectToDatabase } from '../../../lib/mongoose';
 import { Product, Category, StockHistory } from '../../../lib/models';
 import { requireAdmin, verifySession } from '../../../lib/auth';
 import { normalizeAdminPurchaseMode, normalizePurchaseMode } from '../../../utils/purchaseMode';
+import { getPublicProducts, invalidate, CACHE_TAGS } from '../../../lib/cache';
 import { del } from '@vercel/blob';
 
 export const dynamic = 'force-dynamic';
@@ -73,16 +74,6 @@ function normalizeProductForClient(product) {
   };
 }
 
-async function normalizeLegacyPurchaseModes() {
-  await Promise.all([
-    Product.updateMany({ purchaseMode: 'both', price: { $gt: 0 } }, { $set: { purchaseMode: 'cart', updatedAt: Date.now() } }),
-    Product.updateMany({
-      purchaseMode: 'both',
-      $or: [{ price: { $exists: false } }, { price: null }, { price: { $lte: 0 } }],
-    }, { $set: { purchaseMode: 'quote', whatsappEnabled: true, updatedAt: Date.now() } }),
-  ]);
-}
-
 function validatePurchaseModePayload(clean) {
   const mode = clean.purchaseMode || 'cart';
   if (mode === 'cart' && (!('price' in clean) || Number(clean.price) <= 0)) {
@@ -127,10 +118,19 @@ export async function GET(req) {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  await connectToDatabase();
-  await normalizeLegacyPurchaseModes();
+  // Public storefront path — served from the tag-invalidated Data Cache so the
+  // homepage/shop reads avoid a MongoDB round-trip on every request. Legacy
+  // purchase-mode data is normalised in-memory at read time (see
+  // toPublicProductCard); the old per-request updateMany writes are gone and
+  // are now a one-off migration script (npm run migrate:purchase-modes).
+  if (!all) {
+    const mapped = await getPublicProducts();
+    return NextResponse.json(mapped);
+  }
 
-  if (all) {
+  await connectToDatabase();
+
+  {
     const { searchParams } = req.nextUrl;
     const page = Math.max(1, parseInt(searchParams.get('page'), 10) || 1);
     const limit = Math.max(1, parseInt(searchParams.get('limit'), 10) || 20);
@@ -156,9 +156,6 @@ export async function GET(req) {
       ];
     }
 
-    const total = await Product.countDocuments(query);
-    const totalPages = Math.ceil(total / limit);
-
     const sortQuery = {};
     if (sort === 'price_asc') {
       sortQuery.price = 1;
@@ -174,11 +171,17 @@ export async function GET(req) {
       sortQuery.name = 1;
     }
 
-    const data = await Product.find(query)
-      .sort(sortQuery)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
+    // Run the independent admin queries concurrently instead of sequentially.
+    const [total, data, active, draft, archived, activeList] = await Promise.all([
+      Product.countDocuments(query),
+      Product.find(query).sort(sortQuery).skip((page - 1) * limit).limit(limit).lean(),
+      Product.countDocuments({ status: 'active' }),
+      Product.countDocuments({ status: 'draft' }),
+      Product.countDocuments({ status: 'archived' }),
+      Product.find({ status: 'active' }).select('stock lowStockThreshold variants').lean(),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
 
     const mapped = data.map(raw => {
       const p = normalizeProductForClient(raw);
@@ -202,11 +205,6 @@ export async function GET(req) {
       };
     });
 
-    const active = await Product.countDocuments({ status: 'active' });
-    const draft = await Product.countDocuments({ status: 'draft' });
-    const archived = await Product.countDocuments({ status: 'archived' });
-    
-    const activeList = await Product.find({ status: 'active' }).select('stock lowStockThreshold variants').lean();
     const lowStock = activeList.filter(p => {
       const threshold = p.lowStockThreshold || 0;
       if (p.variants && p.variants.length > 0) {
@@ -233,32 +231,6 @@ export async function GET(req) {
       }
     }, { status: 200 });
   }
-
-  const products = await Product.find({ status: 'active' }).lean();
-  
-  const mapped = products.map(raw => {
-    const p = normalizeProductForClient(raw);
-    if (p.media && p.media.length > 0) return p;
-    if (!p.img) return { ...p, media: [] };
-    return {
-      ...p,
-      media: [{
-        id:         p.id + '-img',
-        type:       'image',
-        url:        p.img,
-        storageKey: null,
-        altText:    p.name || '',
-        sortOrder:  0,
-        isPrimary:  true,
-        fileName:   p.img.split('/').pop(),
-        mimeType:   p.img.endsWith('.png') ? 'image/png' : 'image/jpeg',
-        fileSize:   0,
-        createdAt:  p.createdAt || Date.now(),
-      }],
-    };
-  });
-  
-  return NextResponse.json(mapped);
 }
 
 export async function POST(req) {
@@ -292,6 +264,7 @@ export async function POST(req) {
   };
   
   const created = await Product.create(newProduct);
+  invalidate([CACHE_TAGS.products]);
   return NextResponse.json(created, { status: 201 });
 }
 
@@ -394,7 +367,9 @@ export async function PATCH(req) {
       { new: true, lean: true }
     );
   }
-  
+
+  // Stock adjustments and product edits both change the public catalogue.
+  invalidate([CACHE_TAGS.products]);
   return NextResponse.json(updated);
 }
 
@@ -429,5 +404,6 @@ export async function DELETE(req) {
   }
 
   await Product.findOneAndDelete({ id });
+  invalidate([CACHE_TAGS.products]);
   return NextResponse.json({ ok: true });
 }

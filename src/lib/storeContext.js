@@ -91,54 +91,77 @@ export function ProductsProvider({ children }) {
     // the old price/cart mode before the live API data lands.
     try { localStorage.removeItem('ab_products'); } catch {}
 
-    // Fetch products from API — DB is the only source of truth.
+    let cancelled = false;
+
+    const applyShipping = (data) => {
+      if (Array.isArray(data) && typeof window !== 'undefined') {
+        window.SHIPPING_RATES = data;
+        window.dispatchEvent(new Event('ab:shipping-loaded'));
+      }
+    };
+    const applySettings = (s) => {
+      if (!s) return;
+      setSettings(s);
+      if (typeof window !== 'undefined') window.__settings = s;
+    };
+
+    // Fallback path — hit the individual public endpoints if the single
+    // bootstrap request fails, so the storefront still works end-to-end.
+    const loadIndividually = async () => {
+      await Promise.all([
+        (async () => {
+          try {
+            const res = await fetch(`${API_BASE}/api/products`);
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!cancelled && Array.isArray(data)) setProducts(data);
+          } catch {}
+        })(),
+        (async () => {
+          try {
+            const res = await fetch(`${API_BASE}/api/categories`);
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!cancelled && Array.isArray(data) && data.length) setCategories(data);
+          } catch {}
+        })(),
+        (async () => {
+          try {
+            const res = await fetch(`${API_BASE}/api/settings`);
+            if (!res.ok) return;
+            if (!cancelled) applySettings(await res.json());
+          } catch {}
+        })(),
+        (async () => {
+          try {
+            const res = await fetch(`${API_BASE}/api/shipping`);
+            if (!res.ok) return;
+            applyShipping(await res.json());
+          } catch {}
+        })(),
+      ]);
+    };
+
+    // Single cached bootstrap request — one round-trip for products,
+    // categories, public settings and shipping instead of four.
     (async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/products`, { cache: 'no-store' });
-        if (!res.ok) { setProductsLoaded(true); return; }
+        const res = await fetch(`${API_BASE}/api/storefront`);
+        if (!res.ok) throw new Error('bootstrap unavailable');
         const data = await res.json();
-        if (Array.isArray(data)) setProducts(data);
+        if (cancelled) return;
+        if (Array.isArray(data.products)) setProducts(data.products);
+        if (Array.isArray(data.categories) && data.categories.length) setCategories(data.categories);
+        applySettings(data.settings);
+        applyShipping(data.shipping);
       } catch {
-        // Network failure — leave products empty; UI shows skeleton/empty state
-        // rather than risk a wrong purchase-mode flash.
+        if (!cancelled) await loadIndividually();
       } finally {
-        setProductsLoaded(true);
+        if (!cancelled) setProductsLoaded(true);
       }
     })();
 
-    // Fetch categories from API
-    (async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/categories`);
-        if (!res.ok) return;
-        const data = await res.json();
-        if (Array.isArray(data) && data.length) setCategories(data);
-      } catch {}
-    })();
-
-    // Fetch settings
-    (async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/settings`);
-        if (!res.ok) return;
-        const s = await res.json();
-        setSettings(s);
-        if (typeof window !== 'undefined') window.__settings = s;
-      } catch {}
-    })();
-
-    // Fetch shipping rates for cart/checkout delivery estimates
-    (async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/shipping`);
-        if (!res.ok) return;
-        const data = await res.json();
-        if (Array.isArray(data) && typeof window !== 'undefined') {
-          window.SHIPPING_RATES = data;
-          window.dispatchEvent(new Event('ab:shipping-loaded'));
-        }
-      } catch {}
-    })();
+    return () => { cancelled = true; };
   }, []);
 
   const value = useMemo(() => ({ products, productsLoaded, categories, settings }), [products, productsLoaded, categories, settings]);
@@ -329,20 +352,19 @@ export function CartProvider({ children }) {
     return () => clearTimeout(syncTimer.current);
   }, [items]);
 
-  const showToast = (msg) => {
+  const showToast = useCallback((msg) => {
     setToast(msg);
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(null), 2600);
-  };
+  }, []);
 
-  const add = (product, qty = 1, variation = null) => {
+  const add = useCallback((product, qty = 1, variation = null) => {
     if (normalizePurchaseMode(product?.purchaseMode, product?.price) === 'quote') {
       showToast(`${product.name} is available by WhatsApp quote only`);
       return;
     }
 
     const variant = product.variants?.find((v) => v.name === variation);
-    const price = variant ? variant.price : (product.price || 0);
     const maxStock = variant ? variant.stock : (product.stock || 0);
     const outOfStock = !!product.outOfStock || (variant ? !!variant.outOfStock : false);
 
@@ -365,9 +387,9 @@ export function CartProvider({ children }) {
       return [...prev, { id: product.id, variation, qty: newQty }];
     });
     showToast(`${product.name}${variation ? ` (${variation})` : ''} added to cart`);
-  };
+  }, [showToast]);
 
-  const setQty = (id, qty, variation = null) => setItems((prev) => {
+  const setQty = useCallback((id, qty, variation = null) => setItems((prev) => {
     const product = products.find((p) => p.id === id);
     if (!product) return prev;
     const variant = product.variants?.find((v) => v.name === variation);
@@ -376,13 +398,13 @@ export function CartProvider({ children }) {
     return clamped <= 0
       ? prev.filter((i) => !(i.id === id && i.variation === variation))
       : prev.map((i) => (i.id === id && i.variation === variation) ? { ...i, qty: clamped } : i);
-  });
+  }), [products]);
 
-  const remove = (id, variation = null) => {
+  const remove = useCallback((id, variation = null) => {
     setItems((prev) => prev.filter((i) => !(i.id === id && i.variation === variation)));
-  };
+  }, []);
 
-  const clear = () => {
+  const clear = useCallback(() => {
     setItems([]);
     setCoupon(null);
     const guestId = getGuestId();
@@ -392,9 +414,11 @@ export function CartProvider({ children }) {
       credentials: 'include',
       body: JSON.stringify({ guestId, action: 'convert' }),
     }).catch(() => {});
-  };
+  }, []);
 
-  const detailed = items.map((i) => {
+  // Derived cart lines/totals are recomputed only when the cart items or the
+  // product catalogue actually change — not on every unrelated re-render.
+  const detailed = useMemo(() => items.map((i) => {
     const product = products.find((p) => p.id === i.id);
     if (!product) return null;
     const variant = product.variants?.find((v) => v.name === i.variation);
@@ -404,14 +428,14 @@ export function CartProvider({ children }) {
     const outOfStock = !!product.outOfStock || (variant ? !!variant.outOfStock : false);
     const lowStock = maxStock > 0 && maxStock <= (product.lowStockThreshold || 10);
     return { ...i, product, size, price, maxStock, outOfStock, lowStock };
-  }).filter(Boolean);
+  }).filter(Boolean), [items, products]);
 
-  const count = items.reduce((s, i) => s + i.qty, 0);
-  const subtotal = detailed.reduce((s, i) => s + i.price * i.qty, 0);
+  const count = useMemo(() => items.reduce((s, i) => s + i.qty, 0), [items]);
+  const subtotal = useMemo(() => detailed.reduce((s, i) => s + i.price * i.qty, 0), [detailed]);
 
   const value = useMemo(() => ({
     items, detailed, count, subtotal, add, setQty, remove, clear, open, setOpen, toast, coupon, setCoupon
-  }), [items, detailed, count, subtotal, open, toast, coupon, products]);
+  }), [items, detailed, count, subtotal, add, setQty, remove, clear, open, toast, coupon]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

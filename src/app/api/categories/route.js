@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '../../../lib/mongoose';
 import { Category, Product } from '../../../lib/models';
 import { requireAdmin, verifySession } from '../../../lib/auth';
+import { getPublicCategories, invalidate, CACHE_TAGS } from '../../../lib/cache';
 
 function slugify(value) {
   return String(value || '')
@@ -35,19 +36,18 @@ function cleanCategory(input = {}) {
 
 export async function GET(req) {
   const all = req.nextUrl.searchParams.get('all');
-  if (all === '1') {
-    const session = verifySession(req);
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // Public storefront path — served from the tag-invalidated Data Cache.
+  if (all !== '1') {
+    const categories = await getPublicCategories();
+    return NextResponse.json(categories);
   }
 
+  const session = verifySession(req);
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   await connectToDatabase();
-  
-  let filter = {};
-  if (all !== '1') {
-    filter.status = { $ne: 'inactive' };
-  }
-  
-  const categories = await Category.find(filter).lean();
+  const categories = await Category.find({}).lean();
   return NextResponse.json(categories);
 }
 
@@ -81,6 +81,7 @@ export async function POST(req) {
   };
 
   const created = await Category.create(cat);
+  invalidate([CACHE_TAGS.categories]);
   return NextResponse.json(created, { status: 201 });
 }
 
@@ -116,6 +117,7 @@ export async function PATCH(req) {
     { new: true, lean: true }
   );
 
+  invalidate([CACHE_TAGS.categories]);
   return NextResponse.json(updated);
 }
 
@@ -148,5 +150,7 @@ export async function DELETE(req) {
   }
 
   await Category.findOneAndDelete({ id });
+  // Deletion (and any product reassignment above) changes the public catalogue.
+  invalidate([CACHE_TAGS.categories, CACHE_TAGS.products]);
   return NextResponse.json({ ok: true });
 }
