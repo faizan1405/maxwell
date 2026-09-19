@@ -683,28 +683,48 @@ function CartProvider({ children }) {
     toastTimer.current = setTimeout(() => setToast(null), 2600);
   };
 
-  const add = (product, qty = 1) => {
-    const maxStock = typeof product.stock === 'number' ? product.stock : Infinity;
-    if (maxStock <= 0) { showToast(`${product.name} is out of stock`); return; }
+  const add = (product, qty = 1, variation = null) => {
+    const variant = product.variants?.find((v) => v.name === variation);
+    const size = variant ? variant.name : (product.size || '');
+    const price = variant ? variant.price : (product.price || 0);
+    const maxStock = variant ? variant.stock : (product.stock || 0);
+    const outOfStock = !!product.outOfStock || (variant ? !!variant.outOfStock : false);
+
+    if (outOfStock || maxStock <= 0) {
+      showToast(`${product.name}${variation ? ` (${variation})` : ''} is out of stock`);
+      return;
+    }
+
     setItems((prev) => {
-      const found      = prev.find((i) => i.id === product.id);
+      const found = prev.find((i) => i.id === product.id && i.variation === variation);
       const currentQty = found ? found.qty : 0;
       const newQty     = Math.min(currentQty + qty, maxStock);
-      if (newQty <= currentQty) { showToast(`Only ${maxStock} unit${maxStock === 1 ? '' : 's'} available`); return prev; }
-      if (found) return prev.map((i) => i.id === product.id ? { ...i, qty: newQty } : i);
-      return [...prev, { id: product.id, qty: newQty }];
+      if (newQty <= currentQty) {
+        showToast(`Only ${maxStock} unit${maxStock === 1 ? '' : 's'} available`);
+        return prev;
+      }
+      if (found) {
+        return prev.map((i) => (i.id === product.id && i.variation === variation) ? { ...i, qty: newQty } : i);
+      }
+      return [...prev, { id: product.id, variation, qty: newQty }];
     });
-    showToast(`${product.name} added to cart`);
+    showToast(`${product.name}${variation ? ` (${variation})` : ''} added to cart`);
   };
 
-  const setQty = (id, qty) => setItems((prev) => {
+  const setQty = (id, qty, variation = null) => setItems((prev) => {
     const product  = PRODUCTS.find((p) => p.id === id);
-    const maxStock = typeof product?.stock === 'number' ? product.stock : Infinity;
+    if (!product) return prev;
+    const variant = product.variants?.find((v) => v.name === variation);
+    const maxStock = variant ? variant.stock : (product.stock || 0);
     const clamped  = Math.min(qty, maxStock);
-    return clamped <= 0 ? prev.filter((i) => i.id !== id) : prev.map((i) => i.id === id ? { ...i, qty: clamped } : i);
+    return clamped <= 0
+      ? prev.filter((i) => !(i.id === id && i.variation === variation))
+      : prev.map((i) => (i.id === id && i.variation === variation) ? { ...i, qty: clamped } : i);
   });
 
-  const remove = (id) => { setItems((prev) => prev.filter((i) => i.id !== id)); };
+  const remove = (id, variation = null) => {
+    setItems((prev) => prev.filter((i) => !(i.id === id && i.variation === variation)));
+  };
 
   const clear = () => {
     setItems([]);
@@ -721,9 +741,30 @@ function CartProvider({ children }) {
     }).catch(() => {});
   };
 
-  const detailed = items.map((i) => ({ ...i, product: PRODUCTS.find((p) => p.id === i.id) })).filter((i) => i.product);
+  const detailed = items.map((i) => {
+    const product = PRODUCTS.find((p) => p.id === i.id);
+    if (!product) return null;
+    const variant = product.variants?.find((v) => v.name === i.variation);
+    
+    const size = variant ? variant.name : (product.size || '');
+    const price = variant ? variant.price : (product.price || 0);
+    const maxStock = variant ? variant.stock : (product.stock || 0);
+    const outOfStock = !!product.outOfStock || (variant ? !!variant.outOfStock : false);
+    const lowStock = maxStock <= (product.lowStockThreshold || 0);
+
+    return {
+      ...i,
+      product,
+      size,
+      price,
+      maxStock,
+      outOfStock,
+      lowStock
+    };
+  }).filter(Boolean);
+
   const count    = items.reduce((s, i) => s + i.qty, 0);
-  const subtotal = detailed.reduce((s, i) => s + i.product.price * i.qty, 0);
+  const subtotal = detailed.reduce((s, i) => s + i.price * i.qty, 0);
 
   const value = { items, detailed, count, subtotal, add, setQty, remove, clear, open, setOpen, toast, coupon, setCoupon };
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

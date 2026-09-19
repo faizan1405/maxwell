@@ -274,10 +274,10 @@ function CartPage({ onGoHome, onCheckout }) {
 
             {/* Cart items */}
             <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden divide-y divide-slate-50">
-              {detailed.map(({ product, qty }) => {
-                const maxStock = typeof product.stock === 'number' ? product.stock : 99;
+              {detailed.map((item) => {
+                const { product, qty, variation, price, size, maxStock, outOfStock, lowStock } = item;
                 return (
-                  <div key={product.id} className="flex gap-4 p-5">
+                  <div key={`${product.id}-${variation || ''}`} className="flex gap-4 p-5">
                     <div className="h-24 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
                       <img src={getPrimaryImg(product)} alt={product.name} className="h-full w-full object-cover" onError={e=>{e.target.onerror=null;e.target.src='assets/products/placeholder.svg'}} />
                     </div>
@@ -285,18 +285,22 @@ function CartPage({ onGoHome, onCheckout }) {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="font-700 text-[15px] text-ink leading-snug truncate">{product.name}</p>
-                          <p className="text-[12px] text-slate-400 mt-0.5">{product.size} · {catOf(product.cat)?.short}</p>
-                          <p className="text-[13.5px] font-700 text-cobalt mt-1">{money(product.price)} each</p>
+                          <p className="text-[12px] text-slate-400 mt-0.5">{size} · {catOf(product.cat)?.short}</p>
+                          <div className="flex flex-wrap items-baseline gap-2 mt-1">
+                            <span className="text-[13.5px] font-700 text-cobalt">{money(price)} each</span>
+                            {lowStock && <span className="text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg">Only {maxStock} left</span>}
+                            {outOfStock && <span className="text-[11px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-lg">Out of Stock</span>}
+                          </div>
                         </div>
-                        <button onClick={() => remove(product.id)} className="shrink-0 text-slate-300 hover:text-red-500 transition" aria-label="Remove">
+                        <button onClick={() => remove(product.id, variation)} className="shrink-0 text-slate-300 hover:text-red-500 transition" aria-label="Remove">
                           <Trash size={17} />
                         </button>
                       </div>
                       <div className="flex items-center justify-between mt-auto pt-1">
                         <div className="flex items-center rounded-full border border-slate-200">
-                          <button onClick={() => setQty(product.id, qty - 1)} className="grid h-9 w-9 place-items-center text-slate-500 hover:text-cobalt transition" aria-label="Decrease"><Minus size={14} /></button>
+                          <button onClick={() => setQty(product.id, qty - 1, variation)} className="grid h-9 w-9 place-items-center text-slate-500 hover:text-cobalt transition" aria-label="Decrease"><Minus size={14} /></button>
                           <span className="w-8 text-center text-[14px] font-700 text-ink">{qty}</span>
-                          <button onClick={() => setQty(product.id, qty + 1)} disabled={qty >= maxStock}
+                          <button onClick={() => setQty(product.id, qty + 1, variation)} disabled={qty >= maxStock || outOfStock}
                             className="grid h-9 w-9 place-items-center text-slate-500 hover:text-cobalt transition disabled:opacity-40 disabled:cursor-not-allowed" aria-label="Increase">
                             <Plus size={14} />
                           </button>
@@ -326,10 +330,10 @@ function CartPage({ onGoHome, onCheckout }) {
           <div className="bg-white rounded-2xl border border-slate-100 p-6 space-y-4 sticky top-28">
             <h3 className="font-display text-[16px] font-extrabold text-ink">Order Summary</h3>
             <div className="space-y-2 text-[13px]">
-              {detailed.map(({ product, qty }) => (
-                <div key={product.id} className="flex justify-between text-slate-600">
-                  <span className="truncate max-w-[190px]">{product.name} ×{qty}</span>
-                  <span className="font-600 shrink-0 ml-2">{money(product.price * qty)}</span>
+              {detailed.map(({ product, qty, variation, price, size }) => (
+                <div key={`${product.id}-${variation || ''}`} className="flex justify-between text-slate-600">
+                  <span className="truncate max-w-[190px]">{product.name}{variation ? ` (${size})` : ''} ×{qty}</span>
+                  <span className="font-600 shrink-0 ml-2">{money(price * qty)}</span>
                 </div>
               ))}
             </div>
@@ -500,7 +504,7 @@ function CheckoutPage({ onBack, onSuccess }) {
       customer:       { name: form.name.trim(), email: form.email.trim(), phone: form.phone.trim() },
       address:        addrString,
       addressDetails: { line: form.addrLine.trim(), city: form.addrCity.trim(), province: form.addrProvince, postalCode: form.addrPostal.trim(), country: form.addrCountry },
-      items:          detailed.map(({ product, qty }) => ({ productId: product.id, name: `${product.name} (${product.size})`, qty, price: product.price })),
+      items:          detailed.map(({ product, qty, variation, price, size }) => ({ productId: product.id, variation, name: `${product.name} (${size})`, qty, price })),
       subtotal, delivery, couponCode: coupon?.code || null, total,
       payment:        { method: form.payment, status: 'pending' },
       notes:          form.notes.trim(),
@@ -754,16 +758,16 @@ function CheckoutPage({ onBack, onSuccess }) {
           <div className="bg-white rounded-2xl border border-slate-100 p-6 space-y-4 sticky top-28">
             <h3 className="font-display text-[16px] font-extrabold text-ink">Order Summary</h3>
             <div className="space-y-3 max-h-[280px] overflow-y-auto">
-              {detailed.map(({ product, qty }) => (
-                <div key={product.id} className="flex items-center gap-3">
+              {detailed.map(({ product, qty, variation, price, size }) => (
+                <div key={`${product.id}-${variation || ''}`} className="flex items-center gap-3">
                   <div className="h-12 w-10 shrink-0 overflow-hidden rounded-lg bg-slate-50 border border-slate-100">
                     <img src={getPrimaryImg(product)} alt={product.name} className="h-full w-full object-cover" onError={e=>{e.target.onerror=null;e.target.src='assets/products/placeholder.svg'}} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[12.5px] font-600 text-ink truncate">{product.name}</p>
-                    <p className="text-[11.5px] text-slate-400">{product.size} × {qty}</p>
+                    <p className="text-[11.5px] text-slate-400">{size} × {qty}</p>
                   </div>
-                  <span className="text-[13px] font-700 text-ink shrink-0">{money(product.price * qty)}</span>
+                  <span className="text-[13px] font-700 text-ink shrink-0">{money(price * qty)}</span>
                 </div>
               ))}
             </div>

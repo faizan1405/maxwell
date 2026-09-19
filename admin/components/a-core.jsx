@@ -521,7 +521,13 @@ function AdminProvider({ children }) {
     const paid    = orders.filter(o => o.payment.status === 'paid');
     const revenue = paid.reduce((s,o) => s + o.total, 0);
     const active  = products.filter(p => p.status === 'active');
-    const lowStock= products.filter(p => p.status === 'active' && p.stock <= p.lowStockThreshold);
+    const lowStock = products.filter(p => {
+      if (p.status !== 'active') return false;
+      if (p.variants && p.variants.length > 0) {
+        return p.variants.some(v => v.stock <= p.lowStockThreshold);
+      }
+      return p.stock <= p.lowStockThreshold;
+    });
     const recentOrders = [...orders].sort((a,b) => b.createdAt - a.createdAt).slice(0, 5);
     const byStatus = orders.reduce((a,o) => { a[o.status] = (a[o.status]||0)+1; return a; }, {});
     return { revenue, totalOrders:orders.length, activeProducts:active.length, totalCustomers:customers.length, lowStockProducts:lowStock, lowStockCount:lowStock.length, recentOrders, byStatus };

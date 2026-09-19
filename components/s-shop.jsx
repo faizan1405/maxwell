@@ -15,9 +15,19 @@ const BadgeChip = ({ badge }) => {
 const ProductCard = ({ p }) => {
   const { add } = useCart();
   const c = catOf(p.cat);
-  const outOfStock      = typeof p.stock === 'number' && p.stock === 0;
-  const lowStock        = typeof p.stock === 'number' && p.stock > 0 && p.stock <= (p.lowStockThreshold || 10);
-  const contactForPrice = !p.price || p.price <= 0;
+  
+  const hasVariants = p.variants && p.variants.length > 0;
+  const outOfStock = p.outOfStock || (hasVariants ? p.variants.every(v => v.outOfStock || v.stock === 0) : p.stock === 0);
+  const lowStock = !outOfStock && (hasVariants ? p.variants.some(v => v.stock > 0 && v.stock <= (p.lowStockThreshold || 10)) : p.stock > 0 && p.stock <= (p.lowStockThreshold || 10));
+  
+  const prices = hasVariants ? p.variants.map(v => v.price) : [p.price];
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+  const hasMultiplePrices = hasVariants && p.variants.length > 1 && minPrice !== maxPrice;
+  const displayPrice = minPrice;
+  const displaySize = hasVariants ? p.variants[0].name : p.size;
+  const displayStock = hasVariants ? p.variants.reduce((acc, v) => acc + (v.stock || 0), 0) : p.stock;
+  const contactForPrice = !displayPrice || displayPrice <= 0;
 
   const primaryImgUrl = getPrimaryImg(p);
   const secondImgUrl  = getSecondImg(p);
@@ -35,9 +45,14 @@ const ProductCard = ({ p }) => {
 
   function handleAdd() {
     if (outOfStock || added) return;
-    add(p);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
+    if (p.variants && p.variants.length > 1) {
+      openQuickView(p);
+    } else {
+      const variant = p.variants && p.variants.length === 1 ? p.variants[0] : null;
+      add(p, 1, variant ? variant.name : null);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1500);
+    }
   }
 
   return (
@@ -87,7 +102,7 @@ const ProductCard = ({ p }) => {
             <Eye size={17} />
           </button>
         </div>
-        <span className="absolute bottom-3 right-3 rounded-full bg-ink/85 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm">{p.size}</span>
+        <span className="absolute bottom-3 right-3 rounded-full bg-ink/85 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm">{hasVariants && p.variants.length > 1 ? `${p.variants.length} Sizes` : displaySize}</span>
       </div>
 
       <div className="flex flex-1 flex-col p-4">
@@ -105,11 +120,11 @@ const ProductCard = ({ p }) => {
           <div className="flex items-baseline gap-1.5">
             {contactForPrice
               ? <span className="font-display text-[15px] font-extrabold text-slate-500">Contact for price</span>
-              : <><span className="font-display text-[20px] font-extrabold text-ink">{money(p.price)}</span>
+              : <><span className="font-display text-[20px] font-extrabold text-ink">{hasMultiplePrices ? 'From ' : ''}{money(displayPrice)}</span>
                   {p.was && <span className="text-[13px] font-medium text-slate-300 line-through">{money(p.was)}</span>}</>
             }
           </div>
-          {lowStock && <span className="text-[11px] font-bold text-amber-600">Only {p.stock} left</span>}
+          {lowStock && <span className="text-[11px] font-bold text-amber-600">Only {displayStock} left</span>}
         </div>
         {contactForPrice ? (
           <a href={`${BRAND.wa}?text=${encodeURIComponent(`Hi Amahle Blue, I would like to get a quote for the ${p.name}.`)}`} target="_blank" rel="noopener noreferrer"
@@ -275,6 +290,7 @@ const Shop = ({ activeCat, setActiveCat, query, setQuery }) => {
 const QuickView = () => {
   const { add, setOpen } = useCart();
   const [product,      setProduct]      = React.useState(null);
+  const [selectedVarName, setSelectedVarName] = React.useState(null);
   const [mediaIdx,     setMediaIdx]     = React.useState(0);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
   const [isZoomed,     setIsZoomed]     = React.useState(false);
@@ -296,13 +312,21 @@ const QuickView = () => {
   /* Open/close */
   React.useEffect(() => {
     const h = (e) => {
-      setProduct(e.detail);
+      const p = e.detail;
+      setProduct(p);
       setQty(1);
       setIsFullscreen(false);
       setIsZoomed(false);
+      
+      if (p && p.variants && p.variants.length > 0) {
+        setSelectedVarName(p.variants[0].name);
+      } else {
+        setSelectedVarName(null);
+      }
+
       /* Start on primary image */
-      if (e.detail && e.detail.media && e.detail.media.length > 0) {
-        const pi = e.detail.media.findIndex(m => m.isPrimary);
+      if (p && p.media && p.media.length > 0) {
+        const pi = p.media.findIndex(m => m.isPrimary);
         setMediaIdx(Math.max(0, pi));
       } else {
         setMediaIdx(0);
@@ -532,42 +556,87 @@ const QuickView = () => {
                   </li>
                 ))}
               </ul>
-              <div className="mt-5 flex items-baseline gap-2">
-                {(!product.price || product.price <= 0)
-                  ? <span className="font-display text-[20px] font-extrabold text-slate-500">Contact for price</span>
-                  : <><span className="font-display text-[24px] sm:text-[28px] font-extrabold text-ink">{money(product.price)}</span>
-                      {product.was && <span className="text-[15px] font-medium text-slate-300 line-through">{money(product.was)}</span>}</>
-                }
-                <span className="ml-auto rounded-full bg-slate-100 px-3 py-1 text-[12px] font-bold text-slate-500">{product.size}</span>
-              </div>
-              {(!product.price || product.price <= 0) ? (
-                <a href={`${BRAND.wa}?text=${encodeURIComponent(`Hi Amahle Blue, I would like to get a quote for the ${product.name}.`)}`} target="_blank" rel="noopener noreferrer"
-                  className="mt-5 flex items-center justify-center gap-2 rounded-full py-3.5 text-[15px] font-bold text-white bg-grass hover:bg-emerald-600 transition">
-                  <Whatsapp size={18} /> Get a quote on WhatsApp
-                </a>
-              ) : (() => {
-                const outOfStock = typeof product.stock === 'number' && product.stock === 0;
-                const lowStock   = typeof product.stock === 'number' && product.stock > 0 && product.stock <= (product.lowStockThreshold || 10);
-                const maxQty     = typeof product.stock === 'number' ? product.stock : 99;
+
+              {/* Variations selector */}
+              {product.variants && product.variants.length > 0 && (
+                <div className="mt-4 border-t border-slate-100 pt-4">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">Select Size</label>
+                  <div className="flex flex-wrap gap-2">
+                    {product.variants.map((v) => {
+                      const isSelected = selectedVarName === v.name;
+                      const isOOS = !!product.outOfStock || !!v.outOfStock || v.stock === 0;
+                      return (
+                        <button
+                          key={v.name}
+                          onClick={() => { setSelectedVarName(v.name); setQty(1); }}
+                          className={`px-3 py-1.5 rounded-xl text-[12.5px] font-bold border transition ${
+                            isSelected
+                              ? 'bg-cobalt border-cobalt text-white shadow-sm'
+                              : isOOS
+                              ? 'border-slate-100 bg-slate-50 text-slate-300 line-through cursor-not-allowed'
+                              : 'border-slate-200 hover:border-slate-400 text-ink'
+                          }`}
+                        >
+                          {v.name} {isOOS && '(OOS)'}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {(() => {
+                const selectedVariant = product.variants?.find((v) => v.name === selectedVarName) || null;
+                const activePrice = selectedVariant ? selectedVariant.price : (product.price || 0);
+                const activeWas = selectedVariant ? null : (product.was || null);
+                const activeSize = selectedVariant ? selectedVariant.name : (product.size || '');
+                const activeStock = selectedVariant ? selectedVariant.stock : (product.stock || 0);
+                const activeOutOfStock = !!product.outOfStock || (selectedVariant ? !!selectedVariant.outOfStock || selectedVariant.stock === 0 : product.stock === 0);
+                const activeLowStock = !activeOutOfStock && activeStock > 0 && activeStock <= (product.lowStockThreshold || 10);
+                const activeMaxQty = activeStock;
+                const contactForPrice = !activePrice || activePrice <= 0;
+
                 return (
                   <React.Fragment>
-                    {lowStock && <p className="mt-3 text-[12.5px] font-bold text-amber-600">Only {product.stock} unit{product.stock === 1 ? '' : 's'} left — order soon!</p>}
-                    <div className="mt-5 flex items-center gap-3">
-                      {!outOfStock && (
-                        <div className="flex items-center rounded-full border border-slate-200">
-                          <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="grid h-11 w-11 place-items-center text-slate-500 hover:text-cobalt" aria-label="Decrease quantity"><Minus size={16} /></button>
-                          <span className="w-8 text-center font-display text-[16px] font-extrabold text-ink">{qty}</span>
-                          <button onClick={() => setQty((q) => Math.min(maxQty, q + 1))} className="grid h-11 w-11 place-items-center text-slate-500 hover:text-cobalt" aria-label="Increase quantity"><Plus size={16} /></button>
-                        </div>
-                      )}
-                      <button
-                        disabled={outOfStock}
-                        onClick={() => { if (!outOfStock) { add(product, qty); setProduct(null); setTimeout(() => setOpen(true), 150); } }}
-                        className={`flex flex-1 items-center justify-center gap-2 rounded-full py-3.5 text-[15px] font-bold text-white transition ${outOfStock ? 'bg-slate-300 cursor-not-allowed' : 'bg-cobalt hover:bg-cobalt-700'}`}
-                      >
-                        {outOfStock ? 'Out of Stock' : <><Cart size={18} /> Add to Cart</>}
-                      </button>
+                    <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                      <div className="flex items-baseline gap-2">
+                        {contactForPrice
+                          ? <span className="font-display text-[20px] font-extrabold text-slate-500">Contact for price</span>
+                          : <><span className="font-display text-[24px] sm:text-[28px] font-extrabold text-ink">{money(activePrice)}</span>
+                              {activeWas && <span className="text-[15px] font-medium text-slate-300 line-through">{money(activeWas)}</span>}</>
+                        }
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="text-[12.5px] font-semibold text-slate-500">
+                          Available: {activeOutOfStock ? <span className="text-red-500 font-bold">Out of stock</span> : <span className="text-grass font-bold">{activeStock} units</span>}
+                        </span>
+                        {activeLowStock && <p className="text-[11.5px] font-bold text-amber-600 mt-0.5">Only {activeStock} left — order soon!</p>}
+                      </div>
                     </div>
+
+                    {contactForPrice ? (
+                      <a href={`${BRAND.wa}?text=${encodeURIComponent(`Hi Amahle Blue, I would like to get a quote for the ${product.name}${activeSize ? ` (${activeSize})` : ''}.`)}`} target="_blank" rel="noopener noreferrer"
+                        className="mt-5 flex items-center justify-center gap-2 rounded-full py-3.5 text-[15px] font-bold text-white bg-grass hover:bg-emerald-600 transition">
+                        <Whatsapp size={18} /> Get a quote on WhatsApp
+                      </a>
+                    ) : (
+                      <div className="mt-5 flex items-center gap-3">
+                        {!activeOutOfStock && (
+                          <div className="flex items-center rounded-full border border-slate-200">
+                            <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="grid h-11 w-11 place-items-center text-slate-500 hover:text-cobalt" aria-label="Decrease quantity"><Minus size={16} /></button>
+                            <span className="w-8 text-center font-display text-[16px] font-extrabold text-ink">{qty}</span>
+                            <button onClick={() => setQty((q) => Math.min(activeMaxQty, q + 1))} className="grid h-11 w-11 place-items-center text-slate-500 hover:text-cobalt" aria-label="Increase quantity"><Plus size={16} /></button>
+                          </div>
+                        )}
+                        <button
+                          disabled={activeOutOfStock}
+                          onClick={() => { if (!activeOutOfStock) { add(product, qty, selectedVarName); setProduct(null); setTimeout(() => setOpen(true), 150); } }}
+                          className={`flex flex-1 items-center justify-center gap-2 rounded-full py-3.5 text-[15px] font-bold text-white transition ${activeOutOfStock ? 'bg-slate-300 cursor-not-allowed' : 'bg-cobalt hover:bg-cobalt-700'}`}
+                        >
+                          {activeOutOfStock ? 'Out of Stock' : <><Cart size={18} /> Add to Cart</>}
+                        </button>
+                      </div>
+                    )}
                   </React.Fragment>
                 );
               })()}

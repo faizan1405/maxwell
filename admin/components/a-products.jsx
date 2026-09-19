@@ -21,13 +21,13 @@ function getPrimaryImg(p) {
 
 // ── Blank product ─────────────────────────────────────────────────────────────
 function blankProduct() {
-  return { name:'', cat:'household', sub:'', price:'', was:'', size:'', sku:'', scent:'', badge:null, img:'', media:[], desc:'', stock:0, lowStockThreshold:10, status:'active', benefits:['','','',''], variants:[], rating:4.8, reviews:0 };
+  return { name:'', cat:'household', sub:'', price:'', was:'', size:'', sku:'', scent:'', badge:null, img:'', media:[], desc:'', stock:0, lowStockThreshold:10, status:'active', outOfStock:false, benefits:['','','',''], variants:[], rating:4.8, reviews:0 };
 }
 
 // ── Variant row ───────────────────────────────────────────────────────────────
 function VariantRow({ v, idx, onChange, onRemove }) {
   return (
-    <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
+    <div className="grid grid-cols-[1fr_80px_64px_60px_32px] items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
       <input value={v.name} onChange={e=>onChange(idx,'name',e.target.value)} placeholder="Size (e.g. 1L)"
         className="min-w-0 px-2.5 py-1.5 rounded-lg border border-slate-200 text-sm outline-none focus:border-cobalt"/>
       <input value={v.price} onChange={e=>onChange(idx,'price',e.target.value)} placeholder="Price"
@@ -36,6 +36,10 @@ function VariantRow({ v, idx, onChange, onRemove }) {
       <input value={v.stock} onChange={e=>onChange(idx,'stock',e.target.value)} placeholder="Stock"
         type="number" min="0"
         className="w-16 px-2.5 py-1.5 rounded-lg border border-slate-200 text-sm outline-none focus:border-cobalt"/>
+      <label className="flex items-center justify-center cursor-pointer select-none">
+        <input type="checkbox" checked={!!v.outOfStock} onChange={e=>onChange(idx,'outOfStock',e.target.checked)}
+          className="h-4 w-4 rounded border-slate-300 text-cobalt focus:ring-cobalt accent-cobalt"/>
+      </label>
       <button onClick={()=>onRemove(idx)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Icon.Trash/></button>
     </div>
   );
@@ -228,9 +232,9 @@ function ProductForm({ open, onClose, initial, onSave }) {
 
   const set         = (field, val) => setForm(f => ({...f, [field]: val}));
   const setBenefit  = (i, val)     => setForm(f => { const b=[...f.benefits]; b[i]=val; return {...f,benefits:b}; });
-  const addVariant  = ()           => setForm(f => ({...f, variants:[...f.variants, {name:'',price:'',stock:0}]}));
+  const addVariant  = ()           => setForm(f => ({...f, variants:[...f.variants, {name:'',price:'',stock:0,outOfStock:false}]}));
   const removeVariant = i          => setForm(f => ({...f, variants:f.variants.filter((_,idx)=>idx!==i)}));
-  const changeVariant = (i,field,val) => setForm(f => { const v=[...f.variants]; v[i]={...v[i],[field]:field==='stock'?parseInt(val)||0:field==='price'?parseFloat(val)||0:val}; return {...f,variants:v}; });
+  const changeVariant = (i,field,val) => setForm(f => { const v=[...f.variants]; v[i]={...v[i],[field]:field==='stock'?parseInt(val)||0:field==='price'?parseFloat(val)||0:field==='outOfStock'?!!val:val}; return {...f,variants:v}; });
 
   async function handleFilesSelected(files) {
     const token  = session?.token;
@@ -391,7 +395,7 @@ function ProductForm({ open, onClose, initial, onSave }) {
         </div>
 
         {/* Stock */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 items-start">
           <Input label="Stock Quantity" type="number" min="0" value={form.stock} onChange={e=>set('stock',e.target.value)}/>
           <Input label="Low Stock Alert" type="number" min="0" value={form.lowStockThreshold} onChange={e=>set('lowStockThreshold',e.target.value)} hint="Alert when below this number"/>
           <Select label="Status" value={form.status} onChange={e=>set('status',e.target.value)}>
@@ -401,6 +405,13 @@ function ProductForm({ open, onClose, initial, onSave }) {
             <option value="">No badge</option>
             {BADGES.filter(Boolean).map(b=><option key={b} value={b}>{b}</option>)}
           </Select>
+          <div className="flex flex-col pt-6">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" checked={!!form.outOfStock} onChange={e=>set('outOfStock',e.target.checked)} className="h-5 w-5 rounded border-slate-300 text-cobalt focus:ring-cobalt accent-cobalt"/>
+              <span className="text-sm font-600 text-slate-700">Out of Stock</span>
+            </label>
+            <p className="text-[10px] text-slate-400 mt-1">Force unavailable</p>
+          </div>
         </div>
 
         {/* Media Gallery */}
@@ -438,8 +449,8 @@ function ProductForm({ open, onClose, initial, onSave }) {
           </div>
           {form.variants.length > 0 ? (
             <div className="space-y-2">
-              <div className="grid grid-cols-3 gap-2 px-3 text-xs font-600 text-slate-400 uppercase tracking-wide mb-1">
-                <span>Size / Name</span><span>Price (R)</span><span>Stock</span>
+              <div className="grid grid-cols-[1fr_80px_64px_60px_32px] gap-2 px-3 text-xs font-600 text-slate-400 uppercase tracking-wide mb-1">
+                <span>Size / Name</span><span>Price (R)</span><span>Stock</span><span className="text-center">OOS</span><span></span>
               </div>
               {form.variants.map((v,i)=><VariantRow key={i} v={v} idx={i} onChange={changeVariant} onRemove={removeVariant}/>)}
             </div>
@@ -452,9 +463,232 @@ function ProductForm({ open, onClose, initial, onSave }) {
   );
 }
 
+// ── Stock Adjustment Modal ────────────────────────────────────────────────────
+function StockAdjustmentModal({ open, onClose, product, onSave }) {
+  const [variation, setVariation] = React.useState('');
+  const [mode, setMode] = React.useState('increase');
+  const [qty, setQty] = React.useState('');
+  const [reason, setReason] = React.useState('');
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState('');
+
+  React.useEffect(() => {
+    if (open && product) {
+      if (product.variants && product.variants.length > 0) {
+        setVariation(product.variants[0].name);
+      } else {
+        setVariation('');
+      }
+      setMode('increase');
+      setQty('');
+      setReason('');
+      setError('');
+    }
+  }, [open, product]);
+
+  const currentStock = React.useMemo(() => {
+    if (!product) return 0;
+    if (variation) {
+      const v = product.variants?.find(x => x.name === variation);
+      return v ? v.stock || 0 : 0;
+    }
+    return product.stock || 0;
+  }, [product, variation]);
+
+  async function handleConfirm() {
+    const num = parseInt(qty, 10);
+    if (isNaN(num) || num <= 0) {
+      setError('Please enter a valid quantity greater than 0.');
+      return;
+    }
+    if (mode === 'reduce' && num > currentStock) {
+      setError(`Cannot reduce stock by more than available (${currentStock} units).`);
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    try {
+      const payload = {
+        id: product.id,
+        adjustment: {
+          variation: variation || null,
+          mode,
+          qty: num,
+          reason: reason.trim()
+        }
+      };
+      
+      const session = JSON.parse(localStorage.getItem('ab_admin_session_v2') || '{}');
+      const res = await fetch('/api/products', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.token || ''}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to adjust stock');
+      }
+      onSave(data);
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title={`Adjust Stock: ${product?.name}`}
+      footer={<>
+        {error && <span className="flex-1 text-xs text-red-600 font-500 mr-2">{error}</span>}
+        <Btn variant="secondary" onClick={onClose} disabled={saving}>Cancel</Btn>
+        <Btn onClick={handleConfirm} disabled={saving}>
+          {saving ? <><Spinner size={14}/>Saving…</> : 'Confirm Adjustment'}
+        </Btn>
+      </>}
+    >
+      <div className="space-y-4">
+        {product?.variants && product.variants.length > 0 && (
+          <Select label="Select Variant Size" value={variation} onChange={e=>setVariation(e.target.value)}>
+            {product.variants.map(v => (
+              <option key={v.name} value={v.name}>{v.name} (Current: {v.stock} units)</option>
+            ))}
+          </Select>
+        )}
+
+        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3.5 flex justify-between items-center text-sm">
+          <span className="text-slate-500 font-600">Current Stock:</span>
+          <span className="font-800 text-slate-800 text-lg">{currentStock} units</span>
+        </div>
+
+        <div>
+          <label className="block text-[12px] font-700 text-slate-600 mb-2">Adjustment Mode</label>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id:'increase', label:'Increase Stock', color:'text-green-700 bg-green-50 border-green-200' },
+              { id:'reduce',   label:'Reduce Stock',   color:'text-red-700 bg-red-50 border-red-200' },
+              { id:'set',      label:'Set Manually',   color:'text-blue-700 bg-blue-50 border-blue-200' }
+            ].map(m => {
+              const isSel = mode === m.id;
+              return (
+                <button key={m.id} type="button" onClick={()=>setMode(m.id)}
+                  className={`px-3 py-2.5 rounded-xl border text-xs font-bold transition flex flex-col items-center justify-center gap-1 ${
+                    isSel ? m.color + ' ring-2 ring-cobalt/25 scale-[1.02]' : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                  }`}>
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <Input label="Quantity / Value *" type="number" min="1" value={qty} onChange={e=>setQty(e.target.value)} placeholder="Enter amount..." />
+
+        <Input label="Reason for adjustment (optional)" value={reason} onChange={e=>setReason(e.target.value)} placeholder="e.g. Received new shipment, damaged items, correction" />
+      </div>
+    </Modal>
+  );
+}
+
+// ── Stock History Modal ───────────────────────────────────────────────────────
+function StockHistoryModal({ open, onClose }) {
+  const [history, setHistory] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
+
+  React.useEffect(() => {
+    if (open) {
+      fetchHistory();
+    }
+  }, [open]);
+
+  async function fetchHistory() {
+    setLoading(true);
+    setError('');
+    try {
+      const session = JSON.parse(localStorage.getItem('ab_admin_session_v2') || '{}');
+      const res = await fetch('/api/settings?resource=stock-history', {
+        headers: {
+          'Authorization': `Bearer ${session?.token || ''}`
+        }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch history');
+      setHistory(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function fmtDate(ts) {
+    return new Date(ts).toLocaleString('en-ZA', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} size="lg" title="Stock History Log"
+      footer={<Btn variant="secondary" onClick={onClose}>Close</Btn>}
+    >
+      <div className="space-y-4">
+        {loading ? (
+          <div className="py-12 flex justify-center"><Spinner size={24}/></div>
+        ) : error ? (
+          <div className="text-center py-6 text-red-500 font-500">{error}</div>
+        ) : history.length === 0 ? (
+          <div className="text-center py-12 text-slate-400 font-500">No stock adjustment history logged yet.</div>
+        ) : (
+          <div className="overflow-x-auto border border-slate-100 rounded-2xl">
+            <table className="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-100 font-600 text-slate-500">
+                  <th className="px-4 py-3">Date & Time</th>
+                  <th className="px-4 py-3">Product / Variation</th>
+                  <th className="px-4 py-3 text-center">Prev</th>
+                  <th className="px-4 py-3 text-center">New</th>
+                  <th className="px-4 py-3">Reason / Details</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {history.map(item => {
+                  const diff = item.updatedStock - item.prevStock;
+                  const diffColor = diff > 0 ? 'text-green-600 font-bold' : diff < 0 ? 'text-red-500 font-bold' : 'text-slate-500';
+                  const diffSymbol = diff > 0 ? `+${diff}` : `${diff}`;
+                  
+                  return (
+                    <tr key={item.id} className="hover:bg-slate-50/50">
+                      <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{fmtDate(item.timestamp)}</td>
+                      <td className="px-4 py-3">
+                        <span className="font-600 text-slate-700">{item.productName}</span>
+                        {item.variation && <span className="ml-1.5 px-2 py-0.5 rounded-lg bg-slate-100 text-slate-500 text-[10px] font-bold">{item.variation}</span>}
+                      </td>
+                      <td className="px-4 py-3 text-center text-slate-400 font-mono">{item.prevStock}</td>
+                      <td className="px-4 py-3 text-center font-mono font-700 text-slate-800">
+                        {item.updatedStock} <span className={`text-[10px] ml-1 ${diffColor}`}>({diffSymbol})</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-slate-600 font-500">{item.reason}</span>
+                        {item.orderId && <span className="ml-1.5 text-[10px] font-700 text-cobalt bg-cobalt/5 px-2 py-0.5 rounded-lg">Order #{item.orderId}</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
 // ── Products Page ─────────────────────────────────────────────────────────────
 function ProductsPage() {
-  const { products, addProduct, updateProduct, deleteProduct, fmtMoney, categories } = useAdmin();
+  const { products, addProduct, updateProduct, deleteProduct, fmtMoney, categories, setProducts } = useAdmin();
   const { isAdmin } = useAuth();
 
   const [search,    setSearch]    = React.useState('');
@@ -467,6 +701,15 @@ function ProductsPage() {
   const [deleting,  setDeleting]  = React.useState(null);
   const [archiving, setArchiving] = React.useState(null);
   const [selected,  setSelected]  = React.useState(new Set());
+  
+  const [adjustmentOpen, setAdjustmentOpen] = React.useState(false);
+  const [adjustmentProd, setAdjustmentProd] = React.useState(null);
+  const [historyOpen, setHistoryOpen] = React.useState(false);
+
+  function handleAdjustmentSave(updatedProduct) {
+    setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+    showToast('Stock adjusted successfully');
+  }
   const [toast,     setToast]     = React.useState({ visible:false, msg:'', type:'success' });
 
   function showToast(msg, type='success') {
@@ -541,9 +784,14 @@ function ProductsPage() {
           <h2 className="text-xl font-800 text-slate-800">Products</h2>
           <p className="text-sm text-slate-400 mt-0.5">{products.length} total products</p>
         </div>
-        <Btn onClick={() => { setEditing(null); setFormOpen(true); }}>
-          <Icon.Plus/> Add Product
-        </Btn>
+        <div className="flex gap-2">
+          <Btn variant="secondary" onClick={() => setHistoryOpen(true)}>
+            <Icon.List/> Stock History
+          </Btn>
+          <Btn onClick={() => { setEditing(null); setFormOpen(true); }}>
+            <Icon.Plus/> Add Product
+          </Btn>
+        </div>
       </div>
 
       {/* Quick stats */}
@@ -641,6 +889,8 @@ function ProductsPage() {
                         <td className="px-4 py-3.5"><Badge label={p.status} variant={p.status}/></td>
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-1">
+                            <button onClick={()=>{ setAdjustmentProd(p); setAdjustmentOpen(true); }} title="Adjust Stock"
+                              className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"><Icon.Box/></button>
                             <button onClick={()=>{ setEditing(p); setFormOpen(true); }} title="Edit"
                               className="p-1.5 text-slate-400 hover:text-cobalt hover:bg-cobalt/10 rounded-lg transition-colors"><Icon.Edit/></button>
                             {p.status !== 'archived' && (
@@ -668,6 +918,12 @@ function ProductsPage() {
 
       {/* Product form modal */}
       <ProductForm open={formOpen} onClose={()=>setFormOpen(false)} initial={editing} onSave={handleSave}/>
+
+      {/* Stock adjustment modal */}
+      <StockAdjustmentModal open={adjustmentOpen} onClose={()=>setAdjustmentOpen(false)} product={adjustmentProd} onSave={handleAdjustmentSave}/>
+
+      {/* Stock history modal */}
+      <StockHistoryModal open={historyOpen} onClose={()=>setHistoryOpen(false)}/>
 
       {/* Archive confirm */}
       <ConfirmDialog open={!!archiving} onClose={()=>setArchiving(null)}
