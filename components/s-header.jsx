@@ -54,6 +54,7 @@ const NAV = [
   { label: "Household", href: "#shop", cat: "household", page: "shop" },
   { label: "Car Care", href: "#shop", cat: "car", page: "shop" },
   { label: "Sanitisers", href: "#shop", cat: "sanitiser", page: "shop" },
+  { label: "Manufacturing", href: "#manufacturing", page: "manufacturing" },
   { label: "About", href: "#about", page: "home" },
   { label: "Contact", href: "#contact", page: "home" },
 ];

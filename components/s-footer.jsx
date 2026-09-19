@@ -43,6 +43,7 @@ const Footer = ({ onShopCat }) => (
           <h4 className="font-display text-[13px] font-extrabold uppercase tracking-wide text-white">Company</h4>
           <ul className="mt-4 space-y-2.5 text-[14px]">
             <li><a href="#about" onClick={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('ab:go-page', { detail: 'home' })); setTimeout(() => { const el = document.getElementById('about'); if(el) el.scrollIntoView({ behavior: 'smooth' }); else window.scrollTo(0,0); }, 50); }} className="text-slate-400 transition hover:text-white">About us</a></li>
+            <li><button onClick={() => window.dispatchEvent(new CustomEvent('ab:go-page', { detail: 'manufacturing' }))} className="text-slate-400 transition hover:text-white">Manufacturing process</button></li>
             <li><a href="#contact" onClick={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('ab:go-page', { detail: 'home' })); setTimeout(() => { const el = document.getElementById('contact'); if(el) el.scrollIntoView({ behavior: 'smooth' }); else window.scrollTo(0,0); }, 50); }} className="text-slate-400 transition hover:text-white">Contact</a></li>
             <li><a href={`${BRAND.wa}?text=${encodeURIComponent("Hi Amahle Blue, I'd like to inquire about bulk and trade pricing.")}`} target="_blank" rel="noopener noreferrer" className="text-slate-400 transition hover:text-white">Bulk &amp; trade</a></li>
             <li><button onClick={() => window.dispatchEvent(new CustomEvent('ab:go-page', { detail: 'faq' }))} className="text-slate-400 transition hover:text-white">Delivery &amp; returns</button></li>
@@ -180,6 +181,23 @@ function StoreRouter() {
   if (page === "faq") {
     return shell(
       <FaqPage onGoHome={goHome} />
+    );
+  }
+
+  if (page === "manufacturing") {
+    return (
+      <React.Fragment>
+        <Header onNavCat={onNavCat} />
+        <main className="ab-page-enter">
+          <ManufacturingPage onGoHome={goHome} />
+        </main>
+        <Footer onShopCat={onShopCat} />
+        <CartDrawer />
+        <AuthModal />
+        <QuickView />
+        <Toast />
+        <WhatsappFab />
+      </React.Fragment>
     );
   }
 

@@ -19,7 +19,7 @@ function CustomerProvider({ children }) {
   });
 
   const setPage = React.useCallback((p) => {
-    if (p && p !== 'home' && p !== 'shop' && p !== 'cart' && p !== 'checkout' && p !== 'account' && p !== 'order-confirmed' && p !== 'faq') {
+    if (p && p !== 'home' && p !== 'shop' && p !== 'cart' && p !== 'checkout' && p !== 'account' && p !== 'order-confirmed' && p !== 'faq' && p !== 'manufacturing') {
       p = 'home';
     }
     setPageState(old => {
