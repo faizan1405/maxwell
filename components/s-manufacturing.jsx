@@ -11,6 +11,8 @@
 const MACHINE_IMAGES = {
   ribbonBlender: (window.__resources || {}).ribbonBlender || "assets/machines/ribbon-blender.jpg",
   cageMill: (window.__resources || {}).cageMill || "assets/machines/cage-mill.jpg",
+  cageMillArrival: (window.__resources || {}).cageMillArrival || "assets/machines/cage-mill-arrival-south-africa.jpg",
+  cageMillCratedDetail: (window.__resources || {}).cageMillCratedDetail || "assets/machines/cage-mill-crated-detail.jpg",
 };
 
 /* ── Specialized Industrial Icons ────────────────────────────────────────────── */
@@ -298,8 +300,8 @@ function ManufacturingPage({ onGoHome }) {
             {/* Quick metrics grid */}
             <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6 border-t border-white/10 pt-8">
               <div>
-                <p className="font-display text-[26px] sm:text-[30px] font-extrabold text-white">100%</p>
-                <p className="text-[12.5px] font-semibold text-slate-400">Uniform Batch Mixing</p>
+                <p className="font-display text-[26px] sm:text-[30px] font-extrabold text-white">Controlled</p>
+                <p className="text-[12.5px] font-semibold text-slate-400">Batch Mixing Process</p>
               </div>
               <div>
                 <p className="font-display text-[26px] sm:text-[30px] font-extrabold text-sky-300">Cage Mill</p>
@@ -313,6 +315,66 @@ function ManufacturingPage({ onGoHome }) {
                 <p className="font-display text-[26px] sm:text-[30px] font-extrabold text-grass">Gauteng</p>
                 <p className="text-[12.5px] font-semibold text-slate-400">Proudly South African</p>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Imported equipment arrival story */}
+      <section className="relative overflow-hidden border-b border-slate-200 bg-white py-16 sm:py-20">
+        <div className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-sky-100/70 blur-3xl" />
+        <div className="relative mx-auto grid max-w-[1280px] items-center gap-10 px-4 sm:px-6 lg:grid-cols-12 lg:gap-14">
+          <div className="lg:col-span-7">
+            <div className="group relative overflow-hidden rounded-[2rem] bg-ink shadow-2xl shadow-slate-900/15">
+              <img
+                src={MACHINE_IMAGES.cageMillArrival}
+                alt="Amahle Blue cage mill arriving in South Africa in its protective shipping crate"
+                className="aspect-[16/10] h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.025]"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/10 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 sm:p-7">
+                <div>
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-sky-300 sm:text-[11px]">Real arrival photograph</p>
+                  <p className="mt-1 font-display text-lg font-extrabold text-white sm:text-2xl">Our cage mill reaches its South African home</p>
+                </div>
+                <div className="hidden shrink-0 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-right backdrop-blur-md sm:block">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Journey</p>
+                  <p className="mt-1 font-display text-sm font-extrabold text-white">India &rarr; South Africa</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-5">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cobalt/15 bg-blue-50 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-cobalt">
+              <span className="h-2 w-2 rounded-full bg-grass" /> A new production chapter
+            </div>
+            <h2 className="mt-5 font-display text-[clamp(2rem,4vw,3.2rem)] font-extrabold leading-[1.08] tracking-tight text-ink">
+              Sourced in India.<br />Put to work in South Africa.
+            </h2>
+            <p className="mt-5 text-[16px] leading-relaxed text-slate-600 sm:text-[17px]">
+              This is our cage mill arriving at Amahle Blue after its journey from India. The investment strengthens an important stage in our washing-powder process: breaking down compacted material before blending so each batch starts with a finer, more even texture.
+            </p>
+
+            <div className="mt-7 grid grid-cols-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+              {[["01", "Imported"], ["02", "Set up locally"], ["03", "Built for consistency"]].map(([step, label], index) => (
+                <div key={step} className={`p-3.5 sm:p-4 ${index < 2 ? "border-r border-slate-200" : ""}`}>
+                  <p className="font-mono text-[11px] font-bold text-cobalt">{step}</p>
+                  <p className="mt-1 text-[11px] font-bold leading-snug text-ink sm:text-[12px]">{label}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 flex items-center gap-4 rounded-2xl border border-sky-100 bg-sky-50/70 p-3.5">
+              <img
+                src={MACHINE_IMAGES.cageMillCratedDetail}
+                alt="Close view of the securely crated cage mill after delivery"
+                className="h-20 w-20 shrink-0 rounded-xl object-cover"
+              />
+              <p className="text-[12.5px] leading-relaxed text-slate-600">
+                <span className="font-bold text-ink">A real investment, documented on arrival.</span>{" "}
+                The delivery photos show the equipment securely crated before installation at our Gauteng operation.
+              </p>
             </div>
           </div>
         </div>
@@ -475,7 +537,7 @@ function ManufacturingPage({ onGoHome }) {
             <div className="order-1 lg:order-2 lg:col-span-6">
               <MachinePhoto
                 src={MACHINE_IMAGES.cageMill}
-                alt="Cage Mill used in washing powder manufacturing"
+                alt="Illustrative view of a cage mill used for washing powder particle refinement"
                 title="Cage Mill"
                 subtitle="High-Velocity Pin Mill for Particle Refinement & Delumping"
                 badgeText="Particle Sizing & Breakdown"
